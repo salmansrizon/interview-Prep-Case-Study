@@ -1,0 +1,35 @@
+# WHY YAML for model configs?
+# JSON does not support comments. When students edit configs, they need inline docs.
+# YAML is the industry standard for ML/AI configuration (Kubeflow, Docker Compose, etc.).
+
+parser:
+  name: "raw_data_cleaner"
+  version: "1.0.0"
+
+  # Input settings
+  input:
+    format: "jsonl"           # jsonl | csv | txt
+    encoding: "utf-8"
+    raw_dir: "data/raw"
+
+  # Output settings
+  output:
+    format: "jsonl"
+    encoding: "utf-8"
+    clean_dir: "data/clean"
+
+  # Cleaning rules (declarative config = no code changes needed)
+  cleaning:
+    remove_empty: true
+    strip_whitespace: true
+    lowercase_keys: false
+    min_text_length: 5
+    max_text_length: 500
+    allowed_statuses: ["active", "pending"]  # Filter records by status
+
+  # API simulation settings
+  api:
+    base_url: "https://api.example.com"
+    timeout: 10
+    retries: 3
+    retry_delay: 2

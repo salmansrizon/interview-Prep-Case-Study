@@ -1,0 +1,6 @@
+# Week 1 Class 2 Dependencies
+# WHY pinned: Reproducibility across student machines.
+
+pyyaml>=6.0.1           # YAML config parsing (human-readable model configs)
+jsonschema>=4.21.0      # Validate JSON data against schemas (production-grade safety)
+python-dotenv>=1.0.0    # Environment variable management

@@ -1,0 +1,7 @@
+# Core dependencies for Week 1 Class 1
+# WHY: Pinning versions ensures reproducibility. 
+# If you install without versions, a future update may break your code.
+
+requests>=2.31.0        # HTTP library to talk to Ollama's REST API
+pyyaml>=6.0.1           # Parse YAML config files (human-friendly model settings)
+python-dotenv>=1.0.0    # Load environment variables from .env file
