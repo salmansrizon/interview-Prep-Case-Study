@@ -128,8 +128,8 @@ class TextSorter:
             )
             try:
                 category = self.llm.generate(prompt).lower().strip()
-                # WHY .strip('.")? The LLM might return 'technology.' or '"sports"'.
-                category = category.strip('.,;:"\''')
+                    # WHY .strip('.")? The LLM might return 'technology.' or '"sports"'.
+                    category = category.strip('.,;:"\\\'')
                 if category not in buckets:
                     category = "other"
                 buckets[category].append(line)
