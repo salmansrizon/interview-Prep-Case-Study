@@ -1,0 +1,57 @@
+# ───────────────────────────────────────────────
+# Industrial Equipment Predictor — Configuration
+# ───────────────────────────────────────────────
+
+project:
+  name: "IndustrialEquipmentPredictor"
+  version: "1.0.0"
+  random_seed: 42
+
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  models_dir: "data/models"
+  logs_dir: "logs"
+  artifacts_dir: "artifacts"
+
+data:
+  n_samples: 5000
+  test_size: 0.15
+  val_size: 0.15
+  target_column: "success_score"
+  feature_columns:
+    - "operating_temperature"
+    - "vibration_level"
+    - "pressure_reading"
+    - "power_consumption"
+    - "runtime_hours"
+    - "days_since_maintenance"
+    - "error_count_24h"
+    - "oil_quality_index"
+    - "load_factor"
+    - "ambient_temperature"
+  categorical_columns:
+    - "equipment_type"
+    - "manufacturer"
+    - "facility_location"
+
+model:
+  input_dim: 19          # 10 numeric + 3 categorical (one-hot expanded)
+  hidden_units: [128, 64, 32]
+  dropout_rate: 0.3
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 100
+  early_stopping_patience: 15
+  checkpoint_monitor: "val_loss"
+
+training:
+  optimizer: "adam"
+  loss_function: "mse"
+  metrics: ["mae", "mse"]
+  validation_split: 0.15
+
+preprocessing:
+  numeric_scaler: "standard"   # standard | minmax
+  categorical_encoder: "onehot"
+  handle_missing: "median"
