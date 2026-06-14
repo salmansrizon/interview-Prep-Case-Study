@@ -46,8 +46,7 @@ class OllamaClient:
         Sends a prompt to Ollama and returns the generated text.
 
         WHY json payload? REST APIs speak JSON. It is the universal language of web services.
-        WHY stream=False? For simplicity in Week 1. In production, streaming reduces 
-             perceived latency for long responses.
+        WHY stream=False? For simplicity in Week 1. In production, streaming reduces perceived latency for long responses.
         WHAT IT DOES: Packages your prompt, ships it to Ollama, unwraps the response.
         """
         payload = {

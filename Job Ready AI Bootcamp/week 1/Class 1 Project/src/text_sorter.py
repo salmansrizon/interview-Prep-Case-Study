@@ -2,12 +2,9 @@
 text_sorter.py
 --------------
 Motive: Automate the sorting of text lines using either pure Python or LLM assistance.
-WHY: Sorting is not just alphabetical. In AI, "sorting" means categorization,
-     prioritization, and routing. This module demonstrates both classical and AI-powered sorting.
-WHAT IT DOES: Takes raw text, applies a strategy (alphabetical, length, or LLM category),
-              and writes sorted output files.
-ANALOGY: This is a *smart mailroom*. Traditional mailrooms sort by zip code (alphabetical).
-         Our mailroom can read the letter and decide if it is a bill, invitation, or spam (LLM category).
+WHY: Sorting is not just alphabetical. In AI, "sorting" means categorization,prioritization, and routing. This module demonstrates both classical and AI-powered sorting.
+WHAT IT DOES: Takes raw text, applies a strategy (alphabetical, length, or LLM category),and writes sorted output files.
+ANALOGY: This is a *smart mailroom*. Traditional mailrooms sort by zip code (alphabetical).Our mailroom can read the letter and decide if it is a bill, invitation, or spam (LLM category).
 """
 
 from typing import List, Callable, Dict
@@ -22,11 +19,11 @@ class TextSorter:
     WHY a class? Holds configuration (strategy, categories) and state (llm_client).
     """
 
-    def __init__(self, strategy: str = "alphabetical", categories: List[str] = None):
+    def __init__(self, strategy: str = "alphabetical", categories: List[str] | None = None):
         self.strategy = strategy
         self.categories = categories or []
         # WHY lazy init? Do not spawn an LLM connection unless the strategy needs it.
-        self._llm: OllamaClient = None
+        self._llm: OllamaClient | None = None
 
     @property
     def llm(self) -> OllamaClient:
@@ -85,8 +82,7 @@ class TextSorter:
         """
         Sort by line length (shortest first).
 
-        WHY? In AI preprocessing, short prompts often get batched separately 
-             from long prompts for token-efficiency.
+        WHY? In AI preprocessing, short prompts often get batched separately from long prompts for token-efficiency.
         """
         sorted_lines = sorted(lines, key=len)
         out_path = f"{output_dir}/sorted_length.txt"
@@ -101,12 +97,11 @@ class TextSorter:
         The LLM reads each line and decides which bucket it belongs in.
 
         WHAT IT DOES: 
-          1. For each line, asks the LLM: "Which category?"
-          2. Groups lines by category.
-          3. Writes category files.
+        1. For each line, asks the LLM: "Which category?"
+        2. Groups lines by category.
+        3. Writes category files.
 
-        ANALOGY: This is a *librarian who has read every book*. Instead of sorting by 
-                 title (alphabetical), they sort by genre because they understand the content.
+        ANALOGY: This is a *librarian who has read every book*. Instead of sorting by title (alphabetical), they sort by genre because they understand the content.
         """
         # Validate Ollama is running before processing 1000 lines.
         if not self.llm.is_alive():
@@ -128,9 +123,9 @@ class TextSorter:
             )
             try:
                 category = self.llm.generate(prompt).lower().strip()
-                    # WHY .strip('.")? The LLM might return 'technology.' or '"sports"'.
-                    category = category.strip('.,;:"\\\'')
-                if category not in buckets:
+                # WHY .strip('.")? The LLM might return 'technology.' or '"sports"'.
+                category = category.strip('.,;:"\\\'')
+                if category not in [c.lower() for c in self.categories]:
                     category = "other"
                 buckets[category].append(line)
             except Exception as e:

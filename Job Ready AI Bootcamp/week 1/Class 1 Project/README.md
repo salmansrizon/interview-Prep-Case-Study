@@ -154,11 +154,3 @@ python main.py
 | `ModuleNotFoundError` | Ensure your virtual environment is activated. |
 | `Empty output files` | Check that `data/raw/*.txt` has non-empty lines. |
 
----
-
-## Learning Checklist
-- [ ] I can explain the difference between an AI Engineer and an ML Engineer.
-- [ ] I have created a `venv` and installed packages via `requirements.txt`.
-- [ ] I have pulled and run a model locally using Ollama.
-- [ ] I understand why `src/` is organized into `llm_client`, `text_sorter`, and `utils`.
-- [ ] I can trace the flow from `main.py` → `TextSorter` → `OllamaClient` → Ollama server.

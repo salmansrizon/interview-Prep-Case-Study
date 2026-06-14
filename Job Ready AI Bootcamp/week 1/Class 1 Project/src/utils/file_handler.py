@@ -38,8 +38,7 @@ def ensure_dir(directory: str) -> None:
 
     WHY exist_ok=True? Prevents crash if the folder already exists.
     WHAT IT DOES: Guarantees the output path is ready before we write.
-    ANALOGY: Like checking that a folder exists in your filing cabinet before
-             dropping documents into it.
+    ANALOGY: Like checking that a folder exists in your filing cabinet before dropping documents into it.
     """
     Path(directory).mkdir(parents=True, exist_ok=True)
 
