@@ -1,0 +1,5 @@
+{"id": 1, "text": "Python is great for AI", "status": "active", "timestamp": "2024-01-15T10:00:00Z", "confidence": 0.9187}
+{"id": 9, "text": "Computer vision systems detect objects in real-time video streams", "status": "active", "timestamp": "2024-01-15T10:40:00Z", "confidence": 0.7839}
+{"id": 4, "text": "Machine learning transforms industries by finding patterns in massive datasets", "status": "active", "timestamp": "2024-01-15T10:15:00Z", "confidence": 0.9365}
+{"id": 7, "text": "Natural language processing enables machines to understand human context and sentiment", "status": "pending", "timestamp": "2024-01-15T10:30:00Z", "confidence": 0.9401}
+{"id": 10, "text": "Reinforcement learning trains agents through trial and error in simulated environments", "status": "active", "timestamp": "2024-01-15T10:45:00Z", "confidence": 0.968}

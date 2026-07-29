@@ -1,12 +1,3 @@
-"""
-main.py
--------
-Motive: Single entry point for the data parsing project.
-WHAT IT DOES: Creates sample raw data if missing, runs the parser, prints a summary.
-ANALOGY: The *start button* on a washing machine. You press it; the machine handles
-         fill, wash, rinse, spin in the correct order.
-"""
-
 import json
 import os
 from src.parser import DataParser

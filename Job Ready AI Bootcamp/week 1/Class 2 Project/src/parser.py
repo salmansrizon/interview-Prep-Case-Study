@@ -76,7 +76,7 @@ class DataParser:
         Writes cleaned records to the output directory.
 
         WHY json.dumps with ensure_ascii=False? Preserves non-English characters
-        (Chinese, Arabic, emoji) instead of escaping them to \uXXXX codes.
+        (Chinese, Arabic, emoji) instead of escaping them to \\uXXXX codes.
         """
         clean_dir = Path(self.parser_config["output"]["clean_dir"])
         clean_dir.mkdir(parents=True, exist_ok=True)

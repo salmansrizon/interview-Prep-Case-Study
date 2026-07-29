@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Ready AI Engineering Bootcamp — Course Intro</title>
+<style>
+  :root{
+    --bg:#f5f7fc; --bg2:#eef2fb;
+    --ink:#141a2e; --muted:#5b6a82; --line:#e3e8f4;
+    --card:#ffffff;
+    --acc:#4f46e5;   /* indigo */
+    --acc2:#0ea5b7;  /* teal   */
+    --acc3:#a855f7;  /* violet */
+    --warn:#f59e0b; --pink:#ec4899; --gold:#f5b301;
+    --lab:#4f46e5; --track:#0ea5b7;
+    --shadow:0 12px 34px -12px rgba(46,54,120,.28);
+    --shadow-hi:0 22px 50px -14px rgba(46,54,120,.40);
+    --font:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font); overflow:hidden;
+  }
+  /* animated background blobs */
+  .blob{position:fixed; border-radius:50%; filter:blur(60px); opacity:.5; z-index:0; pointer-events:none;}
+  .b1{width:46vw;height:46vw;background:radial-gradient(circle,#c7d2fe,transparent 70%);top:-14vw;right:-10vw;animation:float1 16s ease-in-out infinite;}
+  .b2{width:40vw;height:40vw;background:radial-gradient(circle,#bbf2ef,transparent 70%);bottom:-16vw;left:-12vw;animation:float2 20s ease-in-out infinite;}
+  .b3{width:30vw;height:30vw;background:radial-gradient(circle,#f0d5ff,transparent 70%);top:40vh;left:55vw;animation:float1 24s ease-in-out infinite reverse;}
+  @keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-4vw,4vh) scale(1.08)}}
+  @keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(5vw,-3vh) scale(1.12)}}
+
+  #stage{position:relative; width:100vw; height:100vh; z-index:1;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    padding:5vh 6vw 9vh; flex-direction:column;
+  }
+  .slide.active{display:flex;}
+
+  h1{font-size:clamp(28px,3.7vw,54px); line-height:1.07; letter-spacing:-.7px; font-weight:800;}
+  h2{font-size:clamp(18px,2vw,26px); font-weight:600; color:var(--muted);}
+  .kicker{font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--acc); font-weight:800;}
+  .grad{background:linear-gradient(100deg,var(--acc),var(--acc2) 55%,var(--acc3));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .sub{color:var(--muted); font-size:clamp(15px,1.5vw,22px);}
+  .footline{position:absolute; left:6vw; right:6vw; bottom:4.4vh; text-align:center;
+    color:var(--acc); font-weight:700; font-size:clamp(14px,1.5vw,21px);
+    border-top:1px solid var(--line); padding-top:2.3vh;}
+
+  .grid{display:grid; gap:2vh 2vw;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:2.4vh 1.8vw; box-shadow:var(--shadow);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s, border-color .28s;}
+  .card:hover{transform:translateY(-7px); box-shadow:var(--shadow-hi); border-color:#cdd6f0;}
+  .card h3{font-size:clamp(16px,1.7vw,25px); margin-bottom:.5em; font-weight:700;}
+  .card ul{list-style:none; color:var(--muted); font-size:clamp(13px,1.25vw,19px); line-height:1.85;}
+  .badge{display:inline-block; padding:.3em .85em; border-radius:999px; font-size:12.5px; font-weight:800;
+    background:#eef1fe; color:var(--acc);}
+  .center{align-items:center; justify-content:center; text-align:center;}
+
+  .pillrow{display:flex; flex-wrap:wrap; gap:10px;}
+  .pill{background:#fff; border:1px solid var(--line); border-radius:11px; padding:.5em 1em;
+    font-size:clamp(12px,1.15vw,17px); color:var(--ink); font-weight:600; box-shadow:0 3px 10px -6px rgba(46,54,120,.3);
+    transition:transform .2s, border-color .2s;}
+  .pill:hover{transform:translateY(-3px); border-color:var(--acc);}
+  .emoji{font-size:clamp(30px,3vw,46px); display:inline-block; transition:transform .3s;}
+  .card:hover .emoji{transform:scale(1.18) rotate(-6deg);}
+
+  .timeline{display:grid; grid-template-columns:repeat(5,1fr); gap:1.3vw; align-items:stretch;}
+  .step .n{width:48px;height:48px;border-radius:50%; display:flex;align-items:center;justify-content:center;
+    font-weight:800; font-size:20px; background:linear-gradient(135deg,var(--acc),var(--acc2)); color:#fff; margin-bottom:10px;
+    box-shadow:0 8px 18px -6px rgba(79,70,229,.6);}
+
+  /* motion: staggered reveal for children marked .rise */
+  .slide.active .rise{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes rise{from{opacity:0; transform:translateY(26px)} to{opacity:1; transform:none}}
+  .slide.active .pop{animation:pop .55s cubic-bezier(.34,1.56,.64,1) both;}
+  @keyframes pop{from{opacity:0; transform:scale(.85)} to{opacity:1; transform:scale(1)}}
+
+  /* progress + nav */
+  #bar{position:fixed; top:0; left:0; height:4px; z-index:50;
+    background:linear-gradient(90deg,var(--acc),var(--acc2),var(--acc3)); transition:width .35s ease;}
+  #nav{position:fixed; bottom:16px; right:22px; display:flex; gap:10px; align-items:center; z-index:50;}
+  #nav button{background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:11px;
+    width:42px; height:38px; font-size:18px; cursor:pointer; box-shadow:var(--shadow); transition:transform .15s, border-color .2s;}
+  #nav button:hover{border-color:var(--acc); transform:translateY(-2px);}
+  #count{color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; min-width:54px; text-align:center; font-weight:700;}
+  #dots{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:50;}
+  #dots i{width:8px;height:8px;border-radius:50%;background:#c4cde4;cursor:pointer;transition:all .25s;}
+  #dots i.on{width:26px;border-radius:6px;background:linear-gradient(90deg,var(--acc),var(--acc2));}
+  .snum{position:absolute; top:3.4vh; right:6vw; color:#9aa6c2; font-size:12px; letter-spacing:2px; font-weight:700;}
+  a.cta{text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div id="bar"></div>
+<div id="stage">
+
+  <!-- SLIDE 1 -->
+  <section class="slide center">
+    <div class="snum"></div>
+    <div class="kicker rise">Job Ready · 5 Months · Cohort-Based</div>
+    <h1 class="rise" style="font-size:clamp(38px,5.6vw,86px); margin:2vh 0 1vh;">Job Ready <span class="grad">AI Engineering</span><br>Bootcamp</h1>
+    <p class="sub rise" style="font-size:clamp(18px,2vw,30px);">Build production-grade AI systems. Not just notebooks.</p>
+    <div class="pillrow center rise" style="justify-content:center; margin:4vh 0 1vh;">
+      <span class="pill">40 Live Classes</span><span class="pill">16 Projects</span>
+      <span class="pill">5 Months</span><span class="pill">40 Support Classes</span>
+    </div>
+    <p class="sub rise" style="margin-top:2vh;">From Python syntax → Docker deployment → Job-ready portfolio</p>
+  </section>
+
+  <!-- SLIDE 2 — Instructor intro -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Your Instructor</div>
+    <h1 class="rise" style="margin:.5vh 0 2.5vh;">Meet <span class="grad">Salman Sakib</span></h1>
+    <div class="grid" style="grid-template-columns:1fr 1.25fr; flex:1; align-content:center;">
+      <div class="card rise" style="display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:clamp(22px,2.4vw,34px);font-weight:800;">Salman Sakib</div>
+        <div style="color:var(--acc);font-weight:700;font-size:clamp(15px,1.5vw,22px);margin:.3em 0;">Manager, Data &amp; BI</div>
+        <div class="sub" style="font-size:clamp(14px,1.4vw,20px);">U S Bangla Group</div>
+        <div class="pillrow" style="margin-top:1.4vh;">
+          <span class="pill">Analytics</span><span class="pill">BI</span>
+          <span class="pill">Data Engineering</span><span class="pill">Machine Learning</span>
+        </div>
+      </div>
+      <div class="card rise" style="display:flex;flex-direction:column;justify-content:center;">
+        <p style="font-size:clamp(15px,1.6vw,24px);line-height:1.5;">
+          <span style="color:var(--acc);font-size:1.6em;font-weight:800;">7+ years</span>
+          transforming complex data into <span class="grad" style="font-weight:700">actionable insights</span> —
+          specializing in data-driven business growth through data analysis and data engineering.</p>
+        <div style="margin-top:2vh;">
+          <div class="kicker" style="color:var(--acc2);margin-bottom:.8vh;">📈 Helped To Grow</div>
+          <div class="pillrow">
+            <span class="pill">Daraz</span><span class="pill">foodi</span>
+            <span class="pill">wagely</span><span class="pill">উপায়</span><span class="pill">+ more</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="footline">Data Driven · Business Focused · Impact Oriented — building scalable solutions that deliver results</p>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">The Landscape</div>
+    <h1 class="grad rise" style="margin:.5vh 0 3vh;">The AI Talent Gap</h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1;">
+      <div class="card rise" style="border-top:4px solid var(--lab)">
+        <span class="badge">Lab · Research</span>
+        <h3 style="margin-top:.6em;">ML Engineer</h3>
+        <ul><li>• Trains models from scratch</li><li>• PyTorch, JAX, Kubeflow</li>
+          <li>• Hyperparameter tuning</li><li>• Data pipelines</li><li>• Research focus</li></ul>
+      </div>
+      <div class="card rise" style="border-top:4px solid var(--track)">
+        <span class="badge" style="background:#e4faf8;color:var(--acc2)">Track · Product</span>
+        <h3 style="margin-top:.6em;">AI Engineer <span style="color:var(--acc2);font-size:.7em">← You are here</span></h3>
+        <ul><li>• Ships products with models</li><li>• LangChain, Ollama, FastAPI</li>
+          <li>• Prompts, RAG, Agents</li><li>• API orchestration</li><li>• Product focus</li></ul>
+      </div>
+    </div>
+    <p class="footline">~87% of ML models never reach production — we train the engineers who ship them</p>
+  </section>
+
+  <!-- SLIDE 4 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Audience</div>
+    <h1 class="grad rise" style="margin:.5vh 0 3vh;">Who Is This Course For?</h1>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr); flex:1; align-content:center;">
+      <div class="card center rise"><div class="emoji">💻</div><h3>Software Developers</h3><p class="sub" style="font-size:15px">Pivot to AI without a PhD</p></div>
+      <div class="card center rise"><div class="emoji">📊</div><h3>Data Analysts</h3><p class="sub" style="font-size:15px">From dashboards to AI tools</p></div>
+      <div class="card center rise"><div class="emoji">🎓</div><h3>CS Students</h3><p class="sub" style="font-size:15px">Industry-standard project experience</p></div>
+      <div class="card center rise"><div class="emoji">🏢</div><h3>Tech Professionals</h3><p class="sub" style="font-size:15px">Sovereign AI for enterprise</p></div>
+      <div class="card center rise"><div class="emoji">🚀</div><h3>AI Enthusiasts</h3><p class="sub" style="font-size:15px">Real-world use cases</p></div>
+    </div>
+    <p class="footline">Prerequisites: a for-loop + basic probability + an 8GB RAM laptop</p>
+  </section>
+
+  <!-- SLIDE 5 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">The Journey</div>
+    <h1 class="grad rise" style="margin:.5vh 0 3vh;">The 5-Month Learning Arc</h1>
+    <div class="timeline" style="flex:1; grid-template-columns:repeat(3,1fr); align-content:center;">
+      <div class="card step rise"><div class="n">1</div><span class="badge">Month 1</span><h3 style="margin:.5em 0 .2em">Foundations</h3><p class="sub" style="font-size:15px">Data · Python · Stats</p></div>
+      <div class="card step rise"><div class="n">2</div><span class="badge">Month 2</span><h3 style="margin:.5em 0 .2em">ML &amp; DL</h3><p class="sub" style="font-size:15px">Predict · Classify · See</p></div>
+      <div class="card step rise"><div class="n">3</div><span class="badge">Month 3</span><h3 style="margin:.5em 0 .2em">Gen AI</h3><p class="sub" style="font-size:15px">LLMs · RAG · Vision</p></div>
+      <div class="card step rise"><div class="n">4</div><span class="badge">Month 4</span><h3 style="margin:.5em 0 .2em">Agentic + MLOps</h3><p class="sub" style="font-size:15px">Agents · Deploy · Scale</p></div>
+      <div class="card step rise"><div class="n">5</div><span class="badge">Month 5</span><h3 style="margin:.5em 0 .2em">Capstone</h3><p class="sub" style="font-size:15px">Ship · Demo · Hired</p></div>
+    </div>
+    <p class="footline">Learn → Build → Debug → Ship &nbsp;·&nbsp; Every concept has a project. Every project ships to GitHub.</p>
+  </section>
+
+  <!-- SLIDE 6 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Month 1 · "The Math of Meaning"</div>
+    <h1 class="rise" style="margin:.5vh 0 3vh;">Foundations of <span class="grad">Data &amp; Logic</span></h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1;">
+      <div class="card rise"><span class="badge">Week 1</span><h3 style="margin:.5em 0">Python + Ollama</h3><p class="sub" style="font-size:15px">🛠 Local LLM Text Sorter</p></div>
+      <div class="card rise"><span class="badge">Week 2</span><h3 style="margin:.5em 0">NumPy + Pandas</h3><p class="sub" style="font-size:15px">🛠 Similarity Engine · Data Audit</p></div>
+      <div class="card rise"><span class="badge">Week 3</span><h3 style="margin:.5em 0">Matplotlib + Stats</h3><p class="sub" style="font-size:15px">🛠 Data Storyboard · Confidence Scores</p></div>
+      <div class="card rise"><span class="badge">Week 4</span><h3 style="margin:.5em 0">Hypothesis Testing</h3><p class="sub" style="font-size:15px">🛠 A/B Test Analyzer · Insight Report</p></div>
+    </div>
+    <p class="footline">By end of Month 1: you run AI locally and speak the language of data</p>
+  </section>
+
+  <!-- SLIDE 7 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Month 2 · "Teaching Machines to Learn"</div>
+    <h1 class="rise" style="margin:.5vh 0 3vh;">Machine Learning &amp; <span class="grad">Deep Learning</span></h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr 1fr; flex:1; align-content:center;">
+      <div class="card rise"><h3>🏠 House Price Predictor</h3><p class="sub" style="font-size:15px">Regression</p></div>
+      <div class="card rise"><h3>🏦 Loan Approval Predictor</h3><p class="sub" style="font-size:15px">Classification</p></div>
+      <div class="card rise"><h3>📧 Offline Spam Classifier</h3><p class="sub" style="font-size:15px">NLP + ML</p></div>
+      <div class="card rise"><h3>👥 Customer Segmentation</h3><p class="sub" style="font-size:15px">Clustering</p></div>
+      <div class="card rise"><h3>🧠 Neural Network from Scratch</h3><p class="sub" style="font-size:15px">Backprop by hand</p></div>
+      <div class="card rise"><h3>🔢 MNIST Digit Classifier</h3><p class="sub" style="font-size:15px">&gt;98% accuracy</p></div>
+    </div>
+    <p class="footline">By end of Month 2: you build models that predict, classify, and see</p>
+  </section>
+
+  <!-- SLIDE 8 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Month 3 · "The Era of Generative AI"</div>
+    <h1 class="rise" style="margin:.5vh 0 3vh;">NLP, Vision &amp; <span class="grad">Generative AI</span></h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1;">
+      <div class="card rise"><h3>📷 Computer Vision</h3><ul><li>Document Scanner</li><li>🛡 Privacy Shield</li><li class="sub">OpenCV + YOLO</li></ul></div>
+      <div class="card rise"><h3>🔤 NLP + Transformers</h3><ul><li>Keyword Matcher</li><li>💬 Sentiment Analyzer</li><li class="sub">BERT + HuggingFace</li></ul></div>
+      <div class="card rise"><h3>✍ Prompt Engineering</h3><ul><li>Brand Content Generator</li><li>📄 Resume → JSON Converter</li><li class="sub">Chain-of-Thought</li></ul></div>
+      <div class="card rise"><h3>📚 RAG Pipelines</h3><ul><li>PDF Q&amp;A Bot</li><li>🔍 Semantic Search</li><li class="sub">ChromaDB + LLM</li></ul></div>
+    </div>
+    <p class="footline">By end of Month 3: AI that reads docs, sees images, answers from private data</p>
+  </section>
+
+  <!-- SLIDE 9 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Month 4 · "AI That Thinks, Acts, and Ships"</div>
+    <h1 class="rise" style="margin:.5vh 0 3vh;">Agentic AI &amp; <span class="grad">Production MLOps</span></h1>
+    <div class="grid" style="grid-template-columns:1.3fr 1fr; flex:1;">
+      <div class="card rise center" style="justify-content:center;">
+        <div class="pillrow center" style="justify-content:center; gap:14px;">
+          <span class="pill">🧠 Reason</span><span class="pill">🛠 Act</span>
+          <span class="pill">👁 Observe</span><span class="pill">🔄 Repeat</span>
+        </div>
+        <p class="sub" style="margin-top:3vh;">The agent loop — the core pattern behind autonomous AI systems</p>
+      </div>
+      <div class="card rise"><h3>This Month</h3><ul>
+        <li>• Tool Calling + ReAct</li><li>• Multi-Agent (LangGraph)</li>
+        <li>• FastAPI Serving</li><li>• Docker + Cloud</li>
+        <li>• Financial Research AI</li><li>• Healthcare RAG</li></ul></div>
+    </div>
+    <p class="footline">By end of Month 4: you ship AI systems that think autonomously</p>
+  </section>
+
+  <!-- SLIDE 10 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Month 5 · "From Student to AI Engineer"</div>
+    <h1 class="rise" style="margin:.5vh 0 2.5vh;">Capstone + <span class="grad">Job Readiness</span></h1>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:2vh;">
+      <div class="card center rise"><div class="emoji">🏗</div><h3>Capstone Build</h3><p class="sub" style="font-size:15px">Real-world problem · End-to-end solution</p></div>
+      <div class="card center rise"><div class="emoji">🎤</div><h3>Demo Day</h3><p class="sub" style="font-size:15px">Present to mentors · Get feedback</p></div>
+      <div class="card center rise"><div class="emoji">💼</div><h3>Career Launch</h3><p class="sub" style="font-size:15px">Resume · LinkedIn · Interview prep</p></div>
+    </div>
+    <div class="card rise" style="flex:1;">
+      <h3>🎓 What You Leave With</h3>
+      <ul style="columns:2; font-size:clamp(14px,1.4vw,20px); color:var(--ink); line-height:2;">
+        <li>✅ 16 production-ready GitHub projects</li>
+        <li>✅ 1 end-to-end capstone with live deployment</li>
+        <li>✅ Polished AI Engineer resume</li>
+        <li>✅ Optimized LinkedIn profile</li>
+        <li>✅ Interview strategy + portfolio website</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 11 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Portfolio</div>
+    <h1 class="grad rise" style="margin:.5vh 0 .8vh;">The 16 Projects</h1>
+    <p class="sub rise" style="margin-bottom:2.5vh;">Every project is GitHub-worthy and resume-ready</p>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr); flex:1; gap:1.4vh 1.4vw;">
+      <div class="card rise"><span class="badge">#1</span><h3 style="font-size:18px;margin-top:.4em">Local LLM Sorter</h3></div>
+      <div class="card rise"><span class="badge">#2</span><h3 style="font-size:18px;margin-top:.4em">Data Parser</h3></div>
+      <div class="card rise"><span class="badge">#3</span><h3 style="font-size:18px;margin-top:.4em">Similarity Engine</h3></div>
+      <div class="card rise"><span class="badge">#4</span><h3 style="font-size:18px;margin-top:.4em">Data Storyboard</h3></div>
+      <div class="card rise"><span class="badge">#5</span><h3 style="font-size:18px;margin-top:.4em">A/B Test Analyzer</h3></div>
+      <div class="card rise"><span class="badge">#6</span><h3 style="font-size:18px;margin-top:.4em">House Price Predictor</h3></div>
+      <div class="card rise"><span class="badge">#7</span><h3 style="font-size:18px;margin-top:.4em">Loan Approval</h3></div>
+      <div class="card rise"><span class="badge">#8</span><h3 style="font-size:18px;margin-top:.4em">Spam Classifier</h3></div>
+      <div class="card rise"><span class="badge">#9</span><h3 style="font-size:18px;margin-top:.4em">Customer Segments</h3></div>
+      <div class="card rise"><span class="badge">#10</span><h3 style="font-size:18px;margin-top:.4em">Neural Net Scratch</h3></div>
+      <div class="card rise"><span class="badge">#11</span><h3 style="font-size:18px;margin-top:.4em">MNIST Classifier</h3></div>
+      <div class="card rise"><span class="badge">#12</span><h3 style="font-size:18px;margin-top:.4em">Document Scanner</h3></div>
+      <div class="card rise"><span class="badge">#13</span><h3 style="font-size:18px;margin-top:.4em">Privacy Shield</h3></div>
+      <div class="card rise"><span class="badge">#14</span><h3 style="font-size:18px;margin-top:.4em">Content Generator</h3></div>
+      <div class="card rise"><span class="badge">#15</span><h3 style="font-size:18px;margin-top:.4em">PDF Q&amp;A Bot</h3></div>
+      <div class="card rise"><span class="badge">#16</span><h3 style="font-size:18px;margin-top:.4em">Financial Agent</h3></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Toolbox</div>
+    <h1 class="grad rise" style="margin:.5vh 0 3vh;">Tools &amp; Tech Stack</h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1;">
+      <div class="card rise"><h3>Core Python &amp; Data</h3><div class="pillrow" style="margin-top:.6em">
+        <span class="pill">Python</span><span class="pill">NumPy</span><span class="pill">Pandas</span><span class="pill">Matplotlib</span>
+        <span class="pill">Seaborn</span><span class="pill">Scikit-Learn</span><span class="pill">TensorFlow</span></div></div>
+      <div class="card rise"><h3>Generative AI &amp; LLMs</h3><div class="pillrow" style="margin-top:.6em">
+        <span class="pill">Ollama</span><span class="pill">OpenAI API</span><span class="pill">HuggingFace</span>
+        <span class="pill">LangChain</span><span class="pill">LangGraph</span><span class="pill">CrewAI</span></div></div>
+      <div class="card rise"><h3>Vector &amp; Storage</h3><div class="pillrow" style="margin-top:.6em">
+        <span class="pill">ChromaDB</span><span class="pill">Pinecone</span><span class="pill">FAISS</span>
+        <span class="pill">JSON</span><span class="pill">YAML</span></div></div>
+      <div class="card rise"><h3>Production &amp; Deploy</h3><div class="pillrow" style="margin-top:.6em">
+        <span class="pill">FastAPI</span><span class="pill">Docker</span><span class="pill">REST APIs</span>
+        <span class="pill">Langfuse</span><span class="pill">Git</span><span class="pill">VS Code</span></div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Differentiator</div>
+    <h1 class="rise" style="margin:.5vh 0 3vh;">Sovereign AI: <span class="grad">Local-First, Privacy-First</span></h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1; align-content:center;">
+      <div class="card center rise"><div class="emoji">🔒</div><h3>Local LLMs</h3><p class="sub" style="font-size:15px">Run models on your machine. No API costs. No data leaks.</p></div>
+      <div class="card center rise"><div class="emoji">💻</div><h3>Your Laptop</h3><p class="sub" style="font-size:15px">Everything runs on 8GB RAM</p></div>
+      <div class="card center rise"><div class="emoji">📁</div><h3>Private RAG</h3><p class="sub" style="font-size:15px">Query sensitive docs without cloud APIs.</p></div>
+      <div class="card center rise"><div class="emoji">🌐</div><h3>Offline Agents</h3><p class="sub" style="font-size:15px">Build AI that works without internet.</p></div>
+    </div>
+    <p class="footline">An AI Engineer who builds private systems is worth 2x more</p>
+  </section>
+
+  <!-- SLIDE 14 -->
+  <section class="slide">
+    <div class="snum"></div>
+    <div class="kicker rise">Support</div>
+    <h1 class="grad rise" style="margin:.5vh 0 3vh;">Course Format &amp; Support</h1>
+    <div class="grid" style="grid-template-columns:1fr 1fr; flex:1; align-content:center;">
+      <div class="card rise"><h3>🔴 40 Live Classes</h3>
+        <ul style="margin-top:.5em"><li>2 per week · 1.5 hours each</li>
+          <li>Core instruction + live coding</li><li>Build along with the instructor</li></ul></div>
+      <div class="card rise"><h3>🛠 40 Support Sessions</h3>
+        <ul style="margin-top:.5em"><li>2 per week · Flexible timing</li>
+          <li>Debug sessions</li><li>Environment setup help</li><li>Assignment walkthroughs</li></ul></div>
+    </div>
+    <p class="footline">Total: 64 Sessions over 5 Months · No one left behind</p>
+  </section>
+
+  <!-- SLIDE 15 -->
+  <section class="slide center">
+    <div class="snum"></div>
+    <div class="kicker rise">Your Move</div>
+    <h1 class="rise" style="font-size:clamp(38px,5.6vw,82px); margin:2vh 0 2vh;">Ready to <span class="grad">Build the Future?</span></h1>
+    <div class="pillrow center rise" style="justify-content:center; gap:16px; margin:1vh 0 2vh;">
+      <a class="cta pill pulse" style="font-size:clamp(16px,1.8vw,24px); background:linear-gradient(135deg,var(--acc),var(--acc2)); color:#fff; font-weight:800; border:none; padding:.75em 1.7em;">🚀 Enroll Now</a>
+      <a class="cta pill" style="padding:.75em 1.4em;">📅 Free Info Session</a>
+      <a class="cta pill" style="padding:.75em 1.4em;">💬 Talk to Advisor</a>
+    </div>
+    <p class="sub rise">Next cohort starts soon · Limited seats</p>
+  </section>
+
+</div>
+
+<div id="dots"></div>
+<div id="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <span id="count">1 / 15</span>
+  <button id="next" aria-label="Next">›</button>
+</div>
+
+<style>
+  .pulse{animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,.45)}50%{box-shadow:0 0 0 14px rgba(79,70,229,0)}}
+  /* stagger reveal children */
+  .slide.active .rise:nth-child(1){animation-delay:.02s}
+  .slide.active .rise:nth-child(2){animation-delay:.10s}
+  .slide.active .rise:nth-child(3){animation-delay:.18s}
+  .slide.active .rise:nth-child(4){animation-delay:.26s}
+  .slide.active .rise:nth-child(5){animation-delay:.34s}
+  .slide.active .grid .rise:nth-child(1){animation-delay:.14s}
+  .slide.active .grid .rise:nth-child(2){animation-delay:.22s}
+  .slide.active .grid .rise:nth-child(3){animation-delay:.30s}
+  .slide.active .grid .rise:nth-child(4){animation-delay:.38s}
+  .slide.active .grid .rise:nth-child(5){animation-delay:.46s}
+  .slide.active .grid .rise:nth-child(6){animation-delay:.54s}
+  .slide.active .grid .rise:nth-child(n+7){animation-delay:.60s}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  const dots=document.getElementById('dots');
+  const pad=n=>String(n).padStart(2,'0');
+  slides.forEach((s,k)=>{
+    const el=s.querySelector('.snum'); if(el)el.textContent=pad(k+1)+' / '+pad(slides.length);
+    const d=document.createElement('i'); d.onclick=()=>show(k); dots.appendChild(d);
+  });
+  const dotEls=[...dots.children];
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    // retrigger entrance animations
+    const cur=slides[i];
+    cur.querySelectorAll('.rise,.pop').forEach(e=>{e.style.animation='none'; void e.offsetWidth; e.style.animation='';});
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.textContent=(i+1)+' / '+slides.length;
+    dotEls.forEach((d,k)=>d.classList.toggle('on',k===i));
+  }
+  document.getElementById('next').onclick=()=>show(i+1);
+  document.getElementById('prev').onclick=()=>show(i-1);
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();show(i+1);}
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();show(i-1);}
+    if(e.key==='Home')show(0); if(e.key==='End')show(slides.length-1);
+    if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+  });
+  // swipe support
+  let sx=0; addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50)show(i+(dx<0?1:-1));},{passive:true});
+  show(0);
+</script>
+</body>
+</html>
