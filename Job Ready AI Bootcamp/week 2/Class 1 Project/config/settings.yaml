@@ -15,6 +15,7 @@ audit:
   cleaning:
     # Missing value thresholds
     drop_column_if_missing_pct: 0.50    # Drop column if >50% missing
+    drop_duplicates: true               # Remove exact duplicate rows
     impute_numeric: "median"            # mean | median | mode
     impute_categorical: "mode"          # mode | constant
     impute_constant: "UNKNOWN"           # Used if impute_categorical = constant
@@ -38,10 +39,16 @@ audit:
 
     # Standardization
     standardize_text: true              # Lowercase, strip whitespace
-    standardize_categories:              # Map inconsistent labels
+    preserve_case_columns:              # Join keys — never lowercase these
+      - customer_id
+    standardize_categories:              # Map inconsistent labels (matched case-insensitively)
       "USA": "United States"
       "US": "United States"
       "U.S.": "United States"
+      "UNITED STATES": "United States"
       "UK": "United Kingdom"
       "U.K.": "United Kingdom"
       "GB": "United Kingdom"
+      "Canada": "Canada"
+      "Germany": "Germany"
+      "France": "France"

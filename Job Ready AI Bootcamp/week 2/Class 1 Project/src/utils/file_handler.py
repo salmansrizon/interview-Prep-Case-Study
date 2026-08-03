@@ -8,9 +8,32 @@ ANALOGY: The warehouse manager. Handles loading/unloading so workers focus on th
 """
 
 import json
+import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+
+def _json_default(obj: Any) -> Any:
+    """
+    Converts NumPy/pandas scalars into plain Python types.
+
+    WHY? pandas aggregations return np.int64/np.float64, which json.dump
+    rejects. Without this, every audit report write crashes.
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, (pd.Timestamp, pd.Period)):
+        return str(obj)
+    if obj is pd.NaT:
+        return None
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 
 def read_csv(file_path: str, **kwargs) -> pd.DataFrame:
@@ -52,4 +75,4 @@ def write_json_report(data: Dict[str, Any], file_path: str) -> None:
     """Writes an audit report as formatted JSON."""
     Path(file_path).parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(data, f, indent=2, ensure_ascii=False, default=_json_default)

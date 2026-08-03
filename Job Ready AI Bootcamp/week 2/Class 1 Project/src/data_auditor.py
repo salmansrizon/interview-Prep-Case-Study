@@ -118,12 +118,17 @@ class DataAuditor:
 
         WHAT IT DOES:
           1. Drops columns with excessive missing values
-          2. Imputes missing values (numeric: median, categorical: mode)
-          3. Handles outliers (cap or remove)
-          4. Standardizes text and categorical labels
-          5. Enforces data types
+          2. Drops duplicate rows
+          3. Standardizes text and categorical labels
+          4. Enforces data types
+          5. Handles outliers (cap or remove)
+          6. Imputes missing values (numeric: median, categorical: mode)
 
         RETURNS: Cleaned DataFrame.
+
+        WHY THIS ORDER? Standardization and dtype enforcement both CREATE
+        missing values ("not_a_date" -> NaT, "maybe" -> NA). Imputing first
+        would leave those holes unfilled, so imputation runs last.
 
         ANALOGY: The treatment plan after diagnosis. The doctor prescribes
                  medicine (imputation), surgery (drop columns), and lifestyle
@@ -140,17 +145,37 @@ class DataAuditor:
             df = df.drop(columns=cols_to_drop)
             self._log_action("drop_columns", f"Dropped {len(cols_to_drop)} columns with >{threshold*100:.0f}% missing", cols_to_drop)
 
-        # Step 2: Impute missing values
-        df = self._impute_missing(df, cleaning_cfg)
+        # Step 2: Drop duplicate rows
+        df = self._drop_duplicates(df, cleaning_cfg)
 
-        # Step 3: Handle outliers
-        df = self._handle_outliers(df, cleaning_cfg)
-
-        # Step 4: Standardize text and categories
+        # Step 3: Standardize text and categories
         df = self._standardize_data(df, cleaning_cfg)
 
-        # Step 5: Enforce data types
+        # Step 4: Enforce data types
         df = self._enforce_dtypes(df, cleaning_cfg)
+
+        # Step 5: Handle outliers
+        df = self._handle_outliers(df, cleaning_cfg)
+
+        # Step 6: Impute missing values (last — earlier steps create NaN)
+        df = self._impute_missing(df, cleaning_cfg)
+
+        return df
+
+    def _drop_duplicates(self, df: pd.DataFrame, cfg: Dict[str, Any]) -> pd.DataFrame:
+        """
+        Removes exact duplicate rows.
+
+        WHY? Duplicates inflate group counts and bias every aggregate —
+        a customer counted twice looks twice as valuable as they are.
+        """
+        if not cfg.get("drop_duplicates", True):
+            return df
+
+        n_dupes = df.duplicated().sum()
+        if n_dupes:
+            df = df.drop_duplicates().reset_index(drop=True)
+            self._log_action("drop_duplicates", f"Dropped {n_dupes} duplicate rows", [])
 
         return df
 
@@ -162,7 +187,13 @@ class DataAuditor:
 
         for col in df.columns:
             if df[col].isnull().any():
-                if pd.api.types.is_numeric_dtype(df[col]):
+                # Booleans report as numeric, but a median of 0.0 is not a
+                # valid boolean — mode is the only sane fill for them.
+                is_numeric = (
+                    pd.api.types.is_numeric_dtype(df[col])
+                    and not pd.api.types.is_bool_dtype(df[col])
+                )
+                if is_numeric:
                     if numeric_strategy == "median":
                         fill_val = df[col].median()
                     elif numeric_strategy == "mean":
@@ -195,7 +226,8 @@ class DataAuditor:
             if method == "iqr":
                 q1, q3 = df[col].quantile(0.25), df[col].quantile(0.75)
                 iqr = q3 - q1
-                lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+                multiplier = cfg.get("outlier_iqr_multiplier", 1.5)
+                lower, upper = q1 - multiplier * iqr, q3 + multiplier * iqr
             elif method == "zscore":
                 mean, std = df[col].mean(), df[col].std()
                 threshold = cfg.get("outlier_zscore_threshold", 3.0)
@@ -204,6 +236,10 @@ class DataAuditor:
                 continue
 
             if action == "cap":
+                # Integer columns reject float bounds ("Invalid value '114.5'
+                # for dtype 'Int64'"), so round the fence to whole numbers.
+                if pd.api.types.is_integer_dtype(df[col]):
+                    lower, upper = np.floor(lower), np.ceil(upper)
                 df[col] = df[col].clip(lower, upper)
                 self._log_action("cap_outliers", f"Capped {col} to [{lower:.2f}, {upper:.2f}]", [col])
             elif action == "remove":
@@ -215,18 +251,48 @@ class DataAuditor:
         return df
 
     def _standardize_data(self, df: pd.DataFrame, cfg: Dict[str, Any]) -> pd.DataFrame:
-        """Standardize text and categorical labels."""
+        """
+        Standardize text and categorical labels.
+
+        WHY lowercase the map keys? Text standardization runs first, so by the
+        time we map labels every value is already lowercase — a map keyed on
+        "USA" would never match "usa" and silently do nothing.
+        """
+        # Case-insensitive lookup: "  USA " and "usa" both resolve to one key.
+        cat_map = {
+            str(k).strip().lower(): v
+            for k, v in cfg.get("standardize_categories", {}).items()
+        }
+
+        # Identifiers must keep their original casing — lowercasing them
+        # silently breaks every join key downstream.
+        protected = set(cfg.get("preserve_case_columns", []))
+
         if cfg.get("standardize_text", False):
             for col in df.select_dtypes(include=["object", "string"]):
-                df[col] = df[col].astype(str).str.strip().str.lower()
+                if col in protected:
+                    continue
+                # .where() preserves real NaN — astype(str) alone turns them
+                # into the literal string "nan", which imputation can't see.
+                cleaned = df[col].astype(str).str.strip().str.lower()
+                cleaned = cleaned.replace({"": None, "nan": None, "none": None})
+                df[col] = cleaned.where(df[col].notna())
 
-        # Standardize category mappings
-        cat_map = cfg.get("standardize_categories", {})
         for col in df.columns:
-            if df[col].dtype == "object" or pd.api.types.is_categorical_dtype(df[col]):
-                df[col] = df[col].replace(cat_map)
-                if df[col].isin(list(cat_map.values())).any():
-                    self._log_action("standardize", f"Standardized categories in {col}", [col])
+            if col in protected:
+                continue
+            if df[col].dtype == "object" or isinstance(df[col].dtype, pd.CategoricalDtype):
+                normalized = df[col].map(
+                    lambda v: cat_map.get(str(v).strip().lower(), v) if pd.notna(v) else v
+                )
+                remapped = (normalized != df[col]) & df[col].notna()
+                if remapped.any():
+                    self._log_action(
+                        "standardize",
+                        f"Standardized {remapped.sum()} labels in {col}",
+                        [col],
+                    )
+                df[col] = normalized
 
         return df
 
@@ -237,11 +303,18 @@ class DataAuditor:
             if col in df.columns:
                 try:
                     if dtype == "datetime64[ns]":
-                        df[col] = pd.to_datetime(df[col], errors="coerce")
+                        df[col] = pd.to_datetime(df[col], errors="coerce", format="mixed")
                     elif dtype == "category":
                         df[col] = df[col].astype("category")
                     elif dtype == "boolean":
-                        df[col] = df[col].map({True: True, False: False, "true": True, "false": False, "1": True, "0": False})
+                        df[col] = df[col].map(self._to_boolean).astype("boolean")
+                    elif dtype in ("Int64", "int64"):
+                        # WHY to_numeric first? The column arrives as object
+                        # (floats + NaN), and a direct .astype("Int64") raises
+                        # "cannot safely cast non-equivalent object to int64".
+                        df[col] = pd.to_numeric(df[col], errors="coerce").round().astype("Int64")
+                    elif dtype in ("Float64", "float64"):
+                        df[col] = pd.to_numeric(df[col], errors="coerce").astype(dtype)
                     else:
                         df[col] = df[col].astype(dtype)
                     self._log_action("dtype", f"Converted {col} to {dtype}", [col])
@@ -249,6 +322,26 @@ class DataAuditor:
                     print(f"[WARN] Could not convert {col} to {dtype}: {e}")
 
         return df
+
+    @staticmethod
+    def _to_boolean(value: Any) -> Optional[bool]:
+        """
+        Maps the many spellings of true/false onto real booleans.
+
+        WHY? Source systems export booleans as "yes", "1", "TRUE", or True.
+        Anything unrecognized becomes NA so imputation can fill it later.
+        """
+        if isinstance(value, (bool, np.bool_)):
+            return bool(value)
+        if pd.isna(value):
+            return pd.NA
+
+        token = str(value).strip().lower()
+        if token in {"true", "1", "yes", "y", "t"}:
+            return True
+        if token in {"false", "0", "no", "n", "f"}:
+            return False
+        return pd.NA
 
     def _log_action(self, action: str, description: str, columns: List[str]) -> None:
         """Record every cleaning action for the audit trail."""

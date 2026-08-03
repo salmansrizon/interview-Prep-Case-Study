@@ -108,8 +108,10 @@ def main():
     print("=" * 70)
 
     # Load config
+    # WHY ["audit"]? Every rule lives under the top-level `audit:` key,
+    # and DataAuditor expects `cleaning` at the root of what it receives.
     with open("config/settings.yaml", "r") as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f)["audit"]
 
     # ============================================================
     # PART 1: CREATE AND INSPECT DIRTY DATA
