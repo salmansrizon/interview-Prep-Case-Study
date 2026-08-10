@@ -1,0 +1,16 @@
+neural networks learn patterns from training data
+deep learning models need gpu memory to train
+gpu memory limits how large a model can be
+transformers use attention to weigh every token
+attention is a scaled dot product between queries and keys
+the cat sat quietly on the warm mat
+dogs and cats are popular household pets
+my cat refuses to share the mat with the dog
+numpy arrays store numbers in contiguous memory
+vectorized numpy code runs at c speed without python loops
+a python loop over a million elements is painfully slow
+matrix multiplication powers every layer of a neural network
+cosine similarity compares the direction of two vectors
+embeddings turn text into vectors of numbers
+broadcasting adds a bias vector to a whole batch at once
+training a large model needs a lot of data and patience

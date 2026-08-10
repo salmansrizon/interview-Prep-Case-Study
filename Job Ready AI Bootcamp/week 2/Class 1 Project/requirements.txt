@@ -1,8 +1,21 @@
-# Week 2 Class 4 Dependencies
-# WHY pinned: Reproducibility across student machines.
+# Data Audit Pipeline — dependencies
+#
+# Install:  pip install -r requirements.txt
+# Needs:    Python 3.10+
+# Verified: Python 3.13.5 / pandas 3.0.5 / numpy 2.5.2 / PyYAML 6.0.3
+#
+# WHY floors (>=) and not exact pins? These three libraries keep their public
+# API stable across minor releases, so a floor lets your machine reuse what it
+# already has instead of downloading a second copy. Pin exactly only when a
+# release actually breaks you.
 
-pandas>=2.1.0           # Data manipulation and analysis (the Excel of Python)
-numpy>=1.26.0           # Numerical operations (Pandas is built on NumPy)
-pyyaml>=6.0.1           # Config file parsing
-python-dotenv>=1.0.0    # Environment variable management
-openpyxl>=3.1.0         # Excel file reading/writing (for enterprise data)
+# --- required by main.py ---
+pandas>=2.1.0           # DataFrames — the Excel of Python
+numpy>=1.26.0           # numerical backend that Pandas is built on
+pyyaml>=6.0.1           # reads config/settings.yaml
+
+# --- optional ---
+# Only needed if you call read_excel() in src/utils/file_handler.py or
+# src/data_loader.py. main.py never touches Excel, so you can delete this
+# line and the pipeline still runs.
+openpyxl>=3.1.0         # .xlsx read/write engine for Pandas

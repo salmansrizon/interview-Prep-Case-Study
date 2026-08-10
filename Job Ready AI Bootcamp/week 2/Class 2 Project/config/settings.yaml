@@ -1,47 +1,50 @@
-# Data Audit Configuration
+# Semantic Similarity Engine Configuration
 # WHY YAML? Human-readable, commentable, version-controllable.
+# Change behaviour here, never in the Python files.
 
-audit:
-  name: "data_audit_pipeline"
+engine:
+  name: "semantic_similarity_engine"
   version: "1.0.0"
 
-  # Input/Output paths
+  # Input/Output paths (relative to the project folder)
   paths:
     raw_dir: "data/raw"
-    clean_dir: "data/clean"
-    report_dir: "data/audit_reports"
+    vector_dir: "data/vectors"
+    report_dir: "data/reports"
+    corpus_file: "data/raw/corpus.txt"
 
-  # Data cleaning rules
-  cleaning:
-    # Missing value thresholds
-    drop_column_if_missing_pct: 0.50    # Drop column if >50% missing
-    impute_numeric: "median"            # mean | median | mode
-    impute_categorical: "mode"          # mode | constant
-    impute_constant: "UNKNOWN"           # Used if impute_categorical = constant
+  # ---- Embedding settings ----
+  embedding:
+    # WHY float32 and not float64? Half the memory, and no model needs
+    # 15 decimal digits of precision for a similarity score.
+    # Try "float64" and watch the memory report double.
+    dtype: "float32"
+    method: "hashing"       # hashing | bag_of_words
+    dimensions: 128         # hashing dimension (ignored by bag_of_words)
+    lowercase: true
+    seed: 42                # reproducibility — every student gets the same numbers
 
-    # Outlier detection
-    outlier_method: "iqr"               # iqr | zscore | none
-    outlier_iqr_multiplier: 1.5         # Standard IQR rule
-    outlier_zscore_threshold: 3.0       # Z-score threshold
-    outlier_action: "cap"               # cap | remove | flag
-    outlier_cap_lower: 0.01             # Lower percentile for capping
-    outlier_cap_upper: 0.99             # Upper percentile for capping
+  # ---- Similarity settings ----
+  similarity:
+    metric: "cosine"        # cosine | dot
+    normalize: true         # WHY? unit vectors make dot product == cosine
+    top_k: 3                # how many results a search returns
 
-    # Data type enforcement
-    dtype_mapping:
-      customer_id: "string"
-      age: "Int64"                      # Nullable integer
-      income: "Float64"                 # Nullable float
-      signup_date: "datetime64[ns]"
-      is_active: "boolean"
-      category: "category"
+  # ---- Attention demo settings ----
+  attention:
+    seq_len: 6
+    d_k: 16
+    causal_mask: true       # lower-triangular: a token cannot see the future
+    scale_by_sqrt_dk: true  # set false to watch softmax saturate
 
-    # Standardization
-    standardize_text: true              # Lowercase, strip whitespace
-    standardize_categories:              # Map inconsistent labels
-      "USA": "United States"
-      "US": "United States"
-      "U.S.": "United States"
-      "UK": "United Kingdom"
-      "U.K.": "United Kingdom"
-      "GB": "United Kingdom"
+  # ---- Benchmark settings ----
+  benchmark:
+    enabled: true
+    n_elements: 1000000     # for the loop-vs-vectorized race
+    n_docs: 20000           # synthetic corpus for the search benchmark
+    dimensions: 256
+
+  # ---- Skill check ----
+  skill_check:
+    enabled: true
+    strict: false           # true = exit code 1 if any check fails (for CI)

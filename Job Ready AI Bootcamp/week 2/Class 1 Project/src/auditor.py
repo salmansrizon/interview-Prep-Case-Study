@@ -45,8 +45,7 @@ class DataAuditor:
             "columns": {}
         }
 
-        print(f"
-Dataset Shape: {df.shape[0]} rows × {df.shape[1]} columns")
+        print(f"\nDataset Shape: {df.shape[0]} rows × {df.shape[1]} columns")
         print(f"Memory Usage: {report['memory_usage_mb']:.2f} MB")
 
         # Per-column analysis
@@ -118,13 +117,11 @@ Dataset Shape: {df.shape[0]} rows × {df.shape[1]} columns")
             })
 
         # Print summary
-        print(f"
-Issues Found: {len(self.issues)}")
+        print(f"\nIssues Found: {len(self.issues)}")
         for issue in self.issues:
             print(f"  ⚠ {issue['column']}: {issue['issue']} — {issue['details']}")
 
-        print("
-" + "=" * 60)
+        print("\n" + "=" * 60)
         return report
 
     def generate_health_score(self, df: pd.DataFrame) -> float:
@@ -177,8 +174,7 @@ Issues Found: {len(self.issues)}")
         score = (completeness * 0.4 + uniqueness * 0.2 +
                 validity * 0.2 + consistency * 0.2) * 100
 
-        print(f"
-📊 DATA HEALTH SCORE: {score:.1f}/100")
+        print(f"\n📊 DATA HEALTH SCORE: {score:.1f}/100")
         print(f"   Completeness:  {completeness*100:.1f}%")
         print(f"   Uniqueness:    {uniqueness*100:.1f}%")
         print(f"   Validity:      {validity*100:.1f}%")

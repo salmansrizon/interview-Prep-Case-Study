@@ -1,8 +1,14 @@
-# Week 2 Class 4 Dependencies
-# WHY pinned: Reproducibility across student machines.
+# Semantic Similarity Engine — dependencies
+#
+# Install:  pip install -r requirements.txt
+# Needs:    Python 3.10+
+# Verified: Python 3.13.5 / numpy 2.5.2 / PyYAML 6.0.3
+#
+# WHY so few? This project deliberately uses NO machine-learning library.
+# Every embedding, every similarity score, and the whole attention mechanism
+# are written in plain NumPy. That is the point of the class: PyTorch is a
+# GPU-accelerated NumPy with autograd bolted on, so if you can build it here
+# you can read it there.
 
-pandas>=2.1.0           # Data manipulation and analysis (the Excel of Python)
-numpy>=1.26.0           # Numerical operations (Pandas is built on NumPy)
-pyyaml>=6.0.1           # Config file parsing
-python-dotenv>=1.0.0    # Environment variable management
-openpyxl>=3.1.0         # Excel file reading/writing (for enterprise data)
+numpy>=1.26.0           # the entire numerical engine
+pyyaml>=6.0.1           # reads config/settings.yaml

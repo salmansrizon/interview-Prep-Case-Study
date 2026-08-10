@@ -8,11 +8,21 @@ ANALOGY: The quality control manager. Inspects raw materials, rejects defects,
          approves clean batches, and files compliance reports.
 """
 
+import sys
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
+import yaml
+
+# WHY THIS BLOCK? So `python main.py` works no matter which directory you
+# launch it from. PROJECT_ROOT is the folder holding this file; every path
+# below is built from it instead of from your shell's current directory.
+PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.data_auditor import DataAuditor
 from src.utils.file_handler import read_csv, write_csv, write_json_report
-import yaml
 
 
 def create_dirty_dataset() -> pd.DataFrame:
@@ -104,13 +114,13 @@ def create_secondary_dataset() -> pd.DataFrame:
 def main():
     print("=" * 70)
     print("DATA AUDIT PIPELINE")
-    print("Week 2, Class 4 — Data Orchestration with Pandas")
+    print("Week 2, Class 3 — Data Orchestration with Pandas")
     print("=" * 70)
 
     # Load config
     # WHY ["audit"]? Every rule lives under the top-level `audit:` key,
     # and DataAuditor expects `cleaning` at the root of what it receives.
-    with open("config/settings.yaml", "r") as f:
+    with open(PROJECT_ROOT / "config" / "settings.yaml", "r") as f:
         config = yaml.safe_load(f)["audit"]
 
     # ============================================================
@@ -148,7 +158,7 @@ def main():
             print(f"         - {col}: {', '.join(issues)}")
 
     # Save audit report
-    write_json_report(audit_report, "data/audit_reports/audit_raw.json")
+    write_json_report(audit_report, PROJECT_ROOT / "data" / "audit_reports" / "audit_raw.json")
     print("\n         ✓ Audit report saved to data/audit_reports/audit_raw.json")
 
     # ============================================================
@@ -166,7 +176,7 @@ def main():
     print(f"         Missing values after cleaning: {df_clean.isnull().sum().sum()}")
 
     # Save cleaned data
-    write_csv(df_clean, "data/clean/customers_clean.csv")
+    write_csv(df_clean, PROJECT_ROOT / "data" / "clean" / "customers_clean.csv")
     print("\n         ✓ Cleaned data saved to data/clean/customers_clean.csv")
 
     # ============================================================
@@ -217,7 +227,7 @@ def main():
     print(merged_left[sample_cols].head(5).to_string())
 
     # Save merged data
-    write_csv(merged_left, "data/clean/customers_merged.csv")
+    write_csv(merged_left, PROJECT_ROOT / "data" / "clean" / "customers_merged.csv")
     print("\n         ✓ Merged data saved to data/clean/customers_merged.csv")
 
     # ============================================================

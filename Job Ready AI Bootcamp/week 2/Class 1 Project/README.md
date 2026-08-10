@@ -1,5 +1,7 @@
 # Week 2 — Class 1 Project: Data Audit Pipeline (Pandas)
 
+> ✅ **যাচাই করা (verified):** এই pipeline সম্পূর্ণ চলে — Python 3.13, pandas 3.0.5, numpy 2.5.2-তে end-to-end টেস্ট করা। শেষে `Missing values after cleaning: 0` দেখালে সব ঠিক আছে।
+
 ## অর্জন (Achievement)
 একটা unclean dataset-এর উপর সম্পূর্ণ audit চালানো — missing value, outlier, inconsistent label আর ভুল dtype ধরা, তারপর সেগুলো স্বয়ংক্রিয়ভাবে পরিষ্কার করে একটা comprehensive cleaning report বানানো। যা যা ব্যবহার হবে:
 - DataFrame + Series (Pandas-এর মূল দুই container)
@@ -7,6 +9,20 @@
 - IQR / Z-score দিয়ে outlier detection
 - GroupBy (split-apply-combine), Merge (SQL join), Pivot table
 - Config-driven cleaning rule (`settings.yaml`)
+
+---
+
+## ⚡ TL;DR — ৩০ সেকেন্ডে চালু
+
+```bash
+cd "Class 1 Project"
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+শেষ লাইনে `AUDIT PIPELINE COMPLETE` দেখলেই কাজ শেষ। বিস্তারিত নিচে।
 
 ---
 
@@ -36,23 +52,27 @@
 ```
 Class 1 Project/
 ├── README.md                     # আপনি এখানে আছেন
-├── requirements.txt              # Pinned dependencies
+├── requirements.txt              # Dependencies
 ├── config/
 │   └── settings.yaml             # Audit rule, threshold, dtype mapping
 ├── src/
 │   ├── __init__.py               # Package marker
-│   ├── data_auditor.py           # মূল ক্লাস: audit + clean + report
+│   ├── data_auditor.py           # ⭐ মূল ক্লাস: audit + clean + report
 │   └── utils/
 │       ├── __init__.py
-│       └── file_handler.py       # CSV/Excel/JSON I/O
+│       └── file_handler.py       # ⭐ CSV/Excel/JSON I/O
 ├── data/
 │   ├── raw/                      # Input dataset
-│   ├── clean/                    # পরিষ্কার + merged output
-│   └── audit_reports/            # JSON audit report
-└── main.py                       # একটাই entry point
+│   ├── clean/                    # (auto-তৈরি) পরিষ্কার + merged output
+│   └── audit_reports/            # (auto-তৈরি) JSON audit report
+└── main.py                       # ⭐ একটাই entry point
 ```
 
-> `src/`-এ `auditor.py`, `data_loader.py`, `data_cleaner.py`, `feature_engineer.py`, `audit_reporter.py` নামে আরও কিছু file থাকতে পারে — সেগুলো এই pipeline ব্যবহার করে না। শুধু `data_auditor.py` আর `utils/file_handler.py` চলে।
+⭐ দেওয়া তিনটা file-ই pipeline চালায়। `src/`-এ `auditor.py`, `data_loader.py`, `data_cleaner.py`, `feature_engineer.py`, `audit_reporter.py`-ও আছে — এগুলো **reference material**, `main.py` এদের import করে না। পড়তে পারেন, কিন্তু বদলালে pipeline-এ কিছু হবে না।
+
+`data/clean/` আর `data/audit_reports/` folder দুটো git-এ না থাকলেও সমস্যা নেই — `file_handler.py` লেখার আগে নিজেই বানিয়ে নেয়।
+
+`data/raw/dirty_customers.csv` file-টা একটা bonus sample। **`main.py` এটা পড়ে না** — সে `create_dirty_dataset()` দিয়ে নিজের data বানায়, যাতে প্রত্যেক student একই সংখ্যা পায় (`np.random.seed(42)`)।
 
 ---
 
@@ -96,18 +116,44 @@ flowchart TD
 
 ## ধাপে ধাপে নির্দেশনা
 
+### Step 0: আগে যা লাগবে
+
+| দরকার | কীভাবে চেক করবেন | কত হওয়া চাই |
+|---|---|---|
+| Python | `python3 --version` | **3.10 বা তার বেশি** (3.13-তে পরীক্ষিত) |
+| pip | `python3 -m pip --version` | যেকোনো সাম্প্রতিক version |
+
+**⚠️ `python` না `python3`?** macOS/Linux-এ প্রায়ই `python` command-টাই থাকে না। এই README-তে venv বানানোর সময় `python3` লেখা হয়েছে। **venv activate করার পর** `python` লিখলেই চলবে — তখন সেটা venv-এর ভেতরের Python-কেই বোঝায়। Windows-এ সাধারণত সব জায়গায় `python` কাজ করে।
+
+---
+
 ### Step 1: Virtual Environment তৈরি করুন
 
 ```bash
-cd "Class 1 Project"
-python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-# অথবা
-.venv\Scripts\activate         # Windows
+cd "Class 1 Project"          # ⚠️ folder নামে space আছে — quote রাখুন
+python3 -m venv .venv
+```
+
+তারপর activate:
+
+```bash
+source .venv/bin/activate     # macOS / Linux
+.venv\Scripts\activate        # Windows (PowerShell / CMD)
+```
+
+Activate হলে prompt-এর শুরুতে `(.venv)` দেখাবে। এবার dependency:
+
+```bash
 pip install -r requirements.txt
 ```
 
-**উপমা:** রান্নার আগে workbench পরিষ্কার করা। এঁটো বাসনে কেউ রাঁধে না।
+যাচাই করুন:
+
+```bash
+python -c "import pandas, numpy, yaml; print(pandas.__version__, numpy.__version__)"
+```
+
+**উপমা:** রান্নার আগে workbench পরিষ্কার করা। এঁটো বাসনে কেউ রাঁধে না। venv ছাড়া install করলে আপনার global Python-এ অন্য প্রজেক্টের version ভেঙে যেতে পারে।
 
 ---
 
@@ -143,11 +189,18 @@ config = yaml.safe_load(f)               # ❌ cleaning rule কখনো পা
 python main.py
 ```
 
-Venv আগে থেকে থাকলে activate না করেও:
+Venv activate না করেও সরাসরি চালাতে পারেন:
 
 ```bash
-.venv/bin/python main.py          # macOS/Linux
+.venv/bin/python main.py        # macOS/Linux
 .venv\Scripts\python main.py    # Windows
+```
+
+**📁 কোন folder থেকে চালাবেন?** যেকোনো folder থেকে। `main.py` নিজের অবস্থান দেখে সব path বানায় (`PROJECT_ROOT = Path(__file__).resolve().parent`), তাই নিচের দুটোই সমান কাজ করে:
+
+```bash
+cd "Class 1 Project" && python main.py
+python "Class 1 Project/main.py"        # week 2 folder থেকে
 ```
 
 **যে output আসার কথা (সংক্ষেপে):**
@@ -161,6 +214,7 @@ Venv আগে থেকে থাকলে activate না করেও:
          - Duplicate rows: 10
          - age: 7.62% missing, 3 outliers
          - income: 13.33% missing, 3 outliers
+         - purchase_amount: 7.62% missing, 17 outliers
 
 [PART 3] Applying automated cleaning...
          - drop_duplicates: Dropped 10 duplicate rows
@@ -173,9 +227,25 @@ Venv আগে থেকে থাকলে activate না করেও:
 
 [PART 5] Merging with secondary dataset...
          Inner merge result: (150, 12)
+         Left merge result: (200, 12)
+
+======================================================================
+AUDIT PIPELINE COMPLETE
+======================================================================
+✓ Cleaning actions: 18
 ```
 
-দুটো সংখ্যা মিলিয়ে দেখুন: **`Missing values after cleaning: 0`** আর **`Inner merge result: (150, 12)`**। এই দুটো ঠিক থাকলে pipeline সুস্থ।
+### ✅ Self-check — এই ৫টা সংখ্যা মিলিয়ে নিন
+
+| যা দেখাবে | সঠিক মান |
+|---|---|
+| Raw shape | `(210, 8)` |
+| Cleaned shape | `(200, 8)` |
+| `Missing values after cleaning` | `0` |
+| `Inner merge result` | `(150, 12)` |
+| `Cleaning actions` | `18` |
+
+সব মিললে আপনার environment একদম ঠিক। **সংখ্যা প্রতিবার একই আসে** কারণ `np.random.seed(42)` বসানো আছে — মিল না হলে সত্যিই কিছু ভেঙেছে, নিচের Troubleshooting দেখুন।
 
 ---
 
@@ -187,7 +257,16 @@ head -3 data/clean/customers_clean.csv     # চিকিৎসার পর
 head -3 data/clean/customers_merged.csv    # জোড়া লাগানো data
 ```
 
+Windows PowerShell-এ:
+
+```powershell
+Get-Content data\audit_reports\audit_raw.json
+Get-Content data\clean\customers_clean.csv -TotalCount 3
+```
+
 **তিনটা file কেন?** Audit report হলো "আগের ছবি", clean CSV হলো "পরের ছবি"। দুটো পাশাপাশি না থাকলে আপনি প্রমাণ করতে পারবেন না যে cleaning সত্যিই কাজ করেছে।
+
+**আবার চালালে?** File তিনটা নীরবে overwrite হয়। নতুন করে শুরু করতে চাইলে `data/clean/` আর `data/audit_reports/` মুছে দিন — pipeline আবার বানিয়ে নেবে।
 
 ---
 
@@ -273,16 +352,39 @@ json.dump(data, f, indent=2, default=_json_default)
 
 ## Troubleshooting
 
+### Setup-এর সমস্যা
+
+| সমস্যা | কারণ ও সমাধান |
+|-------|----------|
+| `command not found: python` | `python3` লিখুন। অথবা venv activate করুন — তারপর `python` কাজ করবে |
+| `No module named venv` (Linux) | `sudo apt install python3-venv` |
+| `ModuleNotFoundError: No module named 'yaml'` | Dependency install হয়নি বা ভুল Python চলছে। venv activate করে `pip install -r requirements.txt` |
+| `ModuleNotFoundError: pandas` | একই — venv activate আছে কিনা দেখুন (`prompt`-এ `(.venv)` আছে?) |
+| `cd: too many arguments` | Folder নামে space আছে। `cd "Class 1 Project"` — quote দিন |
+| `No such file or directory: 'config/settings.yaml'` | পুরোনো `main.py` চলছে। বর্তমান version যেকোনো folder থেকে চলে; `main.py`-তে `PROJECT_ROOT` আছে কিনা দেখুন |
+| PowerShell-এ activate আটকে যায় | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` চালিয়ে আবার চেষ্টা করুন |
+
+### Pipeline-এর সমস্যা
+
 | সমস্যা | সমাধান |
 |-------|----------|
-| `ModuleNotFoundError: pandas` | `pip install -r requirements.txt` চালান |
 | `TypeError: Object of type int64 is not JSON serializable` | `file_handler.py`-তে `json.dump(..., default=_json_default)` আছে কিনা দেখুন |
 | Cleaning log-এ শুধু `impute` দেখাচ্ছে, cap/dtype নেই | `main.py`-তে `yaml.safe_load(f)["audit"]` লেখা আছে কিনা দেখুন — `["audit"]` বাদ পড়লে সব rule নীরবে বন্ধ |
 | `Inner merge result: (0, 12)` | Join key case বদলে গেছে। `settings.yaml`-এ `preserve_case_columns`-এ `customer_id` আছে কিনা দেখুন |
 | `Missing values after cleaning` ০-এর বেশি | `clean()`-এ impute শেষ ধাপে আছে কিনা দেখুন। Standardize/dtype নতুন NaN বানায় |
 | `Invalid value '114.5' for dtype 'Int64'` | Integer column-এ float bound দিয়ে clip হচ্ছে — bound-এ `floor`/`ceil` দিন |
 | `[WARN] Could not convert age to Int64` | Column object dtype। আগে `pd.to_numeric(errors="coerce")`, তারপর `.astype("Int64")` |
+| সংখ্যা README-র সাথে মিলছে না | `create_dirty_dataset()`-এ `np.random.seed(42)` আছে কিনা দেখুন |
 | `MemoryError` | `create_dirty_dataset()`-এ `n` কমান (default 200) |
+| `SyntaxError` in `src/auditor.py` বা `src/audit_reporter.py` | ওগুলো pipeline চালায় না। git থেকে file দুটো আবার নিন |
+
+### সব ভেঙে গেলে — reset
+
+```bash
+rm -rf .venv data/clean data/audit_reports        # Windows: rmdir /s .venv
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && python main.py
+```
 
 ---
 

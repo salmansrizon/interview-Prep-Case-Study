@@ -50,19 +50,12 @@ class AuditReporter:
 
         for col in cleaned_df.columns:
             if pd.api.types.is_numeric_dtype(cleaned_df[col]):
-                report += f"
-### {col}
-"
-                report += f"- Type: {cleaned_df[col].dtype}
-"
-                report += f"- Min: {cleaned_df[col].min():.2f}
-"
-                report += f"- Max: {cleaned_df[col].max():.2f}
-"
-                report += f"- Mean: {cleaned_df[col].mean():.2f}
-"
-                report += f"- Missing: {cleaned_df[col].isnull().sum()}
-"
+                report += f"\n### {col}\n"
+                report += f"- Type: {cleaned_df[col].dtype}\n"
+                report += f"- Min: {cleaned_df[col].min():.2f}\n"
+                report += f"- Max: {cleaned_df[col].max():.2f}\n"
+                report += f"- Mean: {cleaned_df[col].mean():.2f}\n"
+                report += f"- Missing: {cleaned_df[col].isnull().sum()}\n"
 
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(report)
