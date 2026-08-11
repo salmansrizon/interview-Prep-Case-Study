@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Ready AI Engineering Bootcamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2E8FF6; --blue2:#1E6FE0; --royal:#3B5BDB; --indigo:#4C3BE0;
+  --violet:#7C3AED; --purple:#8B2FC9;
+  --grad:linear-gradient(135deg,#2E8FF6 0%,#3B5BDB 52%,#7C3AED 100%);
+  --grad-soft:linear-gradient(135deg,#5AA7FF 0%,#6B6BE8 55%,#9B5CE0 100%);
+  --ink:#0F1B33; --ink2:#334155; --muted:#64748B; --faint:#94A3B8;
+  --bg:#F4F6FB; --panel:#FFFFFF; --line:#E5EAF3;
+  --shadow:0 18px 50px -20px rgba(42,72,150,.35);
+  --shadow-sm:0 8px 24px -12px rgba(42,72,150,.30);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(1200px 800px at 12% -10%,#EAF1FF 0%,transparent 55%),
+             radial-gradient(1000px 700px at 108% 115%,#F1EAFF 0%,transparent 55%),
+             var(--bg);
+  overflow:hidden;
+}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.slide{
+  position:absolute;width:min(94vw,1240px);height:min(90vh,720px);
+  background:var(--panel);border:1px solid var(--line);border-radius:28px;
+  box-shadow:var(--shadow);padding:56px 64px;overflow:hidden;
+  opacity:0;transform:translateY(24px) scale(.985);pointer-events:none;
+  transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1);
+}
+.slide.active{opacity:1;transform:none;pointer-events:auto}
+.slide.prev{transform:translateY(-24px) scale(.985)}
+.eyebrow{font-family:'Sora';font-weight:700;font-size:13px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--blue2);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:26px;height:3px;border-radius:2px;background:var(--grad)}
+h1,h2{font-family:'Sora';font-weight:800;line-height:1.05;letter-spacing:-.02em;color:var(--ink)}
+.slide h2{font-size:clamp(30px,3.4vw,46px);margin-top:14px}
+.sub{font-family:'Sora';font-weight:600;color:var(--royal);font-size:clamp(16px,1.7vw,24px);margin-top:6px}
+.foot{position:absolute;left:64px;right:64px;bottom:30px;display:flex;align-items:center;gap:12px;
+  color:var(--ink2);font-weight:600;font-size:clamp(13px,1.35vw,18px)}
+.foot .dot{width:8px;height:8px;border-radius:50%;background:var(--grad);flex:none;box-shadow:0 0 0 5px rgba(59,91,219,.12)}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* reveal */
+.r{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+.slide.active .r{opacity:1;transform:none}
+.slide.active .r{transition-delay:calc(var(--i,0)*90ms + 120ms)}
+
+/* chrome */
+.hud{position:fixed;z-index:50;left:0;right:0;bottom:22px;display:flex;justify-content:center;gap:16px;align-items:center}
+.nav{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:100px;padding:8px 10px;box-shadow:var(--shadow-sm)}
+.nav button{border:none;background:var(--grad);color:#fff;width:38px;height:38px;border-radius:50%;
+  font-size:17px;cursor:pointer;display:grid;place-items:center;transition:transform .2s,filter .2s}
+.nav button:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.nav button:disabled{opacity:.35;cursor:default;filter:grayscale(.3)}
+.counter{font-family:'Sora';font-weight:700;font-size:14px;color:var(--ink2);min-width:58px;text-align:center;letter-spacing:.04em}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--grad);z-index:60;width:0;transition:width .45s ease;
+  border-radius:0 4px 4px 0;box-shadow:0 0 14px rgba(76,59,224,.5)}
+.dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:9px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#CBD5E1;cursor:pointer;transition:all .3s;display:block}
+.dots i.on{background:var(--grad);height:24px;border-radius:6px}
+.hint{position:fixed;left:20px;bottom:26px;z-index:50;font-size:12px;color:var(--faint);font-weight:600;letter-spacing:.03em}
+
+/* generic building blocks */
+.pill{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:100px;
+  background:#EEF3FF;color:var(--royal);font-weight:700;font-size:14px;border:1px solid #DCE6FF}
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:8px 15px;border-radius:12px;
+  font-family:'Sora';font-weight:600;font-size:15px;color:#fff;background:var(--grad-soft);
+  box-shadow:var(--shadow-sm);white-space:nowrap}
+.badge{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:26px;color:#fff;
+  background:var(--grad);box-shadow:var(--shadow-sm);flex:none}
+.badge.round{border-radius:50%}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-sm);padding:22px}
+.num{font-family:'Sora';font-weight:800;font-size:15px;color:#fff;background:var(--grad);
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none}
+.hl{background:var(--grad);color:#fff;border-radius:16px;padding:16px 22px;font-family:'Sora';font-weight:700;
+  display:inline-flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.muted{color:var(--muted)}
+.small{font-size:13.5px;line-height:1.5;color:var(--muted)}
+
+/* ===== S1 hero ===== */
+.hero{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative}
+.hero>*{position:relative;z-index:2}
+.hero h1{font-size:clamp(44px,6.2vw,84px);line-height:1.02}
+.orb{position:absolute;border-radius:50%;filter:blur(6px);opacity:.5;z-index:0}
+.orb.a{width:150px;height:150px;background:radial-gradient(circle at 30% 30%,#7FB6FF,#2E8FF6);left:-3%;top:-2%;animation:float 7s ease-in-out infinite}
+.orb.b{width:230px;height:230px;background:radial-gradient(circle at 30% 30%,#9B7BF0,#7C3AED);right:-5%;bottom:-8%;animation:float 9s ease-in-out infinite reverse}
+.orb.c{width:90px;height:90px;background:radial-gradient(circle at 30% 30%,#8AC0FF,#3B5BDB);right:2%;top:2%;animation:float 6s ease-in-out infinite}
+.orb.d{width:80px;height:80px;background:radial-gradient(circle at 30% 30%,#B49CF5,#8B2FC9);left:4%;bottom:2%;animation:float 8s ease-in-out infinite reverse}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+.hero .statbar{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 20px;box-shadow:var(--shadow-sm);
+  font-family:'Sora';font-weight:700;color:var(--ink);font-size:clamp(15px,1.6vw,20px)}
+.stat b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:1.15em}
+.hero .flow{margin-top:22px;color:var(--muted);font-weight:600;font-size:clamp(13px,1.5vw,18px)}
+
+/* layout helpers used across slides */
+.row{display:flex;gap:20px}
+.between{justify-content:space-between}
+.center{align-items:center}
+.wrap{flex-wrap:wrap}
+.col{display:flex;flex-direction:column}
+.head-block{margin-bottom:26px}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="dots" id="dots"></div>
+<div class="stage" id="stage">
+
+<!-- ===================== SLIDE 1 ===================== -->
+<section class="slide" data-i="1">
+  <div class="hero">
+    <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="orb d"></div>
+    <div class="pill r" style="--i:0">5-Month Cohort · Live + Support</div>
+    <h1 class="r" style="--i:1;margin-top:18px">Job Ready <span class="grad-text">AI Engineering</span><br>Bootcamp</h1>
+    <p class="r" style="--i:2;font-family:'Sora';font-weight:600;font-size:clamp(18px,2vw,28px);color:var(--ink2);margin-top:16px">Build production-grade AI systems. Not just notebooks.</p>
+    <div class="statbar">
+      <div class="stat r" style="--i:3"><b>40</b> Live Classes</div>
+      <div class="stat r" style="--i:4"><b>16</b> Projects</div>
+      <div class="stat r" style="--i:5"><b>5</b> Months</div>
+      <div class="stat r" style="--i:6"><b>40</b> Support Classes</div>
+    </div>
+    <div class="flow r" style="--i:7">From Python syntax → Docker deployment → Job-ready portfolio</div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE 2 ===================== -->
+<section class="slide" data-i="2">
+  <div class="head-block">
+    <div class="eyebrow r">The Opportunity</div>
+    <h2 class="r" style="--i:1">The AI Talent Gap</h2>
+  </div>
+  <div class="row" style="gap:26px;height:58%">
+    <div class="card r" style="--i:2;flex:1;display:flex;flex-direction:column;border-top:5px solid var(--blue)">
+      <div class="row center between">
+        <div><div style="font-family:'Sora';font-weight:800;font-size:26px">AI Engineer</div>
+        <span class="pill" style="margin-top:8px">Track</span></div>
+        <div class="badge round">⚙️</div>
+      </div>
+      <ul style="margin-top:16px;list-style:none;display:grid;gap:9px;color:var(--ink2);font-weight:600;font-size:16px">
+        <li>▹ Ships products with models</li>
+        <li>▹ LangChain, Ollama, FastAPI</li>
+        <li>▹ Prompts, RAG, Agents</li>
+        <li>▹ API orchestration</li>
+        <li>▹ Product focus</li>
+      </ul>
+    </div>
+    <div class="card r" style="--i:3;flex:1;display:flex;flex-direction:column;border-top:5px solid var(--purple)">
+      <div class="row center between">
+        <div><div style="font-family:'Sora';font-weight:800;font-size:26px">ML Engineer</div>
+        <span class="pill" style="margin-top:8px;background:#F3EDFF;color:var(--purple);border-color:#E7D9FF">Lab</span></div>
+        <div class="badge round" style="background:linear-gradient(135deg,#7C3AED,#8B2FC9)">🔬</div>
+      </div>
+      <ul style="margin-top:16px;list-style:none;display:grid;gap:9px;color:var(--ink2);font-weight:600;font-size:16px">
+        <li>▹ Trains models from scratch</li>
+        <li>▹ PyTorch, JAX, Kubeflow</li>
+        <li>▹ Hyperparameter tuning</li>
+        <li>▹ Data pipelines</li>
+        <li>▹ Research focus</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot r" style="--i:4"><span class="dot"></span>
+    <span><b class="grad-text" style="font-family:Sora">~87%</b> of ML models never reach production — <b>AI Engineer</b> is the 2026 demand.</span></div>
+</section>
+
+<!-- ===================== SLIDE 3 ===================== -->
+<section class="slide" data-i="3">
+  <div class="head-block">
+    <div class="eyebrow r">Audience</div>
+    <h2 class="r" style="--i:1">Who Is This Course For?</h2>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:18px;height:56%">
+    <div class="card r" style="--i:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="badge round" style="font-size:30px">💻</div>
+      <div style="font-family:Sora;font-weight:700;font-size:18px">Software Developers</div>
+      <div class="small">Pivot to AI without a PhD</div>
+    </div>
+    <div class="card r" style="--i:3;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="badge round" style="font-size:30px">📊</div>
+      <div style="font-family:Sora;font-weight:700;font-size:18px">Data Analysts</div>
+      <div class="small">From dashboards to AI tools</div>
+    </div>
+    <div class="card r" style="--i:4;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="badge round" style="font-size:30px">🎓</div>
+      <div style="font-family:Sora;font-weight:700;font-size:18px">CS Students</div>
+      <div class="small">Industry-standard project experience</div>
+    </div>
+    <div class="card r" style="--i:5;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="badge round" style="font-size:30px">🏢</div>
+      <div style="font-family:Sora;font-weight:700;font-size:18px">Tech Professionals</div>
+      <div class="small">Sovereign AI for enterprise</div>
+    </div>
+    <div class="card r" style="--i:6;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="badge round" style="font-size:30px">🚀</div>
+      <div style="font-family:Sora;font-weight:700;font-size:18px">AI Enthusiasts</div>
+      <div class="small">Real-world use cases</div>
+    </div>
+  </div>
+  <div class="foot r" style="--i:7"><span class="dot"></span>
+    <span>Prerequisites: <b>for-loop</b> + <b>basic probability</b> + <b>8GB RAM laptop</b></span></div>
+</section>
+
+<!-- ===================== SLIDE 4 ===================== -->
+<section class="slide" data-i="4">
+  <div class="head-block">
+    <div class="eyebrow r">Roadmap</div>
+    <h2 class="r" style="--i:1">The 5-Month Learning Arc</h2>
+  </div>
+  <div class="row" style="gap:14px;align-items:stretch;height:50%">
+    <div class="arc r" style="--i:2"><div class="num">1</div><div class="lbl">Month 1</div><div class="tt">Foundations</div><div class="dd">Data · Python · Stats</div></div>
+    <div class="arc r" style="--i:3"><div class="num">2</div><div class="lbl">Month 2</div><div class="tt">ML &amp; DL</div><div class="dd">Predict · Classify · See</div></div>
+    <div class="arc r" style="--i:4"><div class="num">3</div><div class="lbl">Month 3</div><div class="tt">Gen AI</div><div class="dd">LLMs · RAG · Vision</div></div>
+    <div class="arc r" style="--i:5"><div class="num">4</div><div class="lbl">Month 4</div><div class="tt">Agentic + MLOps</div><div class="dd">Agents · Deploy · Scale</div></div>
+    <div class="arc r" style="--i:6"><div class="num">5</div><div class="lbl">Month 5</div><div class="tt">Capstone</div><div class="dd">Ship · Demo · Hired</div></div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:26px">
+    <div class="hl r" style="--i:7">Learn → Build → Debug → Ship</div>
+  </div>
+  <div class="foot r" style="--i:8"><span class="dot"></span>
+    <span>Every concept has a project. Every project ships to GitHub.</span></div>
+</section>
+<style>
+.arc{flex:1;background:var(--grad);color:#fff;border-radius:20px;padding:20px 16px;position:relative;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.arc:nth-child(2){background:linear-gradient(135deg,#2E8FF6,#3567DE)}
+.arc:nth-child(3){background:linear-gradient(135deg,#3567DE,#4C4BD8)}
+.arc:nth-child(4){background:linear-gradient(135deg,#4C4BD8,#6B3EDB)}
+.arc:nth-child(5){background:linear-gradient(135deg,#6B3EDB,#7C3AED)}
+.arc:nth-child(6){background:linear-gradient(135deg,#7C3AED,#8B2FC9)}
+.arc .num{background:rgba(255,255,255,.22);box-shadow:none}
+.arc .lbl{font-family:Inter;font-weight:700;font-size:13px;opacity:.85;letter-spacing:.05em;text-transform:uppercase}
+.arc .tt{font-family:Sora;font-weight:800;font-size:20px;line-height:1.1}
+.arc .dd{font-size:13px;opacity:.9;margin-top:auto;font-weight:500}
+</style>
+
+<!-- ===================== SLIDE 5 ===================== -->
+<section class="slide" data-i="5">
+  <div class="head-block">
+    <div class="eyebrow r">Month 1</div>
+    <h2 class="r" style="--i:1">Foundations of Data &amp; Logic</h2>
+    <div class="sub r" style="--i:2">“The Math of Meaning”</div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:16px;height:52%">
+    <div class="wk r" style="--i:3"><span class="wtag">Week 1</span><div class="wt">Python + Ollama</div><div class="wp">🛠 Local LLM Text Sorter</div></div>
+    <div class="wk r" style="--i:4"><span class="wtag">Week 2</span><div class="wt">NumPy + Pandas</div><div class="wp">🛠 Similarity Engine · Data Audit</div></div>
+    <div class="wk r" style="--i:5"><span class="wtag">Week 3</span><div class="wt">Matplotlib + Stats</div><div class="wp">🛠 Data Storyboard · Confidence Scores</div></div>
+    <div class="wk r" style="--i:6"><span class="wtag">Week 4</span><div class="wt">Hypothesis Testing</div><div class="wp">🛠 A/B Test Analyzer · Insight Report</div></div>
+  </div>
+  <div class="foot r" style="--i:7"><span class="dot"></span>
+    <span>By end of Month 1: You run AI locally and speak the language of data.</span></div>
+</section>
+<style>
+.wk{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.wk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--grad)}
+.wtag{align-self:flex-start;font-family:Sora;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  color:#fff;background:var(--grad);padding:5px 12px;border-radius:8px}
+.wt{font-family:Sora;font-weight:800;font-size:19px;color:var(--ink)}
+.wp{margin-top:auto;font-size:14px;font-weight:600;color:var(--royal);background:#EEF3FF;border-radius:12px;padding:11px 13px;line-height:1.35}
+</style>
+
+<!-- ===================== SLIDE 6 ===================== -->
+<section class="slide" data-i="6">
+  <div class="head-block">
+    <div class="eyebrow r">Month 2</div>
+    <h2 class="r" style="--i:1">Machine Learning &amp; Deep Learning</h2>
+    <div class="sub r" style="--i:2">“Teaching Machines to Learn”</div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px;height:52%">
+    <div class="proj r" style="--i:3"><span class="pi">🏠</span><div><b>House Price Predictor</b><span>Regression</span></div></div>
+    <div class="proj r" style="--i:4"><span class="pi">🏦</span><div><b>Loan Approval Predictor</b><span>Classification</span></div></div>
+    <div class="proj r" style="--i:5"><span class="pi">📧</span><div><b>Offline Spam Classifier</b><span>NLP + ML</span></div></div>
+    <div class="proj r" style="--i:6"><span class="pi">👥</span><div><b>Customer Segmentation</b><span>Clustering</span></div></div>
+    <div class="proj r" style="--i:7"><span class="pi">🧠</span><div><b>Neural Network from Scratch</b><span>Backprop by hand</span></div></div>
+    <div class="proj r" style="--i:8"><span class="pi">🔢</span><div><b>MNIST Digit Classifier</b><span>&gt;98% accuracy</span></div></div>
+  </div>
+  <div class="foot r" style="--i:9"><span class="dot"></span>
+    <span>By end of Month 2: You build models that predict, classify, and see.</span></div>
+</section>
+<style>
+.proj{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px;transition:transform .3s}
+.proj:hover{transform:translateY(-3px)}
+.proj .pi{width:52px;height:52px;border-radius:14px;background:var(--grad);display:grid;place-items:center;font-size:26px;flex:none;box-shadow:var(--shadow-sm)}
+.proj div{display:flex;flex-direction:column}
+.proj b{font-family:Sora;font-weight:700;font-size:17px;color:var(--ink)}
+.proj span{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}
+</style>
+
+<!-- ===================== SLIDE 7 ===================== -->
+<section class="slide" data-i="7">
+  <div class="head-block">
+    <div class="eyebrow r">Month 3</div>
+    <h2 class="r" style="--i:1">NLP, Vision &amp; Generative AI</h2>
+    <div class="sub r" style="--i:2">“The Era of Generative AI”</div>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;height:54%">
+    <div class="quad r" style="--i:3"><div class="qhead"><span class="qi">📷</span>Computer Vision</div>
+      <div class="qbody">📷 Document Scanner<br>🛡 Privacy Shield<br><span>OpenCV + YOLO</span></div></div>
+    <div class="quad r" style="--i:4"><div class="qhead"><span class="qi">🔤</span>NLP + Transformers</div>
+      <div class="qbody">🔤 Keyword Matcher<br>💬 Sentiment Analyzer<br><span>BERT + HuggingFace</span></div></div>
+    <div class="quad r" style="--i:5"><div class="qhead"><span class="qi">✍️</span>Prompt Engineering</div>
+      <div class="qbody">✍️ Brand Content Generator<br>📄 Resume → JSON Converter<br><span>Chain-of-Thought</span></div></div>
+    <div class="quad r" style="--i:6"><div class="qhead"><span class="qi">📚</span>RAG Pipelines</div>
+      <div class="qbody">📚 PDF Q&amp;A Bot<br>🔍 Semantic Search<br><span>ChromaDB + LLM</span></div></div>
+  </div>
+  <div class="foot r" style="--i:7"><span class="dot"></span>
+    <span>By end of Month 3: AI that reads docs, sees images, answers from private data.</span></div>
+</section>
+<style>
+.quad{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 22px;box-shadow:var(--shadow-sm)}
+.qhead{font-family:Sora;font-weight:800;font-size:19px;display:flex;align-items:center;gap:12px;color:var(--ink)}
+.qi{width:44px;height:44px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-size:22px;flex:none;box-shadow:var(--shadow-sm)}
+.qbody{margin-top:12px;font-weight:600;color:var(--ink2);font-size:15.5px;line-height:1.7}
+.qbody span{display:inline-block;margin-top:8px;font-size:12.5px;color:#fff;background:var(--grad-soft);padding:4px 12px;border-radius:8px;font-weight:700}
+</style>
+
+<!-- ===================== SLIDE 8 ===================== -->
+<section class="slide" data-i="8">
+  <div class="head-block">
+    <div class="eyebrow r">Month 4</div>
+    <h2 class="r" style="--i:1">Agentic AI &amp; Production MLOps</h2>
+    <div class="sub r" style="--i:2">“AI That Thinks, Acts, and Ships”</div>
+  </div>
+  <div class="row" style="gap:26px;height:56%;align-items:stretch">
+    <div class="r" style="--i:3;flex:.9;display:flex;align-items:center;justify-content:center">
+      <div class="loop">
+        <div class="node n1">🧠<span>Reason</span></div>
+        <div class="node n2">🛠<span>Act</span></div>
+        <div class="node n3">👁<span>Observe</span></div>
+        <div class="node n4">🔄<span>Repeat</span></div>
+        <div class="loopcore">Agent<br>Loop</div>
+      </div>
+    </div>
+    <div class="card r" style="--i:4;flex:1.1;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-family:Sora;font-weight:800;font-size:20px;margin-bottom:14px">This Month</div>
+      <ul style="list-style:none;display:grid;gap:12px;font-weight:600;font-size:16px;color:var(--ink2)">
+        <li class="mrow">▹ Tool Calling + ReAct</li>
+        <li class="mrow">▹ Multi-Agent (LangGraph)</li>
+        <li class="mrow">▹ FastAPI Serving</li>
+        <li class="mrow">▹ Docker + Cloud</li>
+        <li class="mrow">▹ Financial Research AI</li>
+        <li class="mrow">▹ Healthcare RAG</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot r" style="--i:5"><span class="dot"></span>
+    <span>By end of Month 4: You ship AI systems that think autonomously.</span></div>
+</section>
+<style>
+.loop{position:relative;width:280px;height:280px}
+.loopcore{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;
+  background:var(--grad);color:#fff;display:grid;place-items:center;text-align:center;font-family:Sora;font-weight:800;font-size:17px;
+  box-shadow:var(--shadow);z-index:2}
+.node{position:absolute;width:96px;height:96px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:26px;font-weight:700}
+.node span{font-family:Sora;font-size:12.5px;color:var(--royal);margin-top:2px;font-weight:700}
+.n1{top:0;left:50%;transform:translateX(-50%)}
+.n2{right:0;top:50%;transform:translateY(-50%)}
+.n3{bottom:0;left:50%;transform:translateX(-50%)}
+.n4{left:0;top:50%;transform:translateY(-50%)}
+.slide.active .loop{animation:spin 22s linear infinite}
+.slide.active .node{animation:spin-rev 22s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spin-rev{to{transform:rotate(-360deg)}}
+.mrow{padding:2px 0;border-bottom:1px dashed var(--line);padding-bottom:11px}
+.mrow:last-child{border:none}
+</style>
+
+<!-- ===================== SLIDE 9 ===================== -->
+<section class="slide" data-i="9">
+  <div class="head-block">
+    <div class="eyebrow r">Month 5</div>
+    <h2 class="r" style="--i:1">Capstone + Job Readiness</h2>
+    <div class="sub r" style="--i:2">“From Student to AI Engineer”</div>
+  </div>
+  <div class="row" style="gap:20px;height:56%">
+    <div class="col" style="flex:1.15;gap:14px">
+      <div class="step9 r" style="--i:3"><span class="s9i">🏗</span><div><b>Capstone Build</b><span>Real-world problem · End-to-end solution</span></div></div>
+      <div class="step9 r" style="--i:4"><span class="s9i">🎤</span><div><b>Demo Day</b><span>Present to mentors · Get feedback</span></div></div>
+      <div class="step9 r" style="--i:5"><span class="s9i">🎯</span><div><b>Career Launch</b><span>Resume · LinkedIn · Interview prep</span></div></div>
+    </div>
+    <div class="card r" style="--i:6;flex:1;background:var(--grad);color:#fff;border:none">
+      <div style="font-family:Sora;font-weight:800;font-size:22px;margin-bottom:14px">🎓 What You Leave With</div>
+      <ul style="list-style:none;display:grid;gap:11px;font-weight:600;font-size:15.5px">
+        <li>✅ 16 production-ready GitHub projects</li>
+        <li>✅ 1 end-to-end capstone with live deployment</li>
+        <li>✅ Polished AI Engineer resume</li>
+        <li>✅ Optimized LinkedIn profile</li>
+        <li>✅ Interview strategy + portfolio website</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<style>
+.step9{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px;flex:1}
+.s9i{width:54px;height:54px;border-radius:14px;background:var(--grad);display:grid;place-items:center;font-size:26px;flex:none;box-shadow:var(--shadow-sm)}
+.step9 div{display:flex;flex-direction:column}
+.step9 b{font-family:Sora;font-weight:800;font-size:19px}
+.step9 span{color:var(--muted);font-weight:600;font-size:14px;margin-top:2px}
+</style>
+
+<!-- ===================== SLIDE 10 ===================== -->
+<section class="slide" data-i="10">
+  <div class="head-block">
+    <div class="eyebrow r">Portfolio</div>
+    <h2 class="r" style="--i:1">The 16 Projects</h2>
+    <div class="sub r" style="--i:2;color:var(--muted);font-weight:600">Every project is GitHub-worthy and resume-ready</div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;height:56%">
+    <div class="p16 r" style="--i:3"><span>#1</span>Local LLM Sorter</div>
+    <div class="p16 r" style="--i:3"><span>#2</span>Similarity Engine</div>
+    <div class="p16 r" style="--i:3"><span>#3</span>Data Parser</div>
+    <div class="p16 r" style="--i:3"><span>#4</span>Data Storyboard</div>
+    <div class="p16 r" style="--i:4"><span>#5</span>A/B Test Analyzer</div>
+    <div class="p16 r" style="--i:4"><span>#6</span>House Price Predictor</div>
+    <div class="p16 r" style="--i:4"><span>#7</span>Loan Approval</div>
+    <div class="p16 r" style="--i:4"><span>#8</span>Spam Classifier</div>
+    <div class="p16 r" style="--i:5"><span>#9</span>Customer Segments</div>
+    <div class="p16 r" style="--i:5"><span>#10</span>Neural Net Scratch</div>
+    <div class="p16 r" style="--i:5"><span>#11</span>MNIST Classifier</div>
+    <div class="p16 r" style="--i:5"><span>#12</span>Document Scanner</div>
+    <div class="p16 r" style="--i:6"><span>#13</span>Privacy Shield</div>
+    <div class="p16 r" style="--i:6"><span>#14</span>Content Generator</div>
+    <div class="p16 r" style="--i:6"><span>#15</span>PDF Q&amp;A Bot</div>
+    <div class="p16 r" style="--i:6"><span>#16</span>Financial Agent</div>
+  </div>
+</section>
+<style>
+.p16{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;gap:6px;font-family:Sora;font-weight:700;font-size:15px;color:var(--ink);
+  justify-content:center;transition:transform .25s,box-shadow .25s;position:relative;overflow:hidden}
+.p16:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.p16 span{font-family:Sora;font-weight:800;font-size:13px;color:#fff;background:var(--grad);width:fit-content;
+  padding:2px 10px;border-radius:7px}
+.p16:nth-child(n+13) span{background:linear-gradient(135deg,#7C3AED,#8B2FC9)}
+</style>
+
+<!-- ===================== SLIDE 11 ===================== -->
+<section class="slide" data-i="11">
+  <div class="head-block">
+    <div class="eyebrow r">Stack</div>
+    <h2 class="r" style="--i:1">Tools &amp; Tech Stack</h2>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;height:58%">
+    <div class="stackcard r" style="--i:2"><div class="sc-h"><span class="qi">🐍</span>Core Python &amp; Data</div>
+      <div class="tags"><b>Python</b><b>NumPy</b><b>Pandas</b><b>Matplotlib</b><b>Seaborn</b><b>Scikit-Learn</b></div></div>
+    <div class="stackcard r" style="--i:3"><div class="sc-h"><span class="qi">✨</span>Generative AI &amp; LLMs</div>
+      <div class="tags"><b>Ollama</b><b>OpenAI API</b><b>HuggingFace</b><b>LangChain</b><b>LangGraph</b><b>CrewAI</b><b>TensorFlow</b></div></div>
+    <div class="stackcard r" style="--i:4"><div class="sc-h"><span class="qi">🗄</span>Vector &amp; Storage</div>
+      <div class="tags"><b>FAISS</b><b>ChromaDB</b><b>Pinecone</b><b>JSON</b></div></div>
+    <div class="stackcard r" style="--i:5"><div class="sc-h"><span class="qi">🚀</span>Production &amp; Deploy</div>
+      <div class="tags"><b>FastAPI</b><b>Docker</b><b>REST APIs</b><b>Langfuse</b><b>Git</b><b>VS Code</b><b>YAML</b></div></div>
+  </div>
+</section>
+<style>
+.stackcard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow-sm)}
+.sc-h{font-family:Sora;font-weight:800;font-size:19px;display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.tags{display:flex;flex-wrap:wrap;gap:9px}
+.tags b{font-family:Sora;font-weight:600;font-size:14px;color:var(--royal);background:#EEF3FF;border:1px solid #DCE6FF;
+  padding:8px 14px;border-radius:10px;transition:all .2s}
+.tags b:hover{background:var(--grad);color:#fff;border-color:transparent}
+</style>
+
+<!-- ===================== SLIDE 12 ===================== -->
+<section class="slide" data-i="12">
+  <div class="head-block">
+    <div class="eyebrow r">Differentiator</div>
+    <h2 class="r" style="--i:1">Sovereign AI: Local-First, Privacy-First</h2>
+  </div>
+  <div class="row" style="gap:22px;height:54%;align-items:center">
+    <div class="r" style="--i:2;flex:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+      <div style="font-size:96px;line-height:1;filter:drop-shadow(0 12px 24px rgba(59,91,219,.35))">💻</div>
+      <div class="pill" style="font-size:16px">Your Laptop</div>
+    </div>
+    <div class="col" style="flex:1.3;gap:14px">
+      <div class="sov r" style="--i:3"><span class="s9i">🔒</span><div><b>Private RAG</b><span>Query sensitive docs without cloud APIs.</span></div></div>
+      <div class="sov r" style="--i:4"><span class="s9i">📁</span><div><b>Local LLMs</b><span>Run models on your machine. No API costs. No data leaks.</span></div></div>
+      <div class="sov r" style="--i:5"><span class="s9i">🌐</span><div><b>Offline Agents</b><span>Build AI that works without internet.</span></div></div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:22px">
+    <div class="hl r" style="--i:6">An AI Engineer who builds private systems is worth 2× more</div>
+  </div>
+</section>
+<style>
+.sov{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px}
+.sov div{display:flex;flex-direction:column}
+.sov b{font-family:Sora;font-weight:800;font-size:19px}
+.sov span{color:var(--muted);font-weight:600;font-size:14px;margin-top:2px}
+</style>
+
+<!-- ===================== SLIDE 13 ===================== -->
+<section class="slide" data-i="13">
+  <div class="head-block">
+    <div class="eyebrow r">Support</div>
+    <h2 class="r" style="--i:1">Course Format &amp; Support</h2>
+  </div>
+  <div class="row" style="gap:24px;height:56%">
+    <div class="card r" style="--i:2;flex:1;border-top:5px solid var(--blue);display:flex;flex-direction:column">
+      <div class="row center between"><div style="font-family:Sora;font-weight:800;font-size:24px">40 Live Classes</div><div class="badge round">🔴</div></div>
+      <ul style="margin-top:16px;list-style:none;display:grid;gap:10px;color:var(--ink2);font-weight:600;font-size:16px">
+        <li>▹ 2 per week · 1.5 hours each</li>
+        <li>▹ Core instruction + live coding</li>
+        <li>▹ Build along with the instructor</li>
+      </ul>
+    </div>
+    <div class="card r" style="--i:3;flex:1;border-top:5px solid var(--purple);display:flex;flex-direction:column">
+      <div class="row center between"><div style="font-family:Sora;font-weight:800;font-size:24px">40 Support Sessions</div>
+        <div class="badge round" style="background:linear-gradient(135deg,#7C3AED,#8B2FC9)">🛠</div></div>
+      <ul style="margin-top:16px;list-style:none;display:grid;gap:10px;color:var(--ink2);font-weight:600;font-size:16px">
+        <li>▹ 2 per week · Flexible timing</li>
+        <li>▹ Debug sessions</li>
+        <li>▹ Environment setup help</li>
+        <li>▹ Assignment walkthroughs</li>
+      </ul>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:24px">
+    <div class="hl r" style="--i:4">Total: 64 Sessions over 5 Months · No one left behind</div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE 14 ===================== -->
+<section class="slide" data-i="14">
+  <div class="hero">
+    <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="orb d"></div>
+    <div class="pill r">Next cohort starts soon · Limited seats</div>
+    <h1 class="r" style="--i:1;margin-top:18px">Ready to Build<br>the <span class="grad-text">Future?</span></h1>
+    <div class="statbar" style="margin-top:30px">
+      <button class="cta primary r" style="--i:2" onclick="return false">🚀 Enroll Now</button>
+      <button class="cta r" style="--i:3" onclick="return false">📅 Free Info Session</button>
+      <button class="cta r" style="--i:4" onclick="return false">💬 Talk to Advisor</button>
+    </div>
+    <div class="flow r" style="--i:5;margin-top:20px">40 Live Classes · 16 Projects · 5 Months · Job-ready portfolio</div>
+  </div>
+</section>
+<style>
+.cta{font-family:Sora;font-weight:700;font-size:18px;padding:16px 30px;border-radius:14px;cursor:pointer;
+  border:2px solid var(--blue);background:#fff;color:var(--royal);box-shadow:var(--shadow-sm);transition:transform .2s,filter .2s}
+.cta:hover{transform:translateY(-2px)}
+.cta.primary{background:var(--grad);color:#fff;border-color:transparent;font-size:22px;padding:18px 40px;box-shadow:var(--shadow)}
+.cta.primary:hover{filter:brightness(1.08)}
+</style>
+
+</div><!-- /stage -->
+
+<div class="hint">← → · Space · Home/End</div>
+<div class="hud">
+  <div class="nav">
+    <button id="prev" aria-label="Previous">‹</button>
+    <div class="counter" id="counter">01 / 14</div>
+    <button id="next" aria-label="Next">›</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  const total=slides.length;
+  let idx=0;
+  const prog=document.getElementById('prog');
+  const counter=document.getElementById('counter');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  const dotWrap=document.getElementById('dots');
+  slides.forEach((s,i)=>{const d=document.createElement('i');d.onclick=()=>go(i);dotWrap.appendChild(d);});
+  const dots=[...dotWrap.children];
+  function pad(n){return String(n).padStart(2,'0');}
+  function go(n){
+    n=Math.max(0,Math.min(total-1,n));
+    slides.forEach((s,i)=>{s.classList.remove('active','prev');
+      if(i===n)s.classList.add('active');else if(i<n)s.classList.add('prev');});
+    dots.forEach((d,i)=>d.classList.toggle('on',i===n));
+    idx=n;
+    counter.textContent=pad(n+1)+' / '+pad(total);
+    prog.style.width=((n)/(total-1)*100)+'%';
+    prevBtn.disabled=n===0;nextBtn.disabled=n===total-1;
+  }
+  prevBtn.onclick=()=>go(idx-1);
+  nextBtn.onclick=()=>go(idx+1);
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(idx+1);}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(idx-1);}
+    else if(e.key==='Home'){go(0);}else if(e.key==='End'){go(total-1);}
+  });
+  let sx=0;
+  document.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>50)go(idx+(dx<0?1:-1));},{passive:true});
+  let wt=0;
+  document.addEventListener('wheel',e=>{const now=Date.now();if(now-wt<700)return;
+    if(Math.abs(e.deltaY)>30){wt=now;go(idx+(e.deltaY>0?1:-1));}},{passive:true});
+  go(0);
+})();
+</script>
+</body>
+</html>
