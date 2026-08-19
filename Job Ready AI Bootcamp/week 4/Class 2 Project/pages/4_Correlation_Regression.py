@@ -125,13 +125,16 @@ with tab2:
         sns.scatterplot(data=plot_df, x=x_var, y=y_var, alpha=0.6, ax=ax)
 
     # Add regression line (linear trend) to visualize relationship
+    # Select by position, not by name: if X and Y are the same column, name-based
+    # lookup returns a 2-column DataFrame and np.polyfit fails with "expected 1D vector for x"
     valid = plot_df[[x_var, y_var]].dropna()
+    x_vals, y_vals = valid.iloc[:, 0], valid.iloc[:, -1]
     if len(valid) > 1:
         # Fit linear regression line: y = mx + b
-        z = np.polyfit(valid[x_var], valid[y_var], 1)
+        z = np.polyfit(x_vals, y_vals, 1)
         p = np.poly1d(z)
         # Plot the regression line in red dashed style
-        ax.plot(valid[x_var].sort_values(), p(valid[x_var].sort_values()), 
+        ax.plot(x_vals.sort_values(), p(x_vals.sort_values()),
                 "r--", alpha=0.8, linewidth=2, label='Linear fit')
 
     ax.set_title(f"{y_var} vs {x_var}")
@@ -139,10 +142,11 @@ with tab2:
     st.pyplot(fig)
 
     # Calculate and display Pearson correlation statistics
-    valid_corr = plot_df[[x_var, y_var]].dropna()
-    if len(valid_corr) > 2:
+    if x_var == y_var:
+        st.info("ℹ️ X and Y are the same variable — correlation with itself is always r = 1.0. Pick two different columns.")
+    if len(valid) > 2:
         # Pearson correlation: measures linear relationship (-1 to +1)
-        r, p_val = pearsonr(valid_corr[x_var], valid_corr[y_var])
+        r, p_val = pearsonr(x_vals, y_vals)
         st.markdown(f"**Pearson Correlation:** r = {r:.4f}, p = {p_val:.6f}")
 
         # Interpret statistical significance

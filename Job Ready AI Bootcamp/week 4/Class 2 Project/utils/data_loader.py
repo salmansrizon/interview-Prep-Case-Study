@@ -10,13 +10,18 @@ import numpy as np
 from datetime import datetime
 # Streamlit caching decorator to avoid reloading data on every rerun
 import streamlit as st
+# Path for resolving data files relative to this file, not the current working directory
+from pathlib import Path
+
+# Absolute path to the data/ folder, so the app runs from any working directory
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # STREAMLIT CACHE: Avoid reloading data on every script rerun (improves performance)
 @st.cache_data
 def load_customers():
     """Load and preprocess customer dataset."""
     # Read customer data from CSV file
-    df = pd.read_csv("data/customers.csv")
+    df = pd.read_csv(DATA_DIR / "customers.csv")
     # Convert signup_date from string to datetime format for time-based analysis
     df['signup_date'] = pd.to_datetime(df['signup_date'])
     # Convert churned column to boolean (True/False) for binary classification
@@ -37,7 +42,7 @@ def load_customers():
 def load_transactions():
     """Load and preprocess transaction dataset."""
     # Read transaction data from CSV file
-    df = pd.read_csv("data/transactions.csv")
+    df = pd.read_csv(DATA_DIR / "transactions.csv")
     # Convert transaction_date from string to datetime format
     df['transaction_date'] = pd.to_datetime(df['transaction_date'])
     # Extract year-month for monthly aggregation (e.g., "2023-01")
@@ -51,7 +56,7 @@ def load_transactions():
 def load_support_tickets():
     """Load and preprocess support tickets dataset."""
     # Read support ticket data from CSV file
-    df = pd.read_csv("data/support_tickets.csv")
+    df = pd.read_csv(DATA_DIR / "support_tickets.csv")
     # Convert created_date from string to datetime format
     df['created_date'] = pd.to_datetime(df['created_date'])
     # Extract year-month for monthly aggregation
@@ -68,7 +73,7 @@ def load_support_tickets():
 def load_ab_test():
     """Load and preprocess A/B test dataset."""
     # Read A/B test data from CSV file
-    df = pd.read_csv("data/ab_test.csv")
+    df = pd.read_csv(DATA_DIR / "ab_test.csv")
     # Convert converted column to boolean (True/False) for binary classification
     df['converted'] = df['converted'].astype(bool)
     return df

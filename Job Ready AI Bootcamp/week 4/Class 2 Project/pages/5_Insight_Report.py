@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 # Custom utility functions to load datasets and calculate KPIs
 from utils.data_loader import load_customers, load_transactions, load_support_tickets, load_ab_test, get_kpis
 # Custom statistical functions for hypothesis testing
-from utils.statistics import ab_test_summary, chi_square_test
+from utils.statistics import ab_test_summary, chi_square_test, anova_test
 # Custom visualization functions for creating Plotly charts
 from utils.visualizations import plotly_bar, plotly_line
 
@@ -63,15 +63,25 @@ st.subheader("🔍 Key Statistical Findings")
 
 # FINDING 1: Churn Analysis (Chi-Square Test Results)
 # Chi-square test determines if plan type and churn status are associated
-st.markdown("""
-<div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #2ca02c; margin: 10px 0;">
-<h4 style="margin-top: 0; color: #2ca02c;">✅ FINDING 1: Churn is Non-Random and Predictable</h4>
-<p><strong>Evidence:</strong> Chi-square test shows significant association between plan type and churn status 
-(χ² = {:.2f}, p < 0.001). Enterprise customers churn 40% less than Basic customers.</p>
-<p><strong>Action:</strong> Implement targeted retention campaigns for Basic plan users. Offer upgrade 
-incentives to high-tenure Basic customers before month 12.</p>
+# Run the test once and report what it actually returns — never hard-code a p-value
+churn_chi2 = chi_square_test(customers, 'plan', 'churned')
+churn_by_plan = customers.groupby('plan')['churned'].mean() * 100
+basic_churn, ent_churn = churn_by_plan['Basic'], churn_by_plan['Enterprise']
+rel_gap = (basic_churn - ent_churn) / basic_churn * 100
+
+st.markdown(f"""
+<div style="background-color: {'#e8f5e9' if churn_chi2['significant'] else '#fff3cd'}; padding: 15px; border-radius: 8px; border-left: 4px solid {'#2ca02c' if churn_chi2['significant'] else '#ff7f0e'}; margin: 10px 0;">
+<h4 style="margin-top: 0; color: {'#2ca02c' if churn_chi2['significant'] else '#ff7f0e'};">
+    {'✅' if churn_chi2['significant'] else '⚠️'} FINDING 1: Churn by Plan Type is {'Non-Random and Predictable' if churn_chi2['significant'] else 'Not Statistically Distinguishable'}
+</h4>
+<p><strong>Evidence:</strong> Chi-square test of plan type vs churn status:
+χ² = {churn_chi2['chi2']:.2f}, dof = {churn_chi2['dof']}, p = {churn_chi2['p_value']:.4f} — 
+{'significant at α = 0.05' if churn_chi2['significant'] else 'NOT significant at α = 0.05'}.
+Observed churn: Basic {basic_churn:.2f}%, Enterprise {ent_churn:.2f}% (Enterprise is {rel_gap:.0f}% lower in relative terms,
+but with p = {churn_chi2['p_value']:.4f} this gap is {'unlikely' if churn_chi2['significant'] else 'well within what sampling noise alone can produce'}).</p>
+<p><strong>Action:</strong> {'Implement targeted retention campaigns for Basic plan users. Offer upgrade incentives to high-tenure Basic customers before month 12.' if churn_chi2['significant'] else 'Do NOT build a retention campaign on this gap yet. Collect more data or segment further before acting on a difference this test cannot confirm.'}</p>
 </div>
-""".format(chi_square_test(customers, 'plan', 'churned')['chi2']), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # Finding 2: A/B Test
 ab_result = ab_test_summary(
@@ -97,14 +107,18 @@ Difference = {ab_result['mean_diff']:.2f} (p = {ab_result['p_value']:.4f}, Cohen
 regional_mrr = customers.groupby('region')['mrr'].mean().sort_values(ascending=False)
 regional_churn = customers.groupby('region')['churned'].mean().sort_values()
 
+# Run the actual one-way ANOVA behind this finding: one MRR group per region
+regional_anova = anova_test(*[customers[customers['region'] == r]['mrr'].values
+                              for r in customers['region'].unique()])
+
 # Display finding with dynamic data (best/worst performing regions)
 st.markdown(f"""
 <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3; margin: 10px 0;">
-<h4 style="margin-top: 0; color: #2196f3;">📍 FINDING 3: Regional Performance Gaps Exist</h4>
-<p><strong>Evidence:</strong> ANOVA confirms significant differences in MRR across regions (F = {ab_result['f_statistic']:.2f} placeholder). 
+<h4 style="margin-top: 0; color: #2196f3;">📍 FINDING 3: Regional MRR Gaps Are {'Statistically Confirmed' if regional_anova['significant'] else 'Descriptive Only — Not Statistically Confirmed'}</h4>
+<p><strong>Evidence:</strong> ANOVA {'confirms' if regional_anova['significant'] else 'finds no'} significant differences in MRR across regions (F = {regional_anova['f_statistic']:.2f}, p = {regional_anova['p_value']:.4f}). 
 {regional_mrr.index[0]} leads with ${regional_mrr.iloc[0]:.0f} avg MRR. {regional_churn.index[0]} has lowest churn at {regional_churn.iloc[0]*100:.1f}%.</p>
-<p><strong>Action:</strong> Investigate {regional_mrr.index[-1]} market for pricing optimization. 
-Replicate {regional_churn.index[0]} retention strategies in high-churn regions.</p>
+<p><strong>Action:</strong> Treat the regional ranking as descriptive, not causal. Investigate {regional_mrr.index[-1]} market for pricing optimization 
+and replicate {regional_churn.index[0]} retention strategies — but {'the ANOVA supports acting on regional differences.' if regional_anova['significant'] else 'validate with a larger sample first, since the ANOVA cannot rule out chance.'}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -114,15 +128,26 @@ high_priority = support[support['priority'].isin(['High', 'Critical'])]  # Criti
 high_priority_satisfaction = high_priority['satisfaction_rating'].mean()  # Average satisfaction for high priority
 low_priority_satisfaction = support[support['priority'].isin(['Low', 'Medium'])]['satisfaction_rating'].mean()  # Low/Medium priority
 
+# Test the satisfaction gap instead of asserting it, and time Critical tickets only
+sat_test = ab_test_summary(
+    support[support['priority'].isin(['Low', 'Medium'])]['satisfaction_rating'],
+    high_priority['satisfaction_rating'],
+    "Satisfaction"
+)
+critical_hours = support[support['priority'] == 'Critical']['resolution_hours'].mean()
+
 # Display finding with evidence and actionable recommendation
 st.markdown(f"""
 <div style="background-color: #fce4ec; padding: 15px; border-radius: 8px; border-left: 4px solid #e91e63; margin: 10px 0;">
-<h4 style="margin-top: 0; color: #e91e63;">🎫 FINDING 4: Critical Tickets Drive Dissatisfaction</h4>
+<h4 style="margin-top: 0; color: #e91e63;">🎫 FINDING 4: Critical Tickets Are Slow — but Satisfaction Barely Moves</h4>
 <p><strong>Evidence:</strong> High/Critical priority tickets have avg satisfaction {high_priority_satisfaction:.2f}/5 
-vs {low_priority_satisfaction:.2f}/5 for Low/Medium. Resolution time for Critical tickets averages 
-{high_priority['resolution_hours'].mean():.1f} hours.</p>
-<p><strong>Action:</strong> Create a dedicated Critical Response Team with SLA < 24 hours. 
-Implement automated escalation for Critical tickets.</p>
+vs {low_priority_satisfaction:.2f}/5 for Low/Medium — a gap of {abs(sat_test['mean_diff']):.3f} points 
+(p = {sat_test['p_value']:.4f}, Cohen's d = {sat_test['cohens_d']:.3f}, {sat_test['effect_size'].lower()} effect), so it is 
+{'statistically significant but practically tiny' if sat_test['significant'] else 'NOT statistically significant'}. 
+The real gap is speed: Critical tickets average {critical_hours:.1f} hours to resolve vs 
+{support[support['priority'] == 'Low']['resolution_hours'].mean():.1f} hours for Low.</p>
+<p><strong>Action:</strong> Target resolution time, not satisfaction scores. Create a dedicated Critical Response Team 
+with an SLA under 24 hours and automated escalation — the satisfaction data gives no mandate on its own.</p>
 </div>
 """, unsafe_allow_html=True)
 
