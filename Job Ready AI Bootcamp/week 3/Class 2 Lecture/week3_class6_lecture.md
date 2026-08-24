@@ -29,6 +29,7 @@ $$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
 * **Symmetry:** কার্ভটি $\mu$ এর সাপেক্ষে নিখুঁতভাবে সিমেট্রিক বা সুষম (ডান এবং বাম পাশ হুবহু সমান)।
 * **Area under curve = 1:** সম্ভাব্য সব আউটকামের মোট প্রোবাবিলিটি সবসময় ১ বা ১০০%।
 * **Central Limit Theorem (CLT):** মূল ডেটাসেটের ডিস্ট্রিবিউশন যেমনই হোক না কেন (এমনকি খুব অদ্ভুত বা বাঁকানো হলেও), সেখান থেকে নেওয়া বড় সাইজের স্যাম্পল মিনের (Sample means) ডিস্ট্রিবিউশন সবসময় একটি নরমাল ডিস্ট্রিবিউশনের দিকে ধাবিত হবে।
+![alt text](image.png)
 
 ### Detailed Brief: Deep Dive & Valid Points
 
@@ -70,7 +71,7 @@ $$Z = \frac{X - \mu}{\sigma}$$
 * **Z = -3:** গড় থেকে ৩ স্ট্যান্ডার্ড ডেভিয়েশন নিচে (ডেটার বটম ~০.১৫% এর মধ্যে)।
 
 Z-score যেকোনো নরমাল ডিস্ট্রিবিউশনকে **Standard Normal Distribution ($\mu=0, \sigma=1$)**-এ রূপান্তর করে, যার ফলে আমরা সহজেই স্ট্যান্ডার্ড টেবিল লুকআপ বা ক্রস-ডোমেইন তুলনা করতে পারি।
-
+![alt text](image-1.png)
 ### Detailed Brief: Deep Dive & Valid Points
 
 * **Feature Scaling in ML:** Z-score normalization (যা Scikit-Learn-এর StandardScaler) ফিচারগুলোকে এমনভাবে ট্রান্সফর্ম করে যাতে তাদের Mean=0 এবং Std=1 হয়। Gradient Descent দ্রুত কনভার্জ বা সফল হওয়ার জন্য, ডিস্টেন্স-বেসড অ্যালগরিদম (KNN, K-Means) এবং Regularization (L1/L2 পেনাল্টি সেন্ট্রার্ড ডেটা অনুমান করে)-এর জন্য এটি আবশ্যিক।
@@ -106,6 +107,7 @@ Z-score যেকোনো নরমাল ডিস্ট্রিবিউশ�
 
 প্রতিটি AI সিস্টেমকে অনিশ্চয়তার মধ্যে সিদ্ধান্ত নিতে হয়। একটি স্প্যাম ক্লাসিফায়ার হিসাব করে $P(\text{Spam} \mid \text{Email})$। একটি সেলফ-ড্রাইভিং কার হিসাব করে $P(\text{Pedestrian} \mid \text{Sensor reading})$। একটি মেডিকেল AI হিসাব করে $P(\text{Disease} \mid \text{Symptoms})$। এই সম্ভাবনাকে আপনি "লং-রান ফ্রিকোয়েন্সি" (Frequentist) হিসেবে দেখবেন নাকি "ডিগ্রি অফ বিলিফ" (Bayesian) হিসেবে আপডেট করবেন, তা আপনার পুরো মডেলিংয়ের অ্যাপ্রোচ নির্ধারণ করে দেয়।
 
+![alt text](image-2.png)
 ### How It Works
 
 **Frequentist Probability:**
@@ -133,6 +135,7 @@ $$P(\theta \mid D) = \frac{P(D \mid \theta) \times P(\theta)}{P(D)}$$
 * **Posterior $P(\theta \mid D)$:** নতুন ডেটা দেখার পর আমাদের আপডেটেড বা চূড়ান্ত বিশ্বাস।
 * **Evidence $P(D)$:** নরমালিজিং কনস্ট্যান্ট (হিসাব সহজ করার জন্য অনেক সময় এটিকে ইগনোর করা হয়)।
 
+![alt text](image-3.png)
 ### Detailed Brief: Deep Dive & Valid Points
 
 * **When Frequentist Wins:** যখন ডেটাসেট বিশাল বড় হয়, এক্সপেরিমেন্ট বারবার রিপিট করা যায় এবং নাল হাইপোথিসিস ক্লিয়ার থাকে। যেমন: "এই নতুন ওষুধটি প্লাসিবোর চেয়ে ভালো কাজ করে কি না?" $\rightarrow$ Randomized Controlled Trial $\rightarrow$ Frequentist p-value।

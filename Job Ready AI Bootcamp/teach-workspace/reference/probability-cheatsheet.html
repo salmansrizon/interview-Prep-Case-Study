@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>রেফারেন্স — Statistics for AI (চিট শিট)</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">রেফারেন্স · প্রিন্ট করার জন্য বানানো</p>
+<h1>Statistics for AI — চিট শিট</h1>
+<p class="subtitle">Week 3 / Class 2 Project. পরীক্ষার আগে বা কোড লেখার সময় এক নজরে।</p>
+
+<h2>সূত্র</h2>
+
+<table>
+<tr><th>নাম</th><th>সূত্র</th><th>কখন</th></tr>
+<tr><td>Z-score</td><td class="mono">Z = (X − μ) / σ</td><td>স্কেল মেলানো, outlier ধরা</td></tr>
+<tr><td>Standard Error</td><td class="mono">SE = √(p(1−p)/n)</td><td>অনুমান কতটা নড়বড়ে</td></tr>
+<tr><td>95% CI</td><td class="mono">estimate ± 1.96 × SE</td><td>Frequentist রেঞ্জ</td></tr>
+<tr><td>Bayes</td><td class="mono">P(A|B) = P(B|A)·P(A) / P(B)</td><td>বিশ্বাস আপডেট</td></tr>
+<tr><td>Beta posterior</td><td class="mono">Beta(α+সঠিক, β+ভুল)</td><td>Bayesian accuracy</td></tr>
+<tr><td>Posterior mean</td><td class="mono">α / (α + β)</td><td>প্রত্যাশিত accuracy</td></tr>
+</table>
+
+<h2>68–95–99.7</h2>
+
+<table>
+<tr><th>রেঞ্জ</th><th>ভেতরে</th><th>বাইরে</th></tr>
+<tr><td>μ ± 1σ</td><td>68.27%</td><td>~১ জনে ৩</td></tr>
+<tr><td>μ ± 2σ</td><td>95.45%</td><td>~১ জনে ২২</td></tr>
+<tr><td>μ ± 3σ</td><td>99.73%</td><td>~১ জনে ৩৭০ → outlier</td></tr>
+</table>
+
+<h2>Z থেকে percentile</h2>
+
+<table>
+<tr><th>Z</th><td>−3</td><td>−2</td><td>−1</td><td>0</td><td>+1</td><td>+2</td><td>+3</td></tr>
+<tr><th>%</th><td>0.1</td><td>2.3</td><td>15.9</td><td>50</td><td>84.1</td><td>97.7</td><td>99.9</td></tr>
+</table>
+
+<h2>কোড স্নিপেট</h2>
+
+<pre><code>from scipy import stats
+from scipy.stats import beta as beta_dist
+import numpy as np
+
+# ডেটা বানানো
+data = np.random.normal(mu, sigma, n)
+
+# Z-score ও percentile
+z = (x - data.mean()) / data.std()
+pct = stats.norm.cdf(z) * 100
+
+# Frequentist CI
+se = np.sqrt(p * (1 - p) / n)
+ci = (p - 1.96*se, p + 1.96*se)
+
+# Bayesian credible interval
+a, b = 1 + successes, 1 + failures
+lo = beta_dist.ppf(0.025, a, b)
+hi = beta_dist.ppf(0.975, a, b)
+mean = a / (a + b)</code></pre>
+
+<h2>Glossary — এই কোর্সে শব্দগুলোর মানে</h2>
+
+<table>
+<tr><th>শব্দ</th><th>মানে</th></tr>
+<tr><td>Normal Distribution</td><td>ঘণ্টা আকৃতির বণ্টন, μ ও σ দিয়ে সম্পূর্ণ বর্ণিত</td></tr>
+<tr><td>μ (mean)</td><td>গড় — বণ্টনের কেন্দ্র</td></tr>
+<tr><td>σ (std dev)</td><td>ছড়ানোর মাপ — বণ্টনের প্রস্থ</td></tr>
+<tr><td>Z-score</td><td>গড় থেকে কত σ দূরে</td></tr>
+<tr><td>Standardization</td><td>ডেটাকে mean=0, std=1 এ রূপান্তর</td></tr>
+<tr><td>Outlier</td><td>অস্বাভাবিক ভ্যালু, সাধারণত |Z| &gt; 3</td></tr>
+<tr><td>Percentile</td><td>কত শতাংশ ডেটা এর নিচে আছে</td></tr>
+<tr><td>Frequentist</td><td>Probability = দীর্ঘমেয়াদে ঘটার হার</td></tr>
+<tr><td>Law of Large Numbers</td><td>নমুনা বাড়লে অনুমান আসল মানে পৌঁছায়</td></tr>
+<tr><td>Standard Error (SE)</td><td>অনুমানের নিজস্ব অনিশ্চয়তা</td></tr>
+<tr><td>Confidence Interval</td><td>Frequentist রেঞ্জ; ১০০টার ৯৫টায় আসল মান ধরে</td></tr>
+<tr><td>Bayesian</td><td>Probability = বিশ্বাসের মাত্রা, প্রমাণে আপডেট হয়</td></tr>
+<tr><td>Prior</td><td>প্রমাণের আগের বিশ্বাস</td></tr>
+<tr><td>Likelihood</td><td>অনুমান সত্যি হলে এই প্রমাণ পাওয়ার সম্ভাবনা</td></tr>
+<tr><td>Posterior</td><td>প্রমাণের পরের আপডেট করা বিশ্বাস</td></tr>
+<tr><td>Credible Interval</td><td>Bayesian রেঞ্জ; “আসল মান এখানে থাকার ৯৫% সম্ভাবনা”</td></tr>
+<tr><td>Beta distribution</td><td>০–১ এর মধ্যে থাকা বণ্টন; accuracy/probability-র অনিশ্চয়তা প্রকাশে</td></tr>
+<tr><td>Confidence Score</td><td>মডেল নিজের উত্তরে কতটা নিশ্চিত (০–১)</td></tr>
+<tr><td>Calibration</td><td>Confidence আর বাস্তব accuracy মেলে কিনা</td></tr>
+<tr><td>Threshold</td><td>যে score-এর উপরে স্বয়ংক্রিয় সিদ্ধান্ত নেওয়া হবে</td></tr>
+<tr><td>False Positive</td><td>নেই এমন জিনিসকে “আছে” বলা</td></tr>
+</table>
+
+<h2>দুই দর্শন — এক নজরে</h2>
+
+<table>
+<tr><th></th><th>Frequentist</th><th>Bayesian</th></tr>
+<tr><td>Probability</td><td>ঘটার হার</td><td>বিশ্বাসের মাত্রা</td></tr>
+<tr><td>Prior লাগে?</td><td>না</td><td>হ্যাঁ</td></tr>
+<tr><td>রেঞ্জ</td><td>Confidence Interval</td><td>Credible Interval</td></tr>
+<tr><td>ছোট ডেটা</td><td>দুর্বল, অতিরঞ্জিত</td><td>নিরাপদ, সংযত</td></tr>
+<tr><td>বড় ডেটা</td><td>চমৎকার</td><td>প্রায় একই ফল</td></tr>
+</table>
+
+<h2>LLM-এ এগুলো কোথায়</h2>
+
+<p>প্রতিটা ধারণা LLM-এর ঠিক কোন জায়গায় বসানো, তার আলাদা শিট আছে —
+<a href="llm-stats-map.html">Statistics → LLM ম্যাপ</a>। সংক্ষেপে:</p>
+
+<table>
+<tr><th>এই শিটের ধারণা</th><th>LLM-এ</th></tr>
+<tr><td>Normal distribution</td><td>Weight initialization</td></tr>
+<tr><td>Z-score</td><td>LayerNorm / RMSNorm</td></tr>
+<tr><td>σ, ছড়ানো</td><td>Softmax temperature</td></tr>
+<tr><td>Frequentist গোনা</td><td>Semantic entropy, benchmark CI</td></tr>
+<tr><td>Bayesian prior</td><td>Prompt / RAG context</td></tr>
+<tr><td>Confidence + calibration</td><td>logprob, perplexity, P(True)</td></tr>
+</table>
+
+<footer>
+<a href="../lessons/0001-normal-distribution.html">পাঠ ১</a>
+<a href="../lessons/0002-z-scores.html">পাঠ ২</a>
+<a href="../lessons/0003-frequentist.html">পাঠ ৩</a>
+<a href="../lessons/0004-bayesian.html">পাঠ ৪</a>
+<a href="../lessons/0005-confidence-scores.html">পাঠ ৫</a>
+<a href="../lessons/0006-stats-inside-llm.html">পাঠ ৬</a>
+<a href="../lessons/0007-llm-probability-confidence.html">পাঠ ৭</a>
+<a href="llm-stats-map.html">LLM ম্যাপ</a>
+</footer>
+
+</main>
+</body>
+</html>

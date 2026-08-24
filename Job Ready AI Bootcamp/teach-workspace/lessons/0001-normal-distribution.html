@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ১ — Normal Distribution (ঘণ্টার মতো বাঁকা লাইন)</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০১ · Week 3 / Class 2 Project</p>
+<h1>Normal Distribution</h1>
+<p class="subtitle">বাংলায়: “গড়ের আশেপাশে সবাই ভিড় করে, দূরে খুব কম মানুষ থাকে।”</p>
+
+<h2>এক লাইনে ব্যাপারটা</h2>
+
+<p>তোমার ক্লাসের ৪০ জনের উচ্চতা মাপো। বেশিরভাগ থাকবে ৫'৪" থেকে ৫'৮" এর মধ্যে। খুব লম্বা (৬'৪") বা খুব খাটো (৪'৮") — এমন পাবে হাতে গোনা দুই-একজন।</p>
+
+<p>এই ছবিটা আঁকলে দেখতে লাগে <strong>একটা ঘণ্টার মতো</strong> — মাঝখানে উঁচু, দুই পাশে নেমে যাওয়া। এটাই <strong>Normal Distribution</strong>, ওরফে Bell Curve.</p>
+
+<p class="sidenote">নাম অনেক, জিনিস এক: Normal Distribution = Gaussian Distribution = Bell Curve. তিনটাই একই জিনিস।</p>
+
+<h2>মাত্র দুইটা সংখ্যা দিয়েই পুরো ছবিটা আঁকা যায়</h2>
+
+<table>
+<tr><th>চিহ্ন</th><th>নাম</th><th>বাংলায় মানে</th></tr>
+<tr><td class="mono">μ</td><td>mean (mu)</td><td>গড় — ঘণ্টার চূড়া কোথায়</td></tr>
+<tr><td class="mono">σ</td><td>standard deviation (sigma)</td><td>ছড়ানো কতটুকু — ঘণ্টা চিকন না মোটা</td></tr>
+</table>
+
+<p>μ বাড়ালে পুরো ঘণ্টা ডানে সরে যায়। σ বাড়ালে ঘণ্টা চ্যাপ্টা-চওড়া হয়, মানে ডেটা বেশি ছড়ানো।</p>
+
+<div class="callout">
+<span class="label">এটাই আসল জিনিস</span>
+<strong>68–95–99.7 নিয়ম।</strong> গড় থেকে ১ σ দূরত্বের ভেতরে থাকে ~৬৮% ডেটা। ২ σ এর ভেতরে ~৯৫%। ৩ σ এর ভেতরে ~৯৯.৭%।
+</div>
+
+<p>উদাহরণ — ধরো গড় উচ্চতা μ = ১৭০ সেমি, σ = ৫ সেমি:</p>
+
+<table>
+<tr><th>রেঞ্জ</th><th>কত মানুষ</th><th>মানে</th></tr>
+<tr><td>১৬৫–১৭৫</td><td>৬৮%</td><td>একদম স্বাভাবিক</td></tr>
+<tr><td>১৬০–১৮০</td><td>৯৫%</td><td>প্রায় সবাই</td></tr>
+<tr><td>১৫৫–১৮৫</td><td>৯৯.৭%</td><td>কার্যত সবাই</td></tr>
+<tr><td>এর বাইরে</td><td>০.৩%</td><td>খুবই অস্বাভাবিক — <em>outlier</em></td></tr>
+</table>
+
+<p>শেষ লাইনটাই AI-তে কাজে লাগে। ডেটাতে কোনো ভুল ভ্যালু বা fraud খুঁজতে চাও? দেখো কোনটা ৩σ এর বাইরে পড়ে গেছে।</p>
+
+<h2>কোডে কেমন দেখায়</h2>
+
+<p>তোমার notebook-এর <code>Section B</code> ঠিক এটাই করছে — ১০,০০০টা নকল ডেটা বানিয়ে নিয়মটা সত্যি কিনা যাচাই করছে:</p>
+
+<pre><code>mu, sigma = 100, 15
+data = np.random.normal(mu, sigma, 10000)
+
+within_1sigma = np.sum((data &gt;= mu - sigma) &amp; (data &lt;= mu + sigma)) / 10000 * 100
+print(within_1sigma)   # ~68.27 আসবে</code></pre>
+
+<p class="sidenote"><code>np.random.seed(42)</code> লাইনটা যাতে প্রতিবার একই র‍্যান্ডম সংখ্যা আসে — ক্লাসে সবার আউটপুট মিলবে।</p>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="1">
+<p class="q">μ = ৫০, σ = ১০। কত শতাংশ ডেটা ৩০ থেকে ৭০ এর মধ্যে থাকবে?</p>
+<button class="opt">প্রায় আটষট্টি শতাংশ ডেটা</button>
+<button class="opt">প্রায় পঁচানব্বই শতাংশ ডেটা</button>
+<button class="opt">প্রায় নিরানব্বই শতাংশ ডেটা</button>
+<p class="why">৩০ থেকে ৭০ মানে গড় ৫০ থেকে ২০ দূরে, আর ২০ = ২ × σ। তাই ±২σ → ৯৫%।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">σ ছোট থেকে বড় হলে ঘণ্টার আকৃতির কী হয়?</p>
+<button class="opt">চূড়াটা ডান দিকে সরে যায়</button>
+<button class="opt">চূড়াটা বাম দিকে সরে যায়</button>
+<button class="opt">চ্যাপ্টা আর চওড়া হয়ে যায়</button>
+<p class="why">σ শুধু ছড়ানো নিয়ন্ত্রণ করে, অবস্থান নয়। অবস্থান সরাতে হলে μ বদলাতে হবে।</p>
+</div>
+
+<div class="recall">
+<p><strong>মুখস্থ নয়, মনে করে লেখো:</strong> notebook না খুলে লিখো — ৬৮–৯৫–৯৯.৭ নিয়মটা কী, আর AI-তে এর একটা কাজ কী?</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+±১σ = ৬৮%, ±২σ = ৯৫%, ±৩σ = ৯৯.৭%। কাজ: ৩σ-এর বাইরের ভ্যালুগুলো outlier — ডেটা পরিষ্কার করা বা fraud ধরার কাজে লাগে।
+</div>
+</div>
+
+<h2>এরপর কী</h2>
+<p>“৩σ দূরে” কথাটা মাপার একটা নিখুঁত হাতিয়ার আছে — সেটার নাম Z-score. পরের পাঠে।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://seeing-theory.brown.edu/probability-distributions/index.html">Seeing Theory — Probability Distributions</a> (Brown University). স্লাইডার টেনে μ আর σ বদলে ঘণ্টা বদলাতে দেখো। ১০ মিনিট দাও।
+</div>
+
+<div class="ask-teacher">
+কিছু আটকে গেলে সরাসরি জিজ্ঞেস করো — আমি এই কোর্সে তোমার শিক্ষক। “σ কেন বর্গমূলের ভেতরে?” টাইপের প্রশ্নও চলবে।
+</div>
+
+<footer>
+<a href="0002-z-scores.html">পরের পাঠ → Z-Score</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+<a href="../MISSION.md">মিশন</a>
+</footer>
+
+</main>
+</body>
+</html>

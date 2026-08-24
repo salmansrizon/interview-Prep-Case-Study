@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৬ — LLM-এর ভেতরে এই স্ট্যাটিসটিক্স কোথায় বসানো</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৬ · LLM সংযোগ, পর্ব ১</p>
+<h1>LLM-এর ভেতরে: Normal Distribution ও Z-Score</h1>
+<p class="subtitle">বাংলায়: “পাঠ ১–২ এ যা শিখলে, GPT/Claude-এর কোডে সেটা আক্ষরিক অর্থেই লেখা আছে।”</p>
+
+<div class="callout">
+<span class="label">এই পাঠের দাবি</span>
+Normal distribution আর Z-score কোনো “তত্ত্ব” নয় যা পরে কাজে লাগবে। এই দুইটা জিনিস <strong>Transformer-এর প্রতিটা layer-এ, প্রতিটা token-এর জন্য</strong> চলে। নিচে ঠিক কোথায় দেখাচ্ছি।
+</div>
+
+<h2>১. মডেল জন্মায় Normal Distribution থেকে</h2>
+
+<p>একটা LLM-এ কোটি কোটি weight। ট্রেনিং শুরুর আগে এগুলোর প্রাথমিক মান কী হবে?</p>
+
+<ul>
+<li><strong>সব শূন্য?</strong> তাহলে প্রতিটা neuron একই কাজ করবে, কেউ আলাদা কিছু শিখবে না। মৃত মডেল।</li>
+<li><strong>এলোমেলো বড় সংখ্যা?</strong> সংখ্যা layer-এ layer-এ বাড়তে বাড়তে ফেটে যাবে (exploding gradients)।</li>
+</ul>
+
+<p>সমাধান: weight টানা হয় একটা <strong>সাবধানে মাপা normal distribution</strong> থেকে —</p>
+
+<div class="formula">W ~ N(0, σ²) &nbsp;&nbsp; যেখানে σ² নির্ভর করে layer-টা কত চওড়া</div>
+
+<table>
+<tr><th>পদ্ধতি</th><th>σ²</th><th>কোথায়</th></tr>
+<tr><td>Xavier / Glorot</td><td class="mono">2 / (fan_in + fan_out)</td><td>tanh-জাতীয় layer</td></tr>
+<tr><td>He init</td><td class="mono">2 / fan_in</td><td>ReLU-জাতীয় layer</td></tr>
+<tr><td>GPT-2 এর নিজস্ব</td><td class="mono">0.02² (fixed)</td><td>GPT পরিবার</td></tr>
+</table>
+
+<p class="sidenote">মনে করো পাঠ ১ — σ ছোট মানে চিকন ঘণ্টা, সব weight শূন্যের কাছাকাছি। σ বড় মানে চওড়া ঘণ্টা, weight ছড়ানো। এখানে σ ঠিক করার পুরো কাজটাই “সংখ্যাগুলো যেন না ফাটে, আবার মরেও না যায়”।</p>
+
+<h2>২. LayerNorm আক্ষরিক অর্থেই Z-Score</h2>
+
+<p>এটাই এই পাঠের সবচেয়ে গুরুত্বপূর্ণ কথা। LayerNorm-এর সূত্র দেখো:</p>
+
+<div class="formula">y = γ · (x − μ) / √(σ² + ε) &nbsp; + &nbsp; β</div>
+
+<p>মাঝের অংশটা <code>(x − μ) / σ</code> — <strong>হুবহু পাঠ ২ এর Z-score</strong>। Transformer প্রতিটা token-এর vector নিয়ে তার নিজের μ আর σ বের করে, তারপর z-score বানায়।</p>
+
+<table>
+<tr><th>অংশ</th><th>কাজ</th></tr>
+<tr><td class="mono">(x − μ) / σ</td><td>Z-score — mean 0, std 1 করে দেয়</td></tr>
+<tr><td class="mono">ε</td><td>খুব ছোট সংখ্যা (~1e-5), σ = 0 হলে ভাগ ভেঙে না যায়</td></tr>
+<tr><td class="mono">γ (gamma)</td><td>শেখা scale — মডেল নিজে ঠিক করে কতটা ছড়াবে</td></tr>
+<tr><td class="mono">β (beta)</td><td>শেখা shift — মডেল নিজে ঠিক করে কেন্দ্র কোথায়</td></tr>
+</table>
+
+<p><strong>কেন দরকার?</strong> পাঠ ২ এ বলেছিলাম — বয়স (২০–৬০) আর বেতন (২০,০০০–২,০০,০০০) একসাথে দিলে model বিভ্রান্ত হয়। LLM-এর ভেতরেও একই সমস্যা: ৮০টা layer পার হতে হতে কিছু সংখ্যা বিশাল, কিছু ক্ষুদ্র হয়ে যায়। প্রতি layer-এ z-score করে সবাইকে আবার একই মাঠে নামানো হয়। এতে ট্রেনিং স্থিতিশীল থাকে।</p>
+
+<pre><code># LayerNorm নিজে হাতে — মাত্র তিন লাইন
+mu    = x.mean(axis=-1, keepdims=True)      # এই token-এর গড়
+sigma = x.std(axis=-1, keepdims=True)       # এই token-এর std
+y     = gamma * (x - mu) / (sigma + 1e-5) + beta</code></pre>
+
+<div class="callout">
+<span class="label">আধুনিক রূপ: RMSNorm</span>
+Llama, T5, Gemma এরা <strong>RMSNorm</strong> ব্যবহার করে — যেখানে <code>μ</code> বিয়োগ করার ধাপটাই বাদ, শুধু RMS দিয়ে ভাগ। কেন? গড় বিয়োগ করে খুব একটা লাভ হয় না, কিন্তু হিসাবটা দ্রুত হয়। বিলিয়ন প্যারামিটারে এই সামান্য সাশ্রয়ও বিশাল।
+</div>
+
+<h2>৩. Attention-এ √d দিয়ে ভাগ — একই যুক্তি</h2>
+
+<p>Attention-এর সূত্রে একটা রহস্যময় ভাগ আছে:</p>
+
+<div class="formula">Attention = softmax( Q·Kᵀ / √d<sub>k</sub> ) · V</div>
+
+<p>ওই <code>√d_k</code> কেন? কারণ <code>Q·Kᵀ</code> হলো <code>d_k</code> সংখ্যক জিনিসের যোগফল, তাই তার variance বেড়ে যায় <code>d_k</code> গুণ। মানে standard deviation বাড়ে <code>√d_k</code> গুণ।</p>
+
+<p>ভাগ না করলে সংখ্যাগুলো বিশাল হয়ে যায়, softmax তখন প্রায় সব probability একটা token-এ ঢেলে দেয় — মডেল অন্ধ হয়ে যায়। <code>√d_k</code> দিয়ে ভাগ করে variance আবার ~১ এ নামানো হয়।</p>
+
+<p class="sidenote">খেয়াল করো — এটাও Z-score-এর ভাইবোন। শুধু <code>σ</code> মেপে নেওয়া হয়নি, গণিত দিয়ে আগেই জানা ছিল <code>σ = √d_k</code>। তাই সরাসরি ভাগ।</p>
+
+<h2>৪. Outlier ধরা — ট্রেনিং ডেটা পরিষ্কারে</h2>
+
+<p>পাঠ ১ এ শিখেছিলে <code>|Z| &gt; 3</code> = outlier। LLM ট্রেনিংয়ের আগে ডেটা পরিষ্কারের সময় এটাই ব্যবহার হয়:</p>
+
+<ul>
+<li>নথির দৈর্ঘ্য অস্বাভাবিক (৩σ এর বাইরে) → সম্ভবত আবর্জনা বা ভাঙা ফাইল</li>
+<li>একই token বারবার (perplexity অস্বাভাবিক কম) → স্প্যাম বা টেমপ্লেট</li>
+<li>Embedding space-এ z-score দিয়ে near-duplicate বাদ দেওয়া</li>
+</ul>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="1">
+<p class="q">LayerNorm-এর সূত্রে <code>(x − μ) / σ</code> অংশটা আসলে কী?</p>
+<button class="opt">Softmax-এর একটা সরল রূপান্তর</button>
+<button class="opt">Z-score, হুবহু একই হিসাব</button>
+<button class="opt">Confidence interval-এর প্রস্থ</button>
+<p class="why">অবিকল পাঠ ২ এর সূত্র। পার্থক্য শুধু এই যে LLM এটা প্রতি token-এ, প্রতি layer-এ, প্রতিবার নতুন করে হিসাব করে।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">Attention-এ <code>√d_k</code> দিয়ে ভাগ না করলে কী হবে?</p>
+<button class="opt">মডেল আরও দ্রুত শিখতে থাকবে</button>
+<button class="opt">কিছুই না, শুধু ধীর হবে</button>
+<button class="opt">Softmax একটা token-এ আটকে যাবে</button>
+<p class="why">বড় সংখ্যায় softmax চরমে চলে যায় — একটা token পায় প্রায় ১.০, বাকিরা ~০। Gradient মরে যায়, মডেল শেখা বন্ধ করে।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> LLM-এ Z-score ঠিক কোন জায়গায় বসানো আছে, আর কেন?</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+LayerNorm-এ — প্রতি token-এর vector-কে mean 0, std 1 করা হয়, তারপর শেখা γ ও β দিয়ে scale ও shift। কারণ: বহু layer পার হলে সংখ্যার মাত্রা বেসামাল হয়ে যায়; z-score করে প্রতি layer-এ আবার সমান মাঠ তৈরি হয়, ফলে ট্রেনিং স্থিতিশীল থাকে।
+</div>
+</div>
+
+<h2>এরপর কী</h2>
+<p>এতক্ষণ দেখলাম মডেলের <em>ভেতরে</em>। পরের পাঠে মডেলের <em>বাইরে</em> — যে token বেরোয় তার probability, temperature, logprobs, আর LLM কতটা মিথ্যা বলছে সেটা ধরার উপায়।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://arxiv.org/abs/1607.06450">Ba, Kiros &amp; Hinton — Layer Normalization (arXiv:1607.06450)</a>. সূত্র ২ দেখো, সেটাই উপরের z-score। সাথে <a href="https://arxiv.org/abs/1910.07467">RMSNorm (arXiv:1910.07467)</a> আর <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a> এর section 3.2.1 — √d_k এর ব্যাখ্যা ওখানেই।
+</div>
+
+<div class="ask-teacher">
+NumPy দিয়ে নিজে একটা LayerNorm লিখে PyTorch-এর <code>nn.LayerNorm</code> এর সাথে মিলিয়ে দেখতে চাও? বলো — এটা করলে জিনিসটা আর কখনও ভুলবে না।
+</div>
+
+<footer>
+<a href="0005-confidence-scores.html">← আগের পাঠ</a>
+<a href="0007-llm-probability-confidence.html">পরের পাঠ → LLM-এর probability ও confidence</a>
+<a href="../reference/llm-stats-map.html">LLM ম্যাপ শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৭ — LLM কতটা নিশ্চিত? Probability, Temperature, Hallucination</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৭ · LLM সংযোগ, পর্ব ২</p>
+<h1>LLM-এর Probability ও Confidence</h1>
+<p class="subtitle">বাংলায়: “LLM আসলে লেখে না — প্রতিটা শব্দে একটা probability distribution বানায়, তারপর সেখান থেকে তোলে।”</p>
+
+<h2>১. LLM মানেই একটা probability মেশিন</h2>
+
+<p>ChatGPT বাক্য “লেখে” না। ও প্রতিবার শুধু একটা প্রশ্নের উত্তর দেয়:</p>
+
+<div class="formula">P( পরের token | এ পর্যন্ত যা আছে )</div>
+
+<p>“আকাশের রং ___” দিলে মডেল পুরো vocabulary-র (~১,০০,০০০ token) উপর একটা distribution বানায়:</p>
+
+<pre><code>নীল    0.72
+কালো   0.09
+ধূসর   0.06
+লাল    0.002
+...  (বাকি ৯৯,৯৯৬ টা token)
+মোট যোগফল = 1.00</code></pre>
+
+<p>তারপর সেখান থেকে একটা তোলে, বাক্যে জোড়ে, আবার একই প্রশ্ন করে। পুরো বাক্যের probability হলো গুণফল:</p>
+
+<div class="formula">P(বাক্য) = P(w₁) × P(w₂|w₁) × P(w₃|w₁,w₂) × …</div>
+
+<p class="sidenote">এটাই chain rule of probability — পাঠ ৪ এর conditional probability <code>P(A|B)</code> এর সরাসরি প্রয়োগ। LLM মানে বিশাল আকারের একটা conditional probability টেবিল, যেটা মুখস্থ না করে শিখে ফেলা হয়েছে।</p>
+
+<h2>২. Logits → Softmax → Probability</h2>
+
+<p>মডেলের শেষ layer থেকে যা বের হয় তার নাম <strong>logits</strong> — যেকোনো সংখ্যা, ঋণাত্মকও হতে পারে। Probability বানাতে softmax লাগে:</p>
+
+<div class="formula">p<sub>i</sub> = exp(z<sub>i</sub> / T) / Σ exp(z<sub>j</sub> / T)</div>
+
+<pre><code>import numpy as np
+
+def softmax(logits, T=1.0):
+    z = np.array(logits) / T
+    e = np.exp(z - z.max())        # স্থিতিশীলতার জন্য max বাদ
+    return e / e.sum()
+
+logits = [3.2, 1.1, 0.8, -0.5]
+softmax(logits, T=1.0)   # [0.81, 0.10, 0.07, 0.02]  ← ধারালো
+softmax(logits, T=2.0)   # [0.55, 0.19, 0.17, 0.09]  ← নরম
+softmax(logits, T=0.3)   # [0.99, 0.00, 0.00, 0.00]  ← প্রায় নিশ্চিত</code></pre>
+
+<h3>Temperature — যে নবটা তুমি API-তে দাও</h3>
+
+<table>
+<tr><th>T</th><th>যা হয়</th><th>কখন</th></tr>
+<tr><td>০ এর কাছে</td><td>সবসময় সবচেয়ে সম্ভাব্য token — একঘেয়ে, পুনরাবৃত্তি</td><td>কোড, তথ্য, JSON</td></tr>
+<tr><td>~০.৭</td><td>ভারসাম্য</td><td>সাধারণ চ্যাট</td></tr>
+<tr><td>১.৫+</td><td>distribution চ্যাপ্টা, বিরল token-ও আসে — সৃজনশীল, কিন্তু আবোলতাবোল</td><td>গল্প, brainstorm</td></tr>
+</table>
+
+<div class="callout">
+<span class="label">সংযোগ</span>
+Temperature আসলে distribution-এর <strong>ছড়ানো নিয়ন্ত্রণের নব</strong> — ঠিক পাঠ ১ এর σ যা করত। T বাড়ানো মানে ঘণ্টা চ্যাপ্টা করা।
+</div>
+
+<h3>Top-k আর Top-p (nucleus)</h3>
+
+<p>Temperature বাড়ালে একটা বিপদ — অত্যন্ত অসম্ভাব্য token-ও (probability ০.০০০১) কখনো কখনো উঠে আসে, আর একটা বাজে শব্দ পুরো বাক্য নষ্ট করে। তাই লেজটা কেটে দেওয়া হয়:</p>
+
+<ul>
+<li><strong>Top-k = 50</strong> → শুধু সবচেয়ে সম্ভাব্য ৫০টা token থেকে তোলো।</li>
+<li><strong>Top-p = 0.9</strong> → উপর থেকে যোগ করতে করতে ৯০% probability যেখানে পূর্ণ হয়, সেখানেই থামো। বাকিটা বাদ।</li>
+</ul>
+
+<p>Top-p বেশি চতুর: মডেল নিশ্চিত হলে হয়তো ৩টা token-ই ৯০% পূরণ করে; অনিশ্চিত হলে ২০০টা লাগে। মানে কাটার জায়গাটা নিজে থেকেই মানিয়ে নেয়।</p>
+
+<h2>৩. Confidence মাপা — পাঠ ৫ এর সরাসরি প্রয়োগ</h2>
+
+<h3>(ক) Token-level: logprob</h3>
+
+<p>অনেক API প্রতিটা token-এর <code>logprob</code> (log probability) ফেরত দেয়। <code>exp(logprob)</code> করলেই confidence:</p>
+
+<pre><code>token "নীল"  logprob = -0.33  → exp(-0.33) = 0.72  ← আত্মবিশ্বাসী
+token "১৯৪৭" logprob = -2.30  → exp(-2.30) = 0.10  ← দুর্বল, যাচাই করো</code></pre>
+
+<p>ব্যবহারিক নিয়ম: extraction বা classification-এ যদি উত্তরের token-গুলোর logprob কম হয়, তাহলে মানুষের কাছে পাঠাও। এটাই পাঠ ৫ এর threshold সিস্টেম, LLM-এ বসানো।</p>
+
+<h3>(খ) Sequence-level: Perplexity</h3>
+
+<div class="formula">Perplexity = exp( − (1/N) Σ log p(w<sub>i</sub>) )</div>
+
+<p>মানে: “প্রতি শব্দে মডেল গড়ে কয়টা বিকল্পের মধ্যে দ্বিধায় ছিল?” PPL = ১ মানে নিখুঁত নিশ্চয়তা। PPL = ১০০ মানে প্রতি শব্দে যেন ১০০টা সমান বিকল্পের মধ্যে আন্দাজ করছে।</p>
+
+<h3>(গ) মডেলকে সরাসরি জিজ্ঞেস করা</h3>
+
+<p>Anthropic-এর গবেষণায় দেখা গেছে বড় মডেল নিজের উত্তর সঠিক কিনা তা নিয়ে <strong>মোটামুটি সৎ P(True) দিতে পারে</strong> — অর্থাৎ মডেল কিছুটা “জানে যে সে জানে না”। নিখুঁত নয়, কিন্তু ফেলনাও নয়।</p>
+
+<h3>(ঘ) Semantic Entropy — hallucination ধরার সেরা উপায়</h3>
+
+<p>সমস্যা: “১৯৭১”, “উনিশশো একাত্তর”, “1971 সালে” — তিনটা আলাদা token সিকোয়েন্স, কিন্তু <em>একই অর্থ</em>। শুধু token probability দেখলে মনে হবে মডেল দ্বিধায়, আসলে না।</p>
+
+<p>সমাধান:</p>
+<ol>
+<li>একই প্রশ্ন ৫–১০ বার চালাও (temperature &gt; 0)</li>
+<li>উত্তরগুলো <em>অর্থ</em> অনুযায়ী দলে ভাগ করো (একটা NLI মডেল দিয়ে)</li>
+<li>দলগুলোর উপর entropy মাপো</li>
+</ol>
+
+<pre><code>সব উত্তর একই দলে      → entropy কম  → মডেল সত্যিই জানে
+উত্তর ৫টা আলাদা দলে   → entropy বেশি → সম্ভবত hallucination</code></pre>
+
+<div class="callout">
+<span class="label">এটা কেন Frequentist</span>
+পাঠ ৩ এর হুবহু কৌশল — “একবার দেখে বোঝা যাচ্ছে না? তাহলে বহুবার চালিয়ে গুনে দেখো।” LLM-এর অনিশ্চয়তা মাপার সবচেয়ে নির্ভরযোগ্য পদ্ধতিটা আসলে law of large numbers।
+</div>
+
+<h2>৪. Calibration — LLM-এর সবচেয়ে বড় ফাঁদ</h2>
+
+<p>পাঠ ৫ এ বলেছিলাম confidence ≠ accuracy। LLM-এ এটা ভয়াবহ রকম সত্যি:</p>
+
+<table>
+<tr><th>ধাপ</th><th>Calibration</th></tr>
+<tr><td>Pre-trained base model</td><td>বেশ ভালো — ০.৮ বললে সত্যিই ~৮০% বার ঠিক</td></tr>
+<tr><td>RLHF করার পর</td><td><strong>খারাপ হয়ে যায়</strong> — সব কিছুতেই অতি-আত্মবিশ্বাসী</td></tr>
+</table>
+
+<p>GPT-4 এর technical report-এ এই পতনটা গ্রাফসহ দেখানো আছে। কারণটা বোধগম্য: RLHF মডেলকে শেখায় <em>মানুষ যে উত্তর পছন্দ করে</em> সেটা দিতে, আর মানুষ দ্বিধাগ্রস্ত উত্তর অপছন্দ করে। ফলে মডেল আত্মবিশ্বাসী ভঙ্গিতে বলা শিখে যায় — জানুক বা না জানুক।</p>
+
+<div class="callout">
+<span class="label">ইঞ্জিনিয়ার হিসেবে যা করতে হবে</span>
+LLM-এর “আমি নিশ্চিত” কথাটাকে কখনও confidence score হিসেবে ধরবে না। মাপো — logprob, বা একাধিকবার চালিয়ে semantic entropy। তারপর নিজের validation set-এ calibration curve এঁকে দেখো দাবি আর বাস্তব মেলে কিনা।
+</div>
+
+<p class="sidenote">মজার মিল: calibration ঠিক করার ক্লাসিক পদ্ধতির নামও <strong>temperature scaling</strong> — একই softmax temperature, কিন্তু এবার validation set-এ fit করে বসানো হয় (Guo et al. 2017)।</p>
+
+<h2>৫. Frequentist দিক — benchmark-এর সংখ্যা কতটা বিশ্বাস করবে</h2>
+
+<p>“আমাদের মডেল MMLU-তে ৮৭.২%, ওদেরটা ৮৬.৯%” — এটা কি সত্যিই ভালো?</p>
+
+<p>পাঠ ৩ এর SE বের করো। n = ১৪,০০০ প্রশ্ন, p ≈ ০.৮৭:</p>
+
+<pre><code>SE = √(0.87 × 0.13 / 14000) = 0.0028
+95% CI = 87.2% ± 0.56%  →  [86.6%, 87.8%]</code></pre>
+
+<p>৮৬.৯% ওই রেঞ্জের ভেতরেই পড়ে। মানে <strong>পার্থক্যটা noise</strong>। আর ২০০ প্রশ্নের কোনো ছোট eval set হলে CI হবে ±৫% — সেখানে ১-২% পার্থক্য নিয়ে কথা বলাই অর্থহীন।</p>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="1">
+<p class="q">Temperature ২.০ করলে softmax distribution-এর কী হয়?</p>
+<button class="opt">ধারালো হয়, শীর্ষ token আরও প্রভাবশালী</button>
+<button class="opt">চ্যাপ্টা হয়, বিরল token-ও সুযোগ পায়</button>
+<button class="opt">অপরিবর্তিত থাকে, শুধু গতি বদলায়</button>
+<p class="why">T ভাগ হিসেবে বসে — বড় T মানে logits ছোট হয়ে যায়, পার্থক্য কমে, distribution সমান হয়ে আসে। পাঠ ১ এর σ বাড়ানোর সমতুল্য।</p>
+</div>
+
+<div class="quiz" data-answer="0">
+<p class="q">RLHF-এর পর মডেলের calibration সাধারণত কী হয়?</p>
+<button class="opt">খারাপ হয়, মডেল অতি-আত্মবিশ্বাসী হয়</button>
+<button class="opt">ভালো হয়, মডেল বেশি সৎ হয়</button>
+<button class="opt">একই থাকে, RLHF এতে প্রভাব ফেলে না</button>
+<p class="why">RLHF মানুষের পছন্দ শেখায়, আর মানুষ দ্বিধা অপছন্দ করে। GPT-4 report-এ pre/post-RLHF calibration গ্রাফে পতনটা স্পষ্ট।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">Semantic entropy-তে উত্তরগুলো কীসের ভিত্তিতে দলে ভাগ করা হয়?</p>
+<button class="opt">উত্তরের দৈর্ঘ্য ও token সংখ্যা</button>
+<button class="opt">প্রতিটা token-এর logprob মান</button>
+<button class="opt">উত্তরের অর্থ, শব্দরূপ নয়</button>
+<p class="why">এটাই মূল কৌশল। "১৯৭১" আর "উনিশশো একাত্তর" token হিসেবে আলাদা, অর্থে এক — একই দলে যাবে। তাই entropy কম, অর্থাৎ মডেল আসলে নিশ্চিত।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> কোনো LLM-এর একটা উত্তরে সে কতটা নিশ্চিত — তুমি কীভাবে মাপবে? দুইটা আলাদা উপায় লেখো।</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+(১) <strong>Logprob</strong> — উত্তরের token-গুলোর log probability নাও, <code>exp()</code> করো, threshold বসাও। এক কলেই হয়, কিন্তু শব্দরূপে বিভ্রান্ত হয়।
+(২) <strong>Semantic entropy</strong> — একই প্রশ্ন ৫–১০ বার চালাও, উত্তরগুলো অর্থ অনুযায়ী দলে ভাগ করো, entropy মাপো। বেশি খরচ, কিন্তু hallucination ধরায় অনেক ভালো।
+আর যাই করো — মডেলের নিজের "আমি নিশ্চিত" বাক্যটা confidence হিসেবে গুনবে না।
+</div>
+</div>
+
+<h2>সাত পাঠ একসাথে</h2>
+
+<table>
+<tr><th>পাঠ ১–৫ এ শেখা</th><th>LLM-এ কোথায়</th></tr>
+<tr><td>Normal distribution</td><td>Weight initialization (Xavier, He, GPT-2 এর 0.02)</td></tr>
+<tr><td>Z-score</td><td>LayerNorm; RMSNorm; attention-এ √d_k ভাগ</td></tr>
+<tr><td>σ = ছড়ানোর নব</td><td>Softmax temperature</td></tr>
+<tr><td>Conditional probability</td><td>পরের token ভবিষ্যদ্বাণী — LLM-এর মূল কাজ</td></tr>
+<tr><td>Frequentist (বারবার গুনে দেখা)</td><td>Semantic entropy; benchmark accuracy CI</td></tr>
+<tr><td>Bayesian (prior + প্রমাণ)</td><td>Prompt/RAG context = prior; উত্তর = posterior</td></tr>
+<tr><td>Confidence score + calibration</td><td>Logprob, perplexity, P(True), calibration curve</td></tr>
+</table>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://arxiv.org/abs/2207.05221">Language Models (Mostly) Know What They Know (arXiv:2207.05221)</a> — LLM calibration নিয়ে সবচেয়ে ভালো একক পেপার। সাথে
+<a href="https://arxiv.org/abs/2302.09664">Semantic Uncertainty (arXiv:2302.09664)</a>,
+<a href="https://arxiv.org/abs/1904.09751">Top-p / nucleus sampling (arXiv:1904.09751)</a>,
+<a href="https://arxiv.org/abs/1706.04599">On Calibration of Modern Neural Networks (arXiv:1706.04599)</a>,
+আর <a href="https://huggingface.co/docs/transformers/perplexity">Hugging Face — Perplexity</a> (কোডসহ)।
+</div>
+
+<div class="callout">
+<span class="label">এবার সব একসাথে</span>
+<a href="0008-one-prompt-end-to-end.html">পাঠ ৮</a> এ একটাই prompt নিয়ে এই আটটা ধাপ শুরু থেকে শেষ পর্যন্ত চালানো আছে — স্লাইডার, ছবি আর চালানোর মতো কোডসহ।
+</div>
+
+<div class="ask-teacher">
+হাতে-কলমে করতে চাও? একটা ছোট open model নিয়ে logprob বের করে, একই প্রশ্ন ১০ বার চালিয়ে semantic entropy হিসাব করা যায় — notebook বানিয়ে দিতে পারি। বলো।
+</div>
+
+<footer>
+<a href="0006-stats-inside-llm.html">← আগের পাঠ</a>
+<a href="0008-one-prompt-end-to-end.html">পরের পাঠ → একটা prompt, শুরু থেকে শেষ</a>
+<a href="0001-normal-distribution.html">শুরু থেকে</a>
+<a href="../reference/llm-stats-map.html">LLM ম্যাপ শিট</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

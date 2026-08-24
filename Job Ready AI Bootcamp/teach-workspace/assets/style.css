@@ -1,0 +1,301 @@
+/* Shared stylesheet for all lessons in this teaching workspace.
+   Bangla-first typography, Tufte-inspired layout, print-friendly. */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --ink: #1b1b18;
+  --ink-soft: #55534d;
+  --rule: #d8d4c8;
+  --paper: #fffdf8;
+  --accent: #7a2e1e;
+  --accent-soft: #f4e9e3;
+  --good: #1f6b3a;
+  --bad: #a3271b;
+  --measure: 40rem;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 17px; }
+
+body {
+  margin: 0;
+  padding: 3.5rem 1.5rem 6rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Noto Sans Bengali', 'Source Serif 4', Georgia, serif;
+  line-height: 1.75;
+}
+
+main { max-width: var(--measure); margin: 0 auto; }
+
+/* ---- Masthead ---- */
+.eyebrow {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.3;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 0 0 2rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 2.75rem 0 0.75rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h3 { font-size: 1.1rem; margin: 1.75rem 0 0.5rem; }
+
+p, li { max-width: var(--measure); }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+code, .mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em;
+  background: #f1eee6;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+pre {
+  background: #f1eee6;
+  border-left: 3px solid var(--accent);
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+pre code { background: none; padding: 0; }
+
+/* ---- Sidenote: the Tufte move ---- */
+.sidenote {
+  float: right;
+  clear: right;
+  width: 13rem;
+  margin: 0.3rem -15rem 1rem 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--rule);
+  padding-left: 0.7rem;
+}
+@media (max-width: 1100px) {
+  .sidenote {
+    float: none;
+    width: auto;
+    margin: 1rem 0;
+    background: #f7f4ec;
+    padding: 0.7rem 0.9rem;
+    border-left: 3px solid var(--rule);
+  }
+}
+
+/* ---- Callouts ---- */
+.callout {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  padding: 0.9rem 1.2rem;
+  margin: 1.5rem 0;
+}
+.callout .label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.formula {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  background: #f1eee6;
+  padding: 1rem;
+  margin: 1.25rem 0;
+  border-radius: 4px;
+}
+
+/* ---- Tables ---- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.25rem 0;
+  font-size: 0.92rem;
+}
+th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--rule); }
+th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+
+/* ---- Quiz widget (see quiz.js) ---- */
+.quiz {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.1rem 1.3rem;
+  margin: 1.5rem 0;
+  background: #fff;
+}
+.quiz .q { font-weight: 600; margin: 0 0 0.8rem; }
+.quiz button.opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 0.95rem;
+  background: #faf8f2;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+.quiz button.opt:hover { background: #f1eee6; }
+.quiz button.opt.right { border-color: var(--good); background: #e8f3ec; }
+.quiz button.opt.wrong { border-color: var(--bad); background: #f8e9e7; }
+.quiz button.opt[disabled] { cursor: default; }
+.quiz .why {
+  display: none;
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  border-top: 1px dashed var(--rule);
+  padding-top: 0.6rem;
+}
+.quiz .why.show { display: block; }
+
+/* ---- Recall box: write-from-memory prompt ---- */
+.recall {
+  border: 2px dashed var(--rule);
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+}
+.recall textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  font: inherit;
+  font-size: 0.92rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.5rem;
+  background: #fffdf8;
+}
+
+/* ---- Softmax lab (see softmax-lab.js) ---- */
+.softmax-lab {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #fff;
+  padding: 1.1rem 1.3rem;
+  margin: 1.5rem 0;
+}
+.lab-controls {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.lab-controls label { display: flex; flex-direction: column; gap: 0.2rem; flex: 1 1 12rem; }
+.lab-controls output {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--accent);
+}
+.lab-controls input[type=range] { width: 100%; accent-color: var(--accent); }
+
+.bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; }
+.bar-label {
+  flex: 0 0 5.5rem;
+  font-size: 0.88rem;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.bar-track { flex: 1 1 auto; background: #f1eee6; border-radius: 3px; height: 1.25rem; }
+.bar-track .bar { display: block; height: 100%; border-radius: 3px; transition: width 0.08s linear; }
+.bar-track .bar.keep { background: var(--accent); }
+.bar-track .bar.drop { background: #cfcabd; }
+.bar-val {
+  flex: 0 0 3.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.lab-readout {
+  margin-top: 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* ---- Figures ---- */
+figure { margin: 1.75rem 0; }
+figure img {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #fff;
+}
+figcaption {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* ---- Pipeline step marker ---- */
+.step {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  vertical-align: 0.15em;
+}
+
+/* ---- Footer nav ---- */
+footer {
+  margin-top: 4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+footer a { margin-right: 1rem; }
+
+.ask-teacher {
+  background: #eef2f6;
+  border-left: 4px solid #3d5a73;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.9rem;
+  margin: 2rem 0 0;
+}
+
+@media print {
+  body { padding: 0; background: #fff; }
+  .quiz button.opt { background: #fff; }
+  .sidenote { float: none; width: auto; margin: 0.8rem 0; }
+  footer, .ask-teacher { page-break-inside: avoid; }
+}

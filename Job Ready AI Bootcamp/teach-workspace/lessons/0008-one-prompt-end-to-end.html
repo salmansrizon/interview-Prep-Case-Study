@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৮ — একটা prompt, শুরু থেকে শেষ পর্যন্ত</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/softmax-lab.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৮ · সব একসাথে</p>
+<h1>একটা Prompt, শুরু থেকে শেষ পর্যন্ত</h1>
+<p class="subtitle">আগের সাতটা পাঠের প্রতিটা ধারণা — একটাই উদাহরণে, ধাপে ধাপে, ছবিসহ।</p>
+
+<h2>দুইটা prompt, একটাই pipeline</h2>
+
+<p>একটা প্রশ্ন মডেল জানে। আরেকটা জানা <em>অসম্ভব</em>। দুইটাই একই pipeline দিয়ে চালাবো — আর দেখবো সংখ্যাগুলো নিজেরাই পার্থক্যটা ফাঁস করে দেয়।</p>
+
+<table>
+<tr><th></th><th>PROMPT A</th><th>PROMPT B</th></tr>
+<tr><td>প্রশ্ন</td><td>বাংলাদেশ স্বাধীন হয় কোন সালে?</td><td>ঢাকার ৩ নম্বর রোডের চায়ের দোকানের মালিকের নাম কী?</td></tr>
+<tr><td>মডেল কি জানে?</td><td>হ্যাঁ — ট্রেনিং ডেটায় হাজারবার আছে</td><td>না — এই তথ্য পৃথিবীর কোথাও লেখা নেই</td></tr>
+<tr><td>মডেল কী করবে?</td><td>সঠিক উত্তর</td><td><strong>আত্মবিশ্বাসের সাথে বানিয়ে বলবে</strong></td></tr>
+</table>
+
+<div class="callout">
+<span class="label">সততার নোট</span>
+নিচের logit সংখ্যাগুলো <strong>হাতে বসানো</strong>, কোনো সত্যিকারের মডেল থেকে নেওয়া নয় — যাতে তুমি প্রতিটা হিসাব নিজে কাগজে মিলিয়ে দেখতে পারো। কিন্তু logit থেকে পরের সব হিসাব (softmax, entropy, top-p, perplexity, semantic entropy) <em>আসল</em>, কোড চালিয়ে বের করা। স্ক্রিপ্ট: <code>assets/prompt_walkthrough.py</code>।
+</div>
+
+<h2><span class="step">ধাপ ১</span> Prompt → token</h2>
+
+<p>মডেল বাংলা বাক্য দেখে না। প্রথমে বাক্যটা ভাঙা হয় token-এ, প্রতিটার একটা নম্বর আছে:</p>
+
+<pre><code>"বাংলাদেশ স্বাধীন হয় কোন সালে?"
+   ↓ tokenizer
+["বাংলা", "দেশ", " স্বাধীন", " হয়", " কোন", " সালে", "?"]
+   ↓
+[8472, 1193, 25518, 3061, 2244, 19807, 30]</code></pre>
+
+<p class="sidenote">খেয়াল করো — “বাংলাদেশ” একটা শব্দ হলেও দুইটা token হয়েছে। ইংরেজির তুলনায় বাংলা token বেশি খরচ করে, তাই একই লেখায় API bill বেশি আসে।</p>
+
+<h2><span class="step">ধাপ ২</span> Transformer-এর ভেতরে — এখানেই Z-score চলে</h2>
+
+<p>Token গুলো এখন ৮০টা layer পার হবে। প্রতি layer-এ, প্রতি token-এ যা ঘটে (পাঠ ৬):</p>
+
+<pre><code>প্রতিটা layer:
+  1. LayerNorm      →  (x − μ) / σ        ← পাঠ ২ এর Z-score, হুবহু
+  2. Attention      →  softmax(QKᵀ / √d)  ← √d দিয়ে variance ~1 রাখা
+  3. LayerNorm      →  আবার z-score
+  4. Feed-forward</code></pre>
+
+<p>৮০ layer × ৭ token = ৫৬০ বার z-score। তুমি পাঠ ২ এ যেটা পরীক্ষার নম্বরে শিখেছিলে, সেটা প্রতিটা উত্তর তৈরির সময় হাজার হাজার বার চলে।</p>
+
+<h2><span class="step">ধাপ ৩</span> শেষ layer → logits</h2>
+
+<p>শেষে প্রতিটা সম্ভাব্য পরের token-এর জন্য একটা কাঁচা সংখ্যা বেরোয়। শীর্ষ ৫টা:</p>
+
+<table>
+<tr><th>PROMPT A — token</th><th>logit</th><th>PROMPT B — token</th><th>logit</th></tr>
+<tr><td>১৯৭১</td><td class="mono">8.2</td><td>করিম</td><td class="mono">2.4</td></tr>
+<tr><td>১৯৫২</td><td class="mono">2.1</td><td>রহিম</td><td class="mono">2.2</td></tr>
+<tr><td>১৯৪৭</td><td class="mono">1.8</td><td>জামাল</td><td class="mono">2.1</td></tr>
+<tr><td>১৯৯০</td><td class="mono">0.4</td><td>সালাম</td><td class="mono">2.0</td></tr>
+<tr><td>সাল</td><td class="mono">1.1</td><td>আব্দুল</td><td class="mono">1.9</td></tr>
+</table>
+
+<p><strong>পার্থক্যটা এখানেই দেখা যাচ্ছে।</strong> A-তে একটা logit বাকিদের চেয়ে অনেক উপরে। B-তে পাঁচটাই কাছাকাছি — মানে মডেলের কাছে পাঁচটা নামই সমান সম্ভব। ও জানে না, কিন্তু থামবেও না।</p>
+
+<h2><span class="step">ধাপ ৪</span> Softmax → probability. নব ঘুরিয়ে দেখো</h2>
+
+<p>নিচের স্লাইডার টানো। এটাই ধাপ ৩ এর logits, জীবন্ত:</p>
+
+<h3>PROMPT A — মডেল জানে</h3>
+<div class="softmax-lab"
+     data-tokens="১৯৭১,১৯৫২,১৯৪৭,১৯৯০,সাল"
+     data-logits="8.2,2.1,1.8,0.4,1.1"></div>
+
+<h3>PROMPT B — মডেল জানে না</h3>
+<div class="softmax-lab"
+     data-tokens="করিম,রহিম,জামাল,সালাম,আব্দুল"
+     data-logits="2.4,2.2,2.1,2.0,1.9"></div>
+
+<div class="callout">
+<span class="label">নিজে করে দেখো</span>
+<ol>
+<li>দুইটাতেই T = ০.১ করো। A এখনও ১৯৭১, B এখনও করিম — কিন্তু B-এর “নিশ্চয়তা” <em>ভুয়া</em>। কম temperature অজ্ঞতা লুকিয়ে দেয়, দূর করে না।</li>
+<li>T = ২.৫ করো। A-তে বিকল্প উঁকি দেয়, B পুরোপুরি এলোমেলো।</li>
+<li>Top-p = ০.৯ রেখে দেখো — A-তে <strong>১টা</strong> token রাখে, B-তে <strong>৫টাই</strong>। এই সংখ্যাটাই একটা তৈরি hallucination সংকেত।</li>
+</ol>
+</div>
+
+<figure>
+<img src="../assets/figures/fig1-temperature.png" alt="একই logits তিনটা temperature-এ">
+<figcaption><strong>চিত্র ১ — Temperature হলো ছড়ানোর নব।</strong> একই logits, তিনটা T। T = ০.৩ এ একটা bar প্রায় সবটুকু নিয়ে নেয় (entropy ০.০৫)। T = ২.০ তে সবাই ভাগ পায় (entropy ১.৪১)। পাঠ ১ এ σ বাড়ালে ঘণ্টা চ্যাপ্টা হতো — ঠিক একই ব্যাপার।</figcaption>
+</figure>
+
+<figure>
+<img src="../assets/figures/fig2-confident-vs-unsure.png" alt="Prompt A বনাম B এর probability distribution">
+<figcaption><strong>চিত্র ২ — distribution-এর আকৃতিই উত্তর দিয়ে দেয়।</strong> বাঁয়ে একটা চূড়া, top-1 = ০.৯৯, entropy = ০.০৪, top-p মাত্র ১টা token রাখে। ডানে পাঁচটা প্রায় সমান bar, top-1 = ০.২৬, entropy = ১.৫৯ (সর্বোচ্চ সম্ভব ১.৬১!), top-p পাঁচটাই রাখে। ধূসর bar = top-p যেগুলো বাদ দিত।</figcaption>
+</figure>
+
+<h2><span class="step">ধাপ ৫</span> Sample → token → logprob</h2>
+
+<p>একটা token তোলা হলো। তার probability-র log টাই <code>logprob</code>:</p>
+
+<pre><code>PROMPT A → "১৯৭১"   p = 0.9949   logprob = -0.005   ✓ ভরসা করা যায়
+PROMPT B → "করিম"    p = 0.2607   logprob = -1.345   ✗ যাচাই করো</code></pre>
+
+<p>তারপর token-টা বাক্যে জুড়ে পুরো জিনিসটা আবার চলে — ধাপ ২ থেকে। প্রতিটা শব্দের জন্য একবার।</p>
+
+<h2><span class="step">ধাপ ৬</span> পুরো বাক্য → perplexity</h2>
+
+<p>Chain rule দিয়ে বাক্যের probability, তারপর perplexity:</p>
+
+<pre><code>A: "বাংলাদেশ স্বাধীন হয় ১৯৭১ সালে"
+   token confidence : [0.951, 0.887, 0.970, 0.733, 0.923]
+   P(বাক্য)         : 0.554
+   perplexity       : 1.13    ← মডেলের কাছে বাক্যটা মোটেও অবাক করা নয়
+
+B: "দোকানের মালিকের নাম করিম উদ্দিন"
+   token confidence : [0.200, 0.100, 0.150, 0.060, 0.122]
+   P(বাক্য)         : 0.000022
+   perplexity       : 8.53    ← প্রতিটা শব্দে হোঁচট খেয়েছে</code></pre>
+
+<p class="sidenote">Perplexity ১.১৩ মানে প্রতি শব্দে মডেল যেন ১টার সামান্য বেশি বিকল্প নিয়ে ভাবছিল। ৮.৫৩ মানে প্রায় ৯টা বিকল্পের মধ্যে আন্দাজ।</p>
+
+<h2><span class="step">ধাপ ৭</span> ১০ বার চালাও → semantic entropy</h2>
+
+<p>এখানেই পাঠ ৩ ফিরে আসে: <em>একবারে বোঝা যাচ্ছে না? বহুবার চালিয়ে গুনে দেখো।</em></p>
+
+<figure>
+<img src="../assets/figures/fig3-semantic-entropy.png" alt="১০ বার চালানোর পর অর্থের দল">
+<figcaption><strong>চিত্র ৩ — hallucination ধরার সবচেয়ে নির্ভরযোগ্য উপায়।</strong> দুইটা prompt ১০ বার চালিয়ে উত্তরগুলো <em>অর্থ</em> অনুযায়ী দলে ভাগ করা হয়েছে। A: ১০টা উত্তরই এক দলে, semantic entropy ০.০০ → বিশ্বাস করো। B: ৫টা আলাদা দল, entropy ১.৫০ → প্রতিবার নতুন নাম বানাচ্ছে, যাচাই করো।</figcaption>
+</figure>
+
+<p>কেন <em>অর্থ</em> ধরে দল করা, শুধু token নয়? কারণ A-তে মডেল কখনো “১৯৭১”, কখনো “উনিশশো একাত্তর” লিখতে পারে। Token আলাদা, অর্থ এক — একই দলে যাবে। শুধু token গুনলে ভুল করে ভাবতে মডেল দ্বিধায়।</p>
+
+<h2><span class="step">ধাপ ৮</span> Calibration — এবং কেন মডেলকে জিজ্ঞেস করে লাভ নেই</h2>
+
+<p>PROMPT B-তে মডেল লিখবে: “দোকানটির মালিকের নাম করিম উদ্দিন।” কোনো দ্বিধা নেই, কোনো “হয়তো” নেই। জিজ্ঞেস করলে বলবে সে নিশ্চিত।</p>
+
+<figure>
+<img src="../assets/figures/fig4-calibration.png" alt="Calibration curve">
+<figcaption><strong>চিত্র ৪ — দাবি বনাম বাস্তব।</strong> কাটা রেখা = নিখুঁত calibration। সবুজ = base model, মোটামুটি রেখার উপরেই। লাল = RLHF-এর পরে — ০.৯৫ দাবি করে, ঠিক হয় ৭০% বার। ওই ফাঁকটাই তোমার production bug।</figcaption>
+</figure>
+
+<div class="callout">
+<span class="label">এই পাঠের মূল কথা</span>
+মডেলকে “তুমি কতটা নিশ্চিত?” জিজ্ঞেস করে লাভ নেই — RLHF ওকে আত্মবিশ্বাসী <em>শোনাতে</em> শিখিয়েছে। নিশ্চয়তা <strong>বাইরে থেকে মাপতে</strong> হয়: entropy, logprob, অথবা ১০ বার চালিয়ে semantic entropy।
+</div>
+
+<h2>সিদ্ধান্তের টেবিল — এটাই তুমি কোডে লিখবে</h2>
+
+<table>
+<tr><th>সংকেত</th><th>PROMPT A</th><th>PROMPT B</th><th>নিয়ম</th></tr>
+<tr><td>top-1 probability</td><td>0.99</td><td>0.26</td><td>&lt; 0.5 হলে সন্দেহ</td></tr>
+<tr><td>entropy (max 1.61)</td><td>0.04</td><td>1.59</td><td>max-এর ৭০% এর বেশি = আন্দাজ</td></tr>
+<tr><td>top-p=0.9 কয়টা রাখে</td><td>১/৫</td><td>৫/৫</td><td>বেশি রাখা = মডেল ছড়ানো</td></tr>
+<tr><td>perplexity</td><td>1.13</td><td>8.53</td><td>উঁচু = হোঁচট খেয়েছে</td></tr>
+<tr><td>semantic entropy</td><td>0.00</td><td>1.50</td><td>&gt; 0.5 = যাচাই করো</td></tr>
+<tr><td><strong>সিদ্ধান্ত</strong></td><td><strong>নিজে গ্রহণ করো</strong></td><td><strong>মানুষকে দেখাও</strong></td><td>পাঠ ৫ এর threshold</td></tr>
+</table>
+
+<pre><code># পাঠ ৫ এর threshold সিস্টেম, LLM-এ বসানো
+def route(answer, top1, sem_entropy):
+    if top1 &gt;= 0.90 and sem_entropy &lt; 0.5:
+        return auto_accept(answer)
+    if top1 &gt;= 0.60:
+        return human_review(answer)
+    return refuse("যথেষ্ট নিশ্চিত নই")</code></pre>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="1">
+<p class="q">Top-p = 0.9 তে PROMPT B এর পাঁচটা token-ই টিকে গেল। এটা কী বলছে?</p>
+<button class="opt">মডেল পাঁচটা উত্তরই সঠিক মনে করছে</button>
+<button class="opt">মডেল ছড়ানো, কোনো উত্তরেই স্থির নয়</button>
+<button class="opt">Top-p এর মান খুব কম রাখা হয়েছে</button>
+<p class="why">Nucleus কাটে যেখানে ৯০% probability জমে। মডেল নিশ্চিত হলে ১টা token-েই ৯০% পূর্ণ হয়। ৫টা লাগা মানে probability সবার মধ্যে ছড়ানো — অনিশ্চয়তার সরাসরি মাপ।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">PROMPT B এ temperature 0.1 করলে কী হবে?</p>
+<button class="opt">মডেল সঠিক উত্তরটা খুঁজে বের করবে</button>
+<button class="opt">মডেল স্বীকার করবে সে জানে না</button>
+<button class="opt">একই ভুল নাম, কিন্তু আরও দৃঢ়ভাবে</button>
+<p class="why">Temperature শুধু distribution-এর আকৃতি বদলায়, মডেলের জ্ঞান নয়। কম T অজ্ঞতাকে আত্মবিশ্বাসের মোড়কে ঢেকে দেয় — hallucination আরও বিশ্বাসযোগ্য শোনায়, তাই আরও বিপজ্জনক।</p>
+</div>
+
+<div class="quiz" data-answer="0">
+<p class="q">Semantic entropy-তে ১০ বার চালাতে হয় কেন, একবারে হয় না কেন?</p>
+<button class="opt">একটা নমুনায় ছড়ানো মাপা যায় না</button>
+<button class="opt">দশ বারে উত্তরের মান ভালো হয়</button>
+<button class="opt">API এর গতি এতে বেড়ে যায়</button>
+<p class="why">পাঠ ৩ এর যুক্তি হুবহু — একবার কয়েন টস করে P(হেড) বের করা যায় না। ছড়ানো মাপতে হলে বহু নমুনা লাগে। এখানে "ছড়ানো" মানে মডেল কি বারবার একই অর্থে ফিরে আসে, নাকি প্রতিবার নতুন গল্প বানায়।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> একটা LLM উত্তর হাতে এলো। কোনো তথ্য যাচাই না করে শুধু সংখ্যা দেখে কীভাবে বুঝবে এটা hallucination হতে পারে? তিনটা সংকেত লেখো।</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+(১) <strong>top-1 probability কম</strong> / token-গুলোর logprob দুর্বল।
+(২) <strong>entropy উঁচু</strong> — সর্বোচ্চ সম্ভব entropy-র কাছাকাছি মানে মডেল সব বিকল্পকে সমান ভাবছে; top-p অস্বাভাবিক বেশি token রাখাও একই কথা বলে।
+(৩) <strong>semantic entropy উঁচু</strong> — ১০ বার চালালে উত্তরগুলো আলাদা আলাদা অর্থে ছড়িয়ে যায়।
+আর যেটা <em>সংকেত নয়</em>: মডেলের নিজের ভাষায় “আমি নিশ্চিত”।
+</div>
+</div>
+
+<h2>আট পাঠ, এক ছবি</h2>
+
+<pre><code>prompt
+  ↓ tokenizer                                    ধাপ ১
+  ↓ ৮০ × [LayerNorm → attention → LayerNorm]     ধাপ ২   ← পাঠ ২ (Z-score), পাঠ ৬
+  ↓ logits                                       ধাপ ৩
+  ↓ softmax(z / T)                               ধাপ ৪   ← পাঠ ১ (σ = ছড়ানো), পাঠ ৭
+  ↓ top-p কাটা → sample → logprob                ধাপ ৫   ← পাঠ ৫ (confidence)
+  ↓ পুনরাবৃত্তি → বাক্য → perplexity              ধাপ ৬   ← পাঠ ৪ (conditional probability)
+  ↓ ১০ বার চালাও → semantic entropy              ধাপ ৭   ← পাঠ ৩ (frequentist গোনা)
+  ↓ calibration যাচাই → threshold → সিদ্ধান্ত     ধাপ ৮   ← পাঠ ৫ (calibration)</code></pre>
+
+<div class="callout">
+<span class="label">নিজে চালাও</span>
+<pre><code>cd teach-workspace
+uv run --with matplotlib --with numpy assets/prompt_walkthrough.py</code></pre>
+সব সংখ্যা ছাপবে, চারটা ছবিই নতুন করে বানাবে। <code>PROMPT_A</code> / <code>PROMPT_B</code> এর logit বদলে দেখো কী হয় — এটাই এই পাঠের সেরা অনুশীলন।
+</div>
+
+<div class="ask-teacher">
+সত্যিকারের মডেল দিয়ে এটা করতে চাও? একটা ছোট open model নামিয়ে আসল logprob বের করে একই টেবিল বানানো যায় — বলো, notebook লিখে দিই।
+</div>
+
+<footer>
+<a href="0007-llm-probability-confidence.html">← আগের পাঠ</a>
+<a href="0001-normal-distribution.html">শুরু থেকে</a>
+<a href="../reference/llm-stats-map.html">LLM ম্যাপ</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

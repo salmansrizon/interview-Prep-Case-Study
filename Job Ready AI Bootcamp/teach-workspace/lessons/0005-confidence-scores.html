@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৫ — Confidence Score (মডেল কতটা নিশ্চিত?)</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৫ · Week 3 / Class 2 Project</p>
+<h1>ML Model-এর Confidence Score</h1>
+<p class="subtitle">বাংলায়: “মডেল উত্তর তো দিলো — কিন্তু ওর নিজের কতটা ভরসা আছে?”</p>
+
+<h2>সমস্যাটা</h2>
+
+<p>Spam detector একটা ইমেইল দেখে বলল “spam”। কিন্তু কতটা নিশ্চিত হয়ে বলল?</p>
+
+<pre><code>ইমেইল A → score 0.97  → প্রায় নিশ্চিত spam  → সরাসরি ফোল্ডারে ফেলো
+ইমেইল B → score 0.51  → কার্যত আন্দাজ       → মানুষকে দেখাও</code></pre>
+
+<p>দুইটাই “spam” উত্তর। কিন্তু দ্বিতীয়টা কয়েন টসের সমান। এই পার্থক্যটা না জানলে তোমার সিস্টেম ভুল ইমেইল ফেলে দেবে। তাই <strong>উত্তরের সাথে confidence লাগবেই</strong>।</p>
+
+<h2>দুইভাবে confidence মাপা যায়</h2>
+
+<h3>১. Frequentist উপায় — গুনে দেখা</h3>
+
+<p>Test set-এ মডেল কতবার ঠিক বলেছে, সেটাই confidence:</p>
+
+<pre><code>accuracy = (predictions == true_labels).mean()      # ধরো 0.95
+se = np.sqrt(accuracy * (1 - accuracy) / n)
+ci = (accuracy - 1.96*se, accuracy + 1.96*se)       # [0.936, 0.964]</code></pre>
+
+<p>পড়ো: “আমরা ৯৫% আত্মবিশ্বাসী যে মডেলের আসল accuracy ৯৩.৬% থেকে ৯৬.৪% এর মধ্যে।”</p>
+
+<h3>২. Bayesian উপায় — বিশ্বাস আপডেট</h3>
+
+<p>শুরুতে ধরে নাও কিছুই জানি না — সব accuracy সমান সম্ভব। এটাকে বলে <code>Beta(1, 1)</code>। তারপর ডেটা দেখে আপডেট করো:</p>
+
+<div class="formula">Posterior = Beta(1 + সঠিক, 1 + ভুল)</div>
+
+<pre><code>successes = 950, failures = 50
+
+alpha_post = 1 + 950 = 951
+beta_post  = 1 + 50  = 51
+
+posterior_mean = 951 / (951 + 51) = 0.949</code></pre>
+
+<p class="sidenote">Beta distribution জিনিসটা কেন? কারণ ও ০ থেকে ১ এর মধ্যে বাস করে — ঠিক যেমন accuracy বা probability করে। তাই “accuracy কত হতে পারে” এই অনিশ্চয়তা প্রকাশের জন্য এটা স্বাভাবিক পছন্দ।</p>
+
+<p>বড় ডেটায় দুইটা পদ্ধতির উত্তর প্রায় একই আসে। পার্থক্য দেখা যায় <strong>ছোট ডেটায়</strong>:</p>
+
+<table>
+<tr><th>ডেটা</th><th>Frequentist</th><th>Bayesian</th></tr>
+<tr><td>৩টার ৩টাই সঠিক</td><td>১০০% accuracy (!)</td><td>৪/৫ = ৮০%, রেঞ্জও চওড়া</td></tr>
+<tr><td>১০০০টার ৯৫০</td><td>৯৫.০%</td><td>৯৪.৯%</td></tr>
+</table>
+
+<p>প্রথম সারিটা দেখো। ৩টা উদাহরণে ১০০% accuracy দাবি করা হাস্যকর — Frequentist সেটাই করে ফেলে। Bayesian prior টেনে ধরে রাখে। কম ডেটায় Bayesian বেশি সৎ।</p>
+
+<h2>Calibration — সবচেয়ে জরুরি সতর্কতা</h2>
+
+<div class="callout">
+<span class="label">মনে রাখো</span>
+<strong>Confidence ≠ Accuracy.</strong> মডেল ০.৯ বললেই সেটা ৯০% বার ঠিক হয় না। বেশিরভাগ মডেল অতি-আত্মবিশ্বাসী।
+</div>
+
+<p>যাচাই করার নিয়ম সোজা: যেসব prediction-এ মডেল ০.৯ বলেছে, সেগুলো আলাদা করো। তার মধ্যে সত্যিই ~৯০% ঠিক হলে মডেল <strong>calibrated</strong>। ৭০% হলে মডেল বাড়িয়ে বলছে — ওই score-কে সিদ্ধান্তে ব্যবহার করা বিপজ্জনক।</p>
+
+<h3>Threshold দিয়ে সিদ্ধান্ত</h3>
+
+<pre><code>if score &gt;= 0.90:   auto_action()        # নিজে সিদ্ধান্ত নাও
+elif score &gt;= 0.60: flag_for_review()    # মানুষ দেখুক
+else:               reject()             # ভরসা নেই</code></pre>
+
+<p>Threshold কোথায় বসাবে সেটা ব্যবসার সিদ্ধান্ত, গণিতের নয়। ভুল করে spam ফোল্ডারে গেলে ক্ষতি বেশি? তাহলে threshold উঁচু রাখো।</p>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="2">
+<p class="q">মডেল ৫টা prediction-এর ৫টাই ঠিক করেছে। accuracy কত বলা উচিত?</p>
+<button class="opt">একশো শতাংশ, হিসাব পরিষ্কার</button>
+<button class="opt">পঞ্চাশ শতাংশ, ডেটা অকেজো</button>
+<button class="opt">অনিশ্চিত, নমুনা বড্ড ছোট</button>
+<p class="why">৫টা নমুনায় CI প্রায় [৫০%, ১০০%] — কার্যত কিছুই জানা গেল না। এখানেই Bayesian prior কাজে লাগে, সে ১০০% দাবি করবে না।</p>
+</div>
+
+<div class="quiz" data-answer="0">
+<p class="q">যেসব prediction-এ মডেল 0.9 বলে, তার ৭০% ঠিক হয়। এর মানে?</p>
+<button class="opt">মডেল অতি-আত্মবিশ্বাসী, calibration দরকার</button>
+<button class="opt">মডেল ভালোভাবেই calibrated আছে</button>
+<button class="opt">মডেল বেশি সন্দেহপ্রবণ হয়ে গেছে</button>
+<p class="why">দাবি ৯০%, বাস্তব ৭০% — মডেল বাড়িয়ে বলছে। ঠিক করার উপায়: Platt scaling বা isotonic regression (দেখো scikit-learn calibration doc)।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> ছোট test set-এ Frequentist confidence কেন বিপজ্জনক, আর Bayesian কীভাবে বাঁচায়?</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+Frequentist শুধু গুনে ভাগ করে, তাই ৩/৩ হলে ১০০% বলে ফেলে — অথচ প্রমাণ নেই। Bayesian prior যোগ করে (Beta(1,1) মানে +১ সঠিক, +১ ভুল), ফলে চরম দাবি নরম হয় আর interval চওড়া থাকে, যা সত্যিকারের অনিশ্চয়তা দেখায়।
+</div>
+</div>
+
+<h2>পাঁচ পাঠ একসাথে</h2>
+
+<p>Normal distribution ডেটার আকৃতি দিলো → Z-score সেটাকে মাপার স্কেল দিলো → Frequentist গুনে অনিশ্চয়তা মাপলো → Bayesian আগের জ্ঞান যোগ করলো → দুইটা মিলে model-এর confidence score দাঁড়ালো। এটাই তোমার notebook-এর পুরো গল্প।</p>
+
+<p>পাঠ ৬ ও ৭ এ দেখাবো এই পাঁচটা জিনিস <strong>LLM-এর ভেতরে ও বাইরে ঠিক কোথায় বসানো</strong> — LayerNorm, temperature, logprob, hallucination ধরা।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://scikit-learn.org/stable/modules/calibration.html">scikit-learn — Probability calibration</a>. Calibration curve কীভাবে আঁকতে হয় আর ঠিক করতে হয়, কোডসহ আছে।
+</div>
+
+<div class="ask-teacher">
+নিজের একটা মডেলের calibration curve আঁকতে চাও? বলো, একসাথে করবো — এটাই এই সপ্তাহের সেরা হাতে-কলমে অনুশীলন।
+</div>
+
+<footer>
+<a href="0004-bayesian.html">← আগের পাঠ</a>
+<a href="0006-stats-inside-llm.html">পরের পাঠ → LLM-এর ভেতরে</a>
+<a href="0001-normal-distribution.html">শুরু থেকে</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

@@ -1,8 +1,7 @@
 # Week 4 — Class 2 Project: TechNova Analytics (Statistical Insight Dashboard)
 
-> ✅ **যাচাই করা (verified):** এই app সম্পূর্ণ চলে — Python 3.13, streamlit 1.61.1, pandas 3.0.5, numpy 2.5.2, scipy 1.18.0, scikit-learn 1.9.0-তে end-to-end টেস্ট করা। ৬টা page, ১৫টা tab, ৭৬টা dropdown branch — সবগুলো error ছাড়া render হয়। Browser-এ `http://localhost:8501` খুললেই কাজ শেষ।
 
-## অর্জন (Achievement)
+## Achievement
 কাঁচা business data থেকে **boardroom-ready statistical insight report** বানানো — একটা multi-page Streamlit dashboard, যেখানে প্রতিটা সিদ্ধান্তের পেছনে একটা statistical test আছে। যা যা ব্যবহার হবে:
 - Descriptive statistics (mean, median, mode, std, IQR, skewness)
 - Hypothesis testing (Welch's t-test, ANOVA, chi-square, two-proportion z-test)

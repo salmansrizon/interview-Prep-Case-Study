@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৪ — Bayesian Probability (বিশ্বাস আপডেট করা)</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৪ · Week 3 / Class 2 Project</p>
+<h1>Bayesian Probability</h1>
+<p class="subtitle">বাংলায়: “আগে যা বিশ্বাস করতে, নতুন প্রমাণ পেয়ে সেটা কতটা বদলাবে?”</p>
+
+<h2>ভিন্ন দর্শন</h2>
+
+<p>Frequentist বলে — probability হলো পুনরাবৃত্তির হার। Bayesian বলে — <strong>probability হলো তোমার বিশ্বাসের মাত্রা</strong>, আর প্রমাণ পেলে সেই বিশ্বাস আপডেট হয়।</p>
+
+<p>রোজকার জীবনে তুমি Bayesian-ই। বন্ধু বলল “কাল ক্লাস বন্ধ” — তুমি ৩০% বিশ্বাস করলে। তারপর নোটিশ বোর্ডে দেখলে — এখন ৯৫%। প্রমাণ পেয়ে বিশ্বাস বদলালে। এটাই Bayes.</p>
+
+<h2>সূত্রটা</h2>
+
+<div class="formula">P(A|B) = P(B|A) × P(A) / P(B)</div>
+
+<p><code>P(A|B)</code> পড়ো “B ঘটেছে জেনে A এর probability”।</p>
+
+<table>
+<tr><th>অংশ</th><th>নাম</th><th>বাংলায়</th></tr>
+<tr><td class="mono">P(A)</td><td>Prior</td><td>প্রমাণ দেখার <em>আগের</em> বিশ্বাস</td></tr>
+<tr><td class="mono">P(B|A)</td><td>Likelihood</td><td>A সত্যি হলে এই প্রমাণ পাওয়া কতটা স্বাভাবিক</td></tr>
+<tr><td class="mono">P(B)</td><td>Evidence</td><td>মোট কতভাবে এই প্রমাণটা আসতে পারে</td></tr>
+<tr><td class="mono">P(A|B)</td><td>Posterior</td><td>প্রমাণ দেখার <em>পরের</em> নতুন বিশ্বাস</td></tr>
+</table>
+
+<h2>ক্লাসিক ধাক্কা: মেডিকেল টেস্ট</h2>
+
+<p>পরিস্থিতি:</p>
+<ul>
+<li>একটা রোগ আছে জনসংখ্যার মাত্র <strong>১%</strong> মানুষের</li>
+<li>টেস্টটা <strong>৯৯% নির্ভুল</strong></li>
+<li>তোমার টেস্ট <strong>পজিটিভ</strong> এসেছে</li>
+</ul>
+
+<p>প্রশ্ন: তোমার রোগ থাকার সম্ভাবনা কত?</p>
+
+<p>প্রায় সবাই বলে “৯৯%”। <strong>আসল উত্তর ৫০%।</strong></p>
+
+<h3>কেন — ১০,০০০ মানুষ দিয়ে গুনে দেখো</h3>
+
+<pre><code>১০,০০০ জন মানুষ
+
+আসলে রোগী        :  ১০০ জন (১%)
+   এদের পজিটিভ  :   ৯৯ জন  ✓ সঠিক ধরা
+আসলে সুস্থ        : ৯,৯০০ জন
+   এদের পজিটিভ  :   ৯৯ জন  ✗ false positive (১%)
+
+মোট পজিটিভ = ৯৯ + ৯৯ = ১৯৮ জন
+এর মধ্যে সত্যি রোগী = ৯৯ জন
+
+৯৯ / ১৯৮ = ৫০%</code></pre>
+
+<p class="sidenote">এই “গুনে দেখা” পদ্ধতিটা মনে রাখো। Bayes-এর সূত্র মুখস্থ করার চেয়ে ১০,০০০ জন কল্পনা করে ভাগ করা অনেক নিরাপদ — ভুল কম হয়।</p>
+
+<div class="callout">
+<span class="label">শিক্ষা</span>
+রোগটা <em>বিরল</em> বলেই সুস্থ মানুষের দল বিশাল। বিশাল দলের ১% ভুলও, ছোট দলের ৯৯% সঠিকের সমান হয়ে যায়। <strong>Prior দুর্বল হলে ভালো প্রমাণও দুর্বল সিদ্ধান্ত দেয়।</strong>
+</div>
+
+<p>AI-তে এটাই fraud detection বা বিরল রোগ নির্ণয়ে সবচেয়ে বড় ফাঁদ। ৯৯% accuracy শুনতে দারুণ, কিন্তু ঘটনাটা বিরল হলে তোমার alert-এর অর্ধেকই মিথ্যা।</p>
+
+<h2>Frequentist বনাম Bayesian</h2>
+
+<table>
+<tr><th></th><th>Frequentist</th><th>Bayesian</th></tr>
+<tr><td>Probability মানে</td><td>ঘটার হার</td><td>বিশ্বাসের মাত্রা</td></tr>
+<tr><td>আগের জ্ঞান</td><td>ব্যবহার করে না</td><td>Prior হিসেবে ঢোকায়</td></tr>
+<tr><td>রেঞ্জের নাম</td><td>Confidence Interval</td><td>Credible Interval</td></tr>
+<tr><td>ছোট ডেটা</td><td>দুর্বল</td><td>ভালো সামলায়</td></tr>
+<tr><td>ঝুঁকি</td><td>—</td><td>খারাপ prior = খারাপ উত্তর</td></tr>
+</table>
+
+<p>Credible Interval-এর ব্যাখ্যাটা যা তুমি <em>চেয়েছিলে</em> তা-ই: “আসল মান এই রেঞ্জে থাকার ৯৫% সম্ভাবনা।” Bayesian-এ এই বাক্যটা বলা বৈধ, Frequentist-এ নয়।</p>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="0">
+<p class="q">রোগটা ১% এর বদলে ২০% মানুষের হলে, পজিটিভ টেস্টের পর posterior কী হবে?</p>
+<button class="opt">অনেক বাড়বে, পঞ্চাশের অনেক উপরে</button>
+<button class="opt">একই থাকবে, পঞ্চাশ শতাংশেই</button>
+<button class="opt">কমে যাবে, পঞ্চাশের নিচে</button>
+<p class="why">Prior বাড়লে posterior বাড়ে। ২০% prior-এ: সত্যি পজিটিভ ১৯৮০, false positive ৮০ → ১৯৮০/২০৬০ ≈ ৯৬%। একই টেস্ট, একই ফল, সম্পূর্ণ ভিন্ন সিদ্ধান্ত।</p>
+</div>
+
+<div class="quiz" data-answer="1">
+<p class="q">Bayes-এর সূত্রে “prior” শব্দটা কোন জিনিসকে বোঝায়?</p>
+<button class="opt">প্রমাণ দেখার পরের বিশ্বাস</button>
+<button class="opt">প্রমাণ দেখার আগের বিশ্বাস</button>
+<button class="opt">প্রমাণ পাওয়ার মোট সম্ভাবনা</button>
+<p class="why">Prior = আগের, Posterior = পরের। মনে রাখার সহজ উপায়: pri<em>or</em> মানে prior knowledge, আগে থেকে জানা।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> ৯৯% নির্ভুল টেস্ট, পজিটিভ ফল — তবু কেন মাত্র ৫০% নিশ্চিত? এক-দুই বাক্যে।</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+রোগ বিরল (১%), তাই সুস্থ মানুষের দল ৯৯ গুণ বড়। সেই বিশাল দলের ১% false positive সংখ্যায় সত্যি রোগীদের সমান হয়ে যায়। তাই পজিটিভদের অর্ধেকই আসলে সুস্থ।
+</div>
+</div>
+
+<h2>এরপর কী</h2>
+<p>দুইটা দর্শনই শেখা হলো। শেষ পাঠে দুইটাকেই কাজে লাগিয়ে একটা ML model-এর <em>confidence score</em> বানাবো — যেটা তোমার notebook-এর মূল প্রজেক্ট।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://www.3blue1brown.com/lessons/bayes-theorem">3Blue1Brown — Bayes' theorem</a>. ভিজ্যুয়ালি এর চেয়ে ভালো ব্যাখ্যা নেই। ১৫ মিনিট, অবশ্যই দেখো।
+</div>
+
+<div class="ask-teacher">
+Bayes প্রথমে মাথা ঘুরিয়ে দেয় — স্বাভাবিক। নিজের একটা উদাহরণ বানিয়ে আমাকে দেখাও, আমি ধরিয়ে দেবো ঠিক হয়েছে কিনা।
+</div>
+
+<footer>
+<a href="0003-frequentist.html">← আগের পাঠ</a>
+<a href="0005-confidence-scores.html">পরের পাঠ → Confidence Score</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ২ — Z-Score (গড় থেকে কত ধাপ দূরে?)</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০২ · Week 3 / Class 2 Project</p>
+<h1>Z-Score ও Standardization</h1>
+<p class="subtitle">বাংলায়: “তুমি গড় থেকে কয় পা দূরে দাঁড়িয়ে আছো?”</p>
+
+<h2>সমস্যাটা আগে বুঝো</h2>
+
+<p>তুমি গণিতে পেয়েছো ৮৫, ইংরেজিতে ৭০। কোনটা ভালো রেজাল্ট?</p>
+
+<p>উত্তর দিতে পারবে না — কারণ গণিতের পরীক্ষা সহজ ছিল কিনা জানো না। ধরো:</p>
+
+<table>
+<tr><th>বিষয়</th><th>তোমার</th><th>ক্লাসের গড় μ</th><th>σ</th></tr>
+<tr><td>গণিত</td><td>৮৫</td><td>৮০</td><td>১০</td></tr>
+<tr><td>ইংরেজি</td><td>৭০</td><td>৫০</td><td>১০</td></tr>
+</table>
+
+<p>এখন পরিষ্কার — ইংরেজিতেই তুমি বেশি ভালো করেছো, যদিও নম্বর কম। কারণ ওখানে সবাই খারাপ করেছে।</p>
+
+<h2>Z-Score এই তুলনাটাই সংখ্যায় করে দেয়</h2>
+
+<div class="formula">Z = (X − μ) / σ</div>
+
+<p>মানে: “আমার ভ্যালু গড় থেকে কত σ দূরে?” <code>X</code> তোমার নম্বর, <code>μ</code> গড়, <code>σ</code> standard deviation.</p>
+
+<pre><code>গণিত  : Z = (85 − 80) / 10 = +0.5
+ইংরেজি : Z = (70 − 50) / 10 = +2.0   ← অনেক ভালো</code></pre>
+
+<p class="sidenote">Z ধনাত্মক = গড়ের উপরে। ঋণাত্মক = গড়ের নিচে। শূন্য = ঠিক গড়ে।</p>
+
+<h2>Z থেকে percentile</h2>
+
+<table>
+<tr><th>Z</th><th>মানে</th><th>Percentile</th></tr>
+<tr><td>০</td><td>ঠিক গড়ে</td><td>৫০তম</td></tr>
+<tr><td>+১</td><td>১σ উপরে</td><td>৮৪তম</td></tr>
+<tr><td>+২</td><td>২σ উপরে</td><td>৯৭.৭তম</td></tr>
+<tr><td>+৩</td><td>৩σ উপরে</td><td>৯৯.৯তম</td></tr>
+<tr><td>−২</td><td>২σ নিচে</td><td>২.৩তম</td></tr>
+</table>
+
+<p>Z = ২ মানে তুমি ৯৭.৭% মানুষের চেয়ে ভালো। এই রূপান্তরটা কোডে এক লাইন:</p>
+
+<pre><code>from scipy import stats
+percentile = stats.norm.cdf(z) * 100   # z=2 → 97.7</code></pre>
+
+<h2>AI-তে Z-Score কেন লাগে</h2>
+
+<ol>
+<li><strong>Feature scaling.</strong> এক column-এ বয়স (২০–৬০), আরেকটায় বেতন (২০,০০০–২,০০,০০০)। সংখ্যা বড় বলে model ভাববে বেতন বেশি গুরুত্বপূর্ণ — যা ভুল। সব column-কে Z-score-এ বদলালে সবার mean=০, std=১ হয়ে যায়, সবাই সমান মাঠে দাঁড়ায়।</li>
+<li><strong>Outlier ধরা।</strong> <code>|Z| &gt; 3</code> মানে খুবই অস্বাভাবিক — ডেটা এন্ট্রির ভুল অথবা fraud।</li>
+</ol>
+
+<div class="callout">
+<span class="label">খেয়াল রাখো</span>
+Z-score বানালে ডেটার <em>আকৃতি</em> বদলায় না, শুধু <em>স্কেল</em> বদলায়। বাঁকা ডেটা Z-score করলেও বাঁকাই থাকে — সোজা bell curve হয়ে যায় না।
+</div>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="0">
+<p class="q">μ = ৬০, σ = ৮, তোমার স্কোর ৪৪। Z কত?</p>
+<button class="opt">মাইনাস দুই পয়েন্ট শূন্য</button>
+<button class="opt">মাইনাস এক পয়েন্ট ছয়</button>
+<button class="opt">যোগ দুই পয়েন্ট শূন্য</button>
+<p class="why">(৪৪ − ৬০) / ৮ = −১৬ / ৮ = −২.০। গড়ের ২σ নিচে, মানে নিচের ২.৩% এর মধ্যে।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">সব ডেটাকে Z-score-এ বদলালে নতুন mean আর std কত হয়?</p>
+<button class="opt">মিন থাকে এক, এসডি শূন্য</button>
+<button class="opt">মিন আর এসডি অপরিবর্তিত</button>
+<button class="opt">মিন হয় শূন্য, এসডি এক</button>
+<p class="why">এটাই standardization-এর সংজ্ঞা: mean = ০, std = ১। তাই notebook-এ চেক করা হয় <code>z_scores.mean()</code> ≈ ০।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> Z-score-এর সূত্র, আর AI pipeline-এ এটা কোন ধাপে লাগে?</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+Z = (X − μ) / σ। লাগে <em>preprocessing</em> ধাপে — model ট্রেনিংয়ের আগে feature scaling করার সময়, আর outlier বাদ দেওয়ার সময়।
+</div>
+</div>
+
+<h2>এরপর কী</h2>
+<p>এতক্ষণ ডেটার আকার নিয়ে কথা বললাম। এবার প্রশ্ন — “probability” জিনিসটা আসলে <em>মানে</em> কী? দুইটা আলাদা উত্তর আছে, আর দুইটাই কাজে লাগে।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://www.khanacademy.org/math/statistics-probability/modeling-distributions-of-data">Khan Academy — Modeling Distributions of Data</a>. Z-score আর percentile-এর অনুশীলন প্রশ্ন আছে, হাতে কলমে করো।
+</div>
+
+<div class="ask-teacher">
+আটকে গেলে জিজ্ঞেস করো। বিশেষ করে যদি বুঝতে সমস্যা হয় “percentile কেন ৮৪%, ৬৮% নয়” — এটা ভালো প্রশ্ন।
+</div>
+
+<footer>
+<a href="0001-normal-distribution.html">← আগের পাঠ</a>
+<a href="0003-frequentist.html">পরের পাঠ → Frequentist</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

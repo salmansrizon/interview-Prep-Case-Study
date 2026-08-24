@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পাঠ ৩ — Frequentist Probability (বারবার করে দেখা)</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">পাঠ ০৩ · Week 3 / Class 2 Project</p>
+<h1>Frequentist Probability</h1>
+<p class="subtitle">বাংলায়: “অনেকবার করে দেখো — যত বার ঘটলো, ভাগ করো মোট চেষ্টা দিয়ে।”</p>
+
+<h2>মূল ভাবনা</h2>
+
+<p>কয়েন টস করলে হেড আসার probability কত? Frequentist-এর উত্তর সোজা: <strong>বহুবার টস করো, গুনে দেখো।</strong></p>
+
+<pre><code>১০ বার টস    → ৪ হেড    → P ≈ 0.40
+১০০ বার টস   → ৫১ হেড   → P ≈ 0.51
+১০০০ বার টস  → ৪৯৯ হেড  → P ≈ 0.499
+∞ বার টস     → P = 0.5   (আসল উত্তর)</code></pre>
+
+<p>যত বেশি বার করবে, উত্তর তত আসল মানের কাছে যাবে। এর নাম <strong>Law of Large Numbers</strong> — বড় সংখ্যার নিয়ম।</p>
+
+<p class="sidenote">এই দর্শনে probability হলো পৃথিবীর একটা <em>নিশ্চিত সত্য</em>, যেটা আমরা শুধু মেপে বের করার চেষ্টা করছি। সংখ্যাটা নড়ে না, আমাদের মাপ নড়ে।</p>
+
+<h2>কিন্তু কতটা বিশ্বাস করব?</h2>
+
+<p>১০ বার টসে ৪ হেড পেলে "P = ০.৪" বলা বোকামি — নমুনা খুব ছোট। এই ভুলের পরিমাণ মাপার নাম <strong>Standard Error</strong>:</p>
+
+<div class="formula">SE = √( p × (1 − p) / n )</div>
+
+<p><code>n</code> হলো কতবার চেষ্টা করলে। খেয়াল করো — <code>n</code> নিচে আছে, তাই <strong>n বাড়লে SE কমে</strong>। বেশি ডেটা = কম অনিশ্চয়তা। কিন্তু বর্গমূলের ভেতরে বলে ভুল অর্ধেক করতে হলে ডেটা <em>চার গুণ</em> লাগে।</p>
+
+<h3>Confidence Interval (CI)</h3>
+
+<div class="formula">95% CI = estimate ± 1.96 × SE</div>
+
+<p>এটা একটা <em>রেঞ্জ</em> — “আসল উত্তরটা সম্ভবত এই দুই সংখ্যার মাঝে”।</p>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভুল বোঝা জিনিস</span>
+৯৫% CI মানে <em>এই না</em> যে “আসল মান এখানে থাকার ৯৫% সম্ভাবনা”। মানে হলো — <strong>একই পরীক্ষা ১০০ বার করলে, যে ১০০টা CI পাবে তার প্রায় ৯৫টাতে আসল মান থাকবে।</strong> সম্ভাবনাটা CI-টার, আসল মানের নয়। আসল মান তো ফিক্সড, ওটা নড়ে না।
+</div>
+
+<h2>কোডে</h2>
+
+<pre><code>flips = np.random.binomial(n=1, p=0.5, size=1000)
+p_obs = flips.mean()
+
+se = np.sqrt(p_obs * (1 - p_obs) / 1000)
+ci = (p_obs - 1.96 * se, p_obs + 1.96 * se)</code></pre>
+
+<p>Notebook-এর <code>Section D</code> এটা ১০ থেকে ১,০০,০০০ পর্যন্ত চালায়। দেখবে CI ক্রমশ সরু হচ্ছে।</p>
+
+<h2>ভালো-খারাপ</h2>
+
+<table>
+<tr><th>সুবিধা</th><th>অসুবিধা</th></tr>
+<tr><td>সহজ, স্বজ্ঞাত</td><td>আগের জানা তথ্য কাজে লাগাতে পারে না</td></tr>
+<tr><td>আগে থেকে কিছু ধরে নিতে হয় না</td><td>ছোট নমুনায় ভরসা করা যায় না</td></tr>
+<tr><td>বড় ডেটায় দারুণ কাজ করে</td><td>“একবারই ঘটবে” এমন ঘটনায় অচল</td></tr>
+</table>
+
+<p>শেষ পয়েন্টটা ভাবো: “আগামীকাল বৃষ্টি হওয়ার probability” — আগামীকাল তো একবারই আসবে, ১০০০ বার চালিয়ে দেখা যাবে না। এখানেই Frequentist আটকে যায়। পরের পাঠে এর সমাধান।</p>
+
+<h2>নিজে পরীক্ষা দাও</h2>
+
+<div class="quiz" data-answer="1">
+<p class="q">নমুনার সংখ্যা n চার গুণ বাড়ালে Standard Error কী হবে?</p>
+<button class="opt">চার ভাগের এক ভাগ হবে</button>
+<button class="opt">দুই ভাগের এক ভাগ হবে</button>
+<button class="opt">একই রকম থেকে যাবে</button>
+<p class="why">SE-তে n বর্গমূলের ভেতরে। √৪ = ২, তাই SE অর্ধেক হয়। ভুল অর্ধেক করতে ডেটা চার গুণ লাগে — দামি ব্যাপার।</p>
+</div>
+
+<div class="quiz" data-answer="2">
+<p class="q">“৯৫% CI = [0.47, 0.53]” — সঠিক ব্যাখ্যা কোনটা?</p>
+<button class="opt">আসল মান শূন্য দশমিক পাঁচ</button>
+<button class="opt">আসল মান এখানে থাকার সম্ভাবনা পঁচানব্বই</button>
+<button class="opt">এভাবে বানানো একশো রেঞ্জের পঁচানব্বইটায় আসল মান পড়ে</button>
+<p class="why">Frequentist দর্শনে আসল মান ফিক্সড, তার কোনো probability নেই। যেটা এলোমেলো, সেটা আমাদের বানানো CI। তাই বিবৃতিটা CI নিয়ে, আসল মান নিয়ে নয়।</p>
+</div>
+
+<div class="recall">
+<p><strong>মনে করে লেখো:</strong> Frequentist-এর মতে probability মানে কী, আর তার সবচেয়ে বড় সীমাবদ্ধতা কী?</p>
+<textarea placeholder="এখানে লিখো..."></textarea>
+<button class="opt reveal" style="width:auto;margin-top:.6rem">উত্তর দেখাও</button>
+<div class="model-answer callout">
+<span class="label">মিলিয়ে দেখো</span>
+Probability = বহুবার পুনরাবৃত্তিতে ঘটার হার। সীমাবদ্ধতা: যে ঘটনা বারবার ঘটানো যায় না (নির্দিষ্ট দিনের বৃষ্টি, একটা নির্দিষ্ট রোগীর রোগ) সেখানে অচল; আর আগের জানা তথ্য ব্যবহার করতে পারে না।
+</div>
+</div>
+
+<div class="callout">
+<span class="label">সবচেয়ে ভালো সোর্স</span>
+<a href="https://seeing-theory.brown.edu/basic-probability/index.html">Seeing Theory — Basic Probability</a>. কয়েন টসের সিমুলেশন নিজে চালিয়ে Law of Large Numbers চোখে দেখো।
+</div>
+
+<div class="ask-teacher">
+CI-এর ব্যাখ্যাটা প্রথমবার সবার কাছেই প্যাঁচানো লাগে। বুঝতে না পারলে জিজ্ঞেস করো — আমি অন্য উদাহরণ দিয়ে বোঝাবো।
+</div>
+
+<footer>
+<a href="0002-z-scores.html">← আগের পাঠ</a>
+<a href="0004-bayesian.html">পরের পাঠ → Bayesian</a>
+<a href="../reference/probability-cheatsheet.html">রেফারেন্স শিট</a>
+</footer>
+
+</main>
+</body>
+</html>

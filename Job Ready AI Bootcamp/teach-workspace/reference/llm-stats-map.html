@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>রেফারেন্স — Statistics → LLM ম্যাপ</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">রেফারেন্স · প্রিন্ট করার জন্য বানানো</p>
+<h1>Statistics → LLM ম্যাপ</h1>
+<p class="subtitle">কোন পরিসংখ্যান ধারণা LLM-এর ঠিক কোন জায়গায় বসানো। ইন্টারভিউয়ের আগে এক নজরে।</p>
+
+<h2>মূল ম্যাপ</h2>
+
+<table>
+<tr><th>ধারণা</th><th>LLM-এ কোথায়</th><th>কেন</th></tr>
+<tr><td>Normal distribution</td><td>Weight initialization</td><td>weight খুব বড় হলে ফাটে, শূন্য হলে কিছু শেখে না</td></tr>
+<tr><td>Z-score</td><td>LayerNorm / RMSNorm</td><td>বহু layer পেরিয়ে সংখ্যার মাত্রা বেসামাল হওয়া ঠেকায়</td></tr>
+<tr><td>Variance নিয়ন্ত্রণ</td><td>Attention-এ <code>/√d_k</code></td><td>softmax যেন এক token-এ আটকে না যায়</td></tr>
+<tr><td>σ (ছড়ানোর নব)</td><td>Softmax temperature</td><td>উত্তর কতটা সৃজনশীল বনাম নিশ্চিত</td></tr>
+<tr><td>Conditional probability</td><td>Next-token prediction</td><td>LLM-এর মূল কাজই <code>P(token | context)</code></td></tr>
+<tr><td>Chain rule</td><td>বাক্যের probability</td><td><code>P(বাক্য) = Π P(wᵢ | w&lt;ᵢ)</code></td></tr>
+<tr><td>Frequentist — বারবার গোনা</td><td>Semantic entropy</td><td>একই প্রশ্ন বহুবার চালিয়ে hallucination ধরা</td></tr>
+<tr><td>Confidence interval</td><td>Benchmark eval</td><td>দুই মডেলের ব্যবধান আসল না noise</td></tr>
+<tr><td>Prior → Posterior</td><td>Prompt / RAG context</td><td>context দিয়ে মডেলের বিশ্বাস আপডেট (উপমা)</td></tr>
+<tr><td>Confidence score</td><td>logprob, perplexity, P(True)</td><td>উত্তর নিজে গ্রহণ করবে না মানুষকে দেখাবে</td></tr>
+<tr><td>Calibration</td><td>RLHF-পরবর্তী অতি-আত্মবিশ্বাস</td><td>দাবি ৯০%, বাস্তবে ৭০% — মেপে দেখতেই হবে</td></tr>
+</table>
+
+<h2>সূত্র</h2>
+
+<table>
+<tr><th>নাম</th><th>সূত্র</th></tr>
+<tr><td>LayerNorm</td><td class="mono">y = γ(x − μ)/√(σ²+ε) + β</td></tr>
+<tr><td>RMSNorm</td><td class="mono">y = γ · x / √(mean(x²) + ε)</td></tr>
+<tr><td>Softmax + temperature</td><td class="mono">pᵢ = exp(zᵢ/T) / Σ exp(zⱼ/T)</td></tr>
+<tr><td>Attention</td><td class="mono">softmax(QKᵀ / √d_k) · V</td></tr>
+<tr><td>Token confidence</td><td class="mono">p = exp(logprob)</td></tr>
+<tr><td>Perplexity</td><td class="mono">exp( −(1/N) Σ log p(wᵢ) )</td></tr>
+<tr><td>Entropy</td><td class="mono">H = − Σ pᵢ log pᵢ</td></tr>
+<tr><td>Benchmark CI</td><td class="mono">acc ± 1.96 √(acc(1−acc)/n)</td></tr>
+</table>
+
+<h2>কোড স্নিপেট</h2>
+
+<pre><code>import numpy as np
+
+# Softmax with temperature
+def softmax(logits, T=1.0):
+    z = np.asarray(logits, float) / T
+    e = np.exp(z - z.max())
+    return e / e.sum()
+
+# LayerNorm (শেষ axis বরাবর)
+def layer_norm(x, gamma, beta, eps=1e-5):
+    mu = x.mean(-1, keepdims=True)
+    var = x.var(-1, keepdims=True)
+    return gamma * (x - mu) / np.sqrt(var + eps) + beta
+
+# RMSNorm — গড় বিয়োগ নেই
+def rms_norm(x, gamma, eps=1e-6):
+    return gamma * x / np.sqrt((x**2).mean(-1, keepdims=True) + eps)
+
+# Token confidence ও entropy
+p = softmax(logits)
+confidence = p.max()
+entropy = -(p * np.log(p + 1e-12)).sum()
+
+# Perplexity
+ppl = np.exp(-np.mean(logprobs))
+
+# Top-p (nucleus) কাটা
+def top_p(p, thresh=0.9):
+    idx = np.argsort(p)[::-1]
+    keep = idx[np.cumsum(p[idx]) &lt;= thresh]
+    return keep if len(keep) else idx[:1]</code></pre>
+
+<h2>Temperature কোথায় কত</h2>
+
+<table>
+<tr><th>কাজ</th><th>T</th><th>Top-p</th></tr>
+<tr><td>কোড, JSON, তথ্য নিষ্কাশন</td><td>0 – 0.2</td><td>1.0</td></tr>
+<tr><td>সাধারণ চ্যাট, সারাংশ</td><td>0.5 – 0.8</td><td>0.9</td></tr>
+<tr><td>গল্প, brainstorm</td><td>0.9 – 1.2</td><td>0.95</td></tr>
+<tr><td>Semantic entropy-র জন্য নমুনা</td><td>~1.0</td><td>1.0</td></tr>
+</table>
+
+<h2>Glossary — LLM অংশ</h2>
+
+<table>
+<tr><th>শব্দ</th><th>মানে</th></tr>
+<tr><td>Logits</td><td>শেষ layer-এর কাঁচা সংখ্যা, এখনও probability নয়</td></tr>
+<tr><td>Softmax</td><td>logits-কে ০–১ probability-তে বদলায়, যোগফল ১</td></tr>
+<tr><td>Temperature</td><td>distribution কতটা ধারালো বা চ্যাপ্টা তার নব</td></tr>
+<tr><td>Top-k</td><td>সবচেয়ে সম্ভাব্য k টা token ছাড়া বাকি বাদ</td></tr>
+<tr><td>Top-p (nucleus)</td><td>উপর থেকে যোগ করে p শতাংশ পূর্ণ হলে থামা</td></tr>
+<tr><td>Logprob</td><td>token-এর log probability; <code>exp()</code> করলে confidence</td></tr>
+<tr><td>Perplexity</td><td>প্রতি শব্দে মডেল গড়ে কত বিকল্পে দ্বিধায়</td></tr>
+<tr><td>Entropy</td><td>distribution কতটা অনিশ্চিত; সমান হলে সর্বোচ্চ</td></tr>
+<tr><td>Semantic entropy</td><td>অর্থের দল ধরে মাপা entropy — hallucination সূচক</td></tr>
+<tr><td>LayerNorm</td><td>প্রতি token-এর vector-কে z-score করা</td></tr>
+<tr><td>RMSNorm</td><td>LayerNorm-এর সস্তা রূপ, গড় বিয়োগ বাদ</td></tr>
+<tr><td>Weight init</td><td>ট্রেনিংয়ের আগে normal distribution থেকে weight তোলা</td></tr>
+<tr><td>RLHF</td><td>মানুষের পছন্দ দিয়ে মডেল সাজানো; calibration নষ্ট করে</td></tr>
+<tr><td>Calibration</td><td>দাবি করা confidence আর বাস্তব accuracy মেলে কিনা</td></tr>
+<tr><td>Temperature scaling</td><td>validation set-এ T fit করে calibration ঠিক করা</td></tr>
+<tr><td>Hallucination</td><td>আত্মবিশ্বাসী ভঙ্গিতে বলা ভুল তথ্য</td></tr>
+</table>
+
+<h2>উৎস</h2>
+
+<ul>
+<li><a href="https://arxiv.org/abs/1607.06450">Layer Normalization — arXiv:1607.06450</a></li>
+<li><a href="https://arxiv.org/abs/1910.07467">RMSNorm — arXiv:1910.07467</a></li>
+<li><a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need — arXiv:1706.03762</a> (§3.2.1 → √d_k)</li>
+<li><a href="https://arxiv.org/abs/1904.09751">Nucleus sampling — arXiv:1904.09751</a></li>
+<li><a href="https://arxiv.org/abs/2207.05221">LMs (Mostly) Know What They Know — arXiv:2207.05221</a></li>
+<li><a href="https://arxiv.org/abs/2302.09664">Semantic Uncertainty — arXiv:2302.09664</a></li>
+<li><a href="https://arxiv.org/abs/1706.04599">On Calibration of Modern Neural Networks — arXiv:1706.04599</a></li>
+<li><a href="https://huggingface.co/docs/transformers/perplexity">Hugging Face — Perplexity</a></li>
+<li><a href="https://cdn.openai.com/papers/gpt-4.pdf">GPT-4 Technical Report</a> (RLHF-পরবর্তী calibration পতন)</li>
+</ul>
+
+<footer>
+<a href="probability-cheatsheet.html">মূল রেফারেন্স শিট</a>
+<a href="../lessons/0006-stats-inside-llm.html">পাঠ ৬</a>
+<a href="../lessons/0007-llm-probability-confidence.html">পাঠ ৭</a>
+</footer>
+
+</main>
+</body>
+</html>
