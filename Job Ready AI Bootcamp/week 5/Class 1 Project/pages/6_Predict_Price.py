@@ -110,7 +110,7 @@ features = {
 # ============================================================
 st.markdown("---")
 
-if st.button("🔮 Predict Price", type="primary", use_container_width=True):
+if st.button("🔮 Predict Price", type="primary", width="stretch"):
     predicted_price = predict_price(features)
     contributions = explain_prediction(features)
 
@@ -146,7 +146,7 @@ if st.button("🔮 Predict Price", type="primary", use_container_width=True):
 
     # Format contributions
     contrib_df['Contribution ($)'] = contrib_df['Contribution ($)'].apply(lambda x: f"${x:+,.0f}")
-    st.dataframe(contrib_df, use_container_width=True)
+    st.dataframe(contrib_df, width="stretch")
 
     # Top positive and negative drivers
     positive = {k: v for k, v in contributions.items() if v > 0 and k != 'Intercept'}
@@ -183,7 +183,7 @@ if st.button("🔮 Predict Price", type="primary", use_container_width=True):
     compare_df['Market Avg'] = compare_df['Market Avg'].round(2)
     compare_df['Market Median'] = compare_df['Market Median'].round(2)
     compare_df['Percentile'] = compare_df['Percentile'].round(1).astype(str) + 'th'
-    st.dataframe(compare_df, use_container_width=True)
+    st.dataframe(compare_df, width="stretch")
 
 st.markdown("---")
 st.caption("💡 This prediction is an estimate based on historical data patterns. Actual market prices may vary due to factors not captured in the model (e.g., recent renovations, neighborhood trends, market conditions).")

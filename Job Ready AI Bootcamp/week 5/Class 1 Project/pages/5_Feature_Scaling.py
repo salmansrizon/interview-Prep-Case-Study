@@ -30,7 +30,7 @@ features_to_scale = ['median_income', 'house_age', 'lot_size_sqft', 'distance_to
 
 fig, ax = plt.subplots(figsize=(12, 6))
 box_data = [df[f].values for f in features_to_scale]
-bp = ax.boxplot(box_data, labels=[f.replace('_', ' ').title() for f in features_to_scale], 
+bp = ax.boxplot(box_data, tick_labels=[f.replace('_', ' ').title() for f in features_to_scale], 
                 patch_artist=True)
 colors = plt.cm.Set3(np.linspace(0, 1, len(features_to_scale)))
 for patch, color in zip(bp['boxes'], colors):
@@ -56,7 +56,7 @@ Where:
 - **σ (sigma)** = standard deviation of the feature
 
 **Result:** All features have **mean = 0** and **std = 1**. No feature dominates!
-""")
+""", unsafe_allow_html=True)
 
 # Apply StandardScaler
 scaler = StandardScaler()
@@ -65,7 +65,7 @@ scaled_df = pd.DataFrame(scaled_data, columns=features_to_scale)
 
 fig2, ax2 = plt.subplots(figsize=(12, 6))
 box_data2 = [scaled_df[f].values for f in features_to_scale]
-bp2 = ax2.boxplot(box_data2, labels=[f.replace('_', ' ').title() for f in features_to_scale], 
+bp2 = ax2.boxplot(box_data2, tick_labels=[f.replace('_', ' ').title() for f in features_to_scale], 
                   patch_artist=True)
 for patch, color in zip(bp2['boxes'], colors):
     patch.set_facecolor(color)

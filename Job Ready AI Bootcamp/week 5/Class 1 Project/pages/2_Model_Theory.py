@@ -42,7 +42,7 @@ For multiple features (Multiple Linear Regression):
 | **β₁, β₂, ... βₙ** | Coefficients (weights) | How much each feature affects price |
 | **x₁, x₂, ... xₙ** | Input features | Income, rooms, age, etc. |
 | **ε** | Error term (noise) | What the model cannot explain |
-""")
+""", unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -62,7 +62,7 @@ Where:
 - **ŷᵢ** = predicted price of house i = β₀ + β₁·xᵢ₁ + β₂·xᵢ₂ + ...
 
 **The smaller the MSE, the better the model fits the data.**
-""")
+""", unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -114,16 +114,41 @@ Scikit-Learn uses the **Ordinary Least Squares (OLS)** method to find the optima
 This closed-form solution finds the exact coefficients that minimize MSE — no iteration needed!
 
 **Our model's coefficients:**
-""")
+""", unsafe_allow_html=True)
 
 # Load and display coefficients
 import pandas as pd
-coef_df = pd.read_csv("models/feature_importance.csv")
-st.dataframe(coef_df, use_container_width=True)
+from pathlib import Path
+from utils.data_loader import load_housing_data
+
+MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
+coef_df = pd.read_csv(MODELS_DIR / "feature_importance.csv")
+
+# A raw coefficient is "dollars per one unit of the feature", and one unit means
+# something different for every feature. Multiplying by the feature's standard
+# deviation puts them all on the same ruler: dollars per 1 std move.
+df = load_housing_data()
+coef_df['feature_std'] = coef_df['feature'].map(df.std(numeric_only=True))
+coef_df['impact_per_std'] = coef_df['coefficient'] * coef_df['feature_std']
+coef_df = coef_df.reindex(coef_df['impact_per_std'].abs().sort_values(ascending=False).index)
+st.dataframe(coef_df, width="stretch")
 
 st.markdown("""
 **Interpretation:**
 - **Positive coefficient** → Higher feature value = Higher predicted price
 - **Negative coefficient** → Higher feature value = Lower predicted price
-- **Larger absolute value** → More important feature for prediction
+- **Larger absolute value ≠ more important.** The coefficient is measured *per unit of
+  the feature*, and the units are not comparable. `population` has a tiny coefficient
+  (~$0.01) only because it is counted in thousands of people; `has_pool` has a huge one
+  (~$24,000) only because its single unit is the whole jump from "no pool" to "pool".
+- **Use `impact_per_std`** (coefficient × feature std) to rank features fairly — that is
+  the dollar move you get from a typical-sized change in each feature. This is the same
+  idea as feature scaling, applied after training instead of before.
 """)
+
+st.warning(
+    "⚠️ **Spot the trap:** `house_age` and `year_built` are the same fact written twice "
+    "(`year_built = 2024 − house_age`). Their coefficients come out as an equal and "
+    "opposite pair (+106.58 / −106.58) — a textbook case of **multicollinearity**. The "
+    "predictions stay fine, but neither coefficient can be trusted on its own."
+)

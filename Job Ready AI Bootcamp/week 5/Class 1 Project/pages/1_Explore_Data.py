@@ -21,10 +21,10 @@ with tab1:
     col3.metric("Target Range", f"${df['price'].min():,.0f} - ${df['price'].max():,.0f}")
 
     st.markdown("**First 10 Rows:**")
-    st.dataframe(df.head(10), use_container_width=True)
+    st.dataframe(df.head(10), width="stretch")
 
     st.markdown("**Descriptive Statistics:**")
-    st.dataframe(df.describe().T, use_container_width=True)
+    st.dataframe(df.describe().T, width="stretch")
 
     st.markdown("**Data Types & Missing Values:**")
     dtype_df = pd.DataFrame({
@@ -33,7 +33,7 @@ with tab1:
         'Missing': df.isnull().sum(),
         'Unique': [df[col].nunique() for col in df.columns]
     })
-    st.dataframe(dtype_df, use_container_width=True)
+    st.dataframe(dtype_df, width="stretch")
 
 with tab2:
     st.subheader("Feature Distributions")
@@ -55,7 +55,7 @@ with tab3:
     import plotly.express as px
     fig = px.imshow(corr, text_auto=".2f", aspect="auto",
                     color_continuous_scale="RdBu_r", title="Feature Correlation Heatmap")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.markdown("**Top Correlations with Price:**")
     price_corr = corr['price'].drop('price').sort_values(key=abs, ascending=False)
@@ -64,7 +64,7 @@ with tab3:
         'Correlation': price_corr.values,
         'Strength': ['Strong' if abs(v) > 0.5 else 'Moderate' if abs(v) > 0.3 else 'Weak' for v in price_corr.values]
     })
-    st.dataframe(corr_df, use_container_width=True)
+    st.dataframe(corr_df, width="stretch")
 
 with tab4:
     st.subheader("Target Variable: House Price")

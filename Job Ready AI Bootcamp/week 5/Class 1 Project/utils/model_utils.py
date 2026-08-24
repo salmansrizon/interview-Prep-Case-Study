@@ -3,28 +3,32 @@ Model loading and prediction utilities.
 """
 import joblib
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 
+MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
+
 @st.cache_resource
 def load_model():
     """Load the trained linear regression model."""
-    return joblib.load("models/linear_regression.pkl")
+    return joblib.load(MODELS_DIR / "linear_regression.pkl")
 
 @st.cache_resource
 def load_scaler():
     """Load the feature scaler."""
-    return joblib.load("models/scaler.pkl")
+    return joblib.load(MODELS_DIR / "scaler.pkl")
 
 def load_feature_names():
     """Load feature names."""
-    with open("models/feature_names.json", "r") as f:
+    with open(MODELS_DIR / "feature_names.json") as f:
         return json.load(f)
 
 def load_model_results():
     """Load model evaluation results."""
-    with open("models/model_results.json", "r") as f:
+    with open(MODELS_DIR / "model_results.json") as f:
         return json.load(f)
 
 def predict_price(features_dict):

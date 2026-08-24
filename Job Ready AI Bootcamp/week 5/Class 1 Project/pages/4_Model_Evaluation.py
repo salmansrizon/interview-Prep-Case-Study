@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from utils.data_loader import load_housing_data
+from utils.model_utils import load_model_results
 from utils.visualizations import plot_actual_vs_predicted, plot_residuals
 
 st.set_page_config(page_title="Model Evaluation", page_icon="📏", layout="wide")
@@ -33,7 +34,7 @@ st.markdown("""
 |--------|---------|----------------|------|
 | **MSE** | (1/n) · Σ(y - ŷ)² | Average squared error | Minimize |
 | **RMSE** | √MSE | Error in same units as target ($) | Minimize |
-| **MAE** | (1/n) · Σ\|y - ŷ\| | Average absolute error (robust to outliers) | Minimize |
+| **MAE** | (1/n) · Σ \\|y − ŷ\\| | Average absolute error (robust to outliers) | Minimize |
 | **R²** | 1 - (SS_res / SS_tot) | % of variance explained by model | Maximize (→ 1.0) |
 
 **R² = 0.85** means the model explains **85%** of price variation. The remaining 15% is due to 
@@ -108,7 +109,8 @@ st.markdown("---")
 st.subheader("🎯 Prediction Examples")
 
 n_examples = 10
-sample_idx = np.random.choice(len(y_test), n_examples, replace=False)
+# Fixed seed so the table does not reshuffle on every widget interaction.
+sample_idx = np.random.default_rng(42).choice(len(y_test), n_examples, replace=False)
 examples_df = pd.DataFrame({
     'Actual Price': y_test.iloc[sample_idx].values,
     'Predicted Price': y_pred[sample_idx],
@@ -118,4 +120,32 @@ examples_df = pd.DataFrame({
 examples_df['Actual Price'] = examples_df['Actual Price'].apply(lambda x: f"${x:,.0f}")
 examples_df['Predicted Price'] = examples_df['Predicted Price'].apply(lambda x: f"${x:,.0f}")
 examples_df['Error'] = examples_df['Error'].apply(lambda x: f"${x:,.0f}")
-st.dataframe(examples_df, use_container_width=True)
+st.dataframe(examples_df, width="stretch")
+
+st.markdown("---")
+
+st.subheader("🏁 Was a Fancier Model Worth It?")
+
+st.markdown("""
+Before shipping, `train_model.py` also trained **Ridge** (L2 regularization) and **Lasso**
+(L1 regularization) on the same split, both at scikit-learn's default `alpha=1.0` and on
+**scaled** features — regularization penalizes every coefficient equally, so it is only fair
+once the features share a scale. Those saved scores live in `models/model_results.json`:
+""")
+
+results_df = pd.DataFrame(load_model_results()).T
+results_df.index = ['Linear Regression', 'Ridge', 'Lasso']
+st.dataframe(
+    results_df.style.format({'mse': '{:,.0f}', 'rmse': '${:,.0f}',
+                             'mae': '${:,.0f}', 'r2': '{:.4f}', 'mape': '{:.2f}%'}),
+    width="stretch",
+)
+
+st.info(
+    "💡 **The result to notice:** all three agree to within **$1 of RMSE**. Regularization "
+    "earns its keep when features are many, collinear, or noisy relative to the number of "
+    "rows — with 16 mostly-clean features and 5,000 rows there is nothing for it to rescue, "
+    "so shrinking the coefficients buys nothing. This is the report you want before anyone "
+    "asks 'should we try something fancier?' — measure first, and keep the simple model "
+    "until the numbers say otherwise."
+)

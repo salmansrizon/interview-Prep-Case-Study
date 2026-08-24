@@ -71,7 +71,7 @@ def plot_feature_distribution(df, feature, color='steelblue'):
     axes[0].set_title(f'Distribution of {feature.replace("_", " ").title()}', fontweight='bold')
     axes[0].legend()
 
-    axes[1].boxplot(df[feature], vert=True, patch_artist=True,
+    axes[1].boxplot(df[feature], patch_artist=True,
                     boxprops=dict(facecolor=color, alpha=0.7))
     axes[1].set_ylabel(feature.replace('_', ' ').title())
     axes[1].set_title(f'Box Plot: {feature.replace("_", " ").title()}', fontweight='bold')
