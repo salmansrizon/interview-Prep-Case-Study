@@ -96,7 +96,7 @@ splitting the data at each step until it reaches a final decision (leaf node).
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+st.markdown(r"""
 ### How It Works
 
 1. **Select the best feature** to split on (using Gini Impurity or Entropy)

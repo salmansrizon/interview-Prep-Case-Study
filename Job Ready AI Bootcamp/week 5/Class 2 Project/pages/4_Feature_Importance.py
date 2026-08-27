@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from utils.model_utils import MODELS_DIR
+from utils.data_loader import load_loan_data
 from utils.visualizations import plot_feature_importance
 
 st.set_page_config(page_title="Feature Importance", page_icon="📊", layout="wide")
@@ -34,7 +36,7 @@ with tab1:
     (Gini index) across all trees. Features that create the "cleanest" splits are most important.
     """)
 
-    rf_imp = pd.read_csv("models/feature_importance.csv")
+    rf_imp = pd.read_csv(MODELS_DIR / "feature_importance.csv")
 
     fig = plot_feature_importance(rf_imp, title="Random Forest Feature Importance", top_n=13)
     st.pyplot(fig)
@@ -55,7 +57,7 @@ with tab2:
     in approval probability for a one-unit increase in that feature. Larger absolute values = more influence.
     """)
 
-    lr_coef = pd.read_csv("models/logistic_coefficients.csv")
+    lr_coef = pd.read_csv(MODELS_DIR / "logistic_coefficients.csv")
 
     fig, ax = plt.subplots(figsize=(10, 8))
     colors = ['green' if c > 0 else 'red' for c in lr_coef['coefficient']]
@@ -128,7 +130,7 @@ Let's verify that protected attributes (gender, marital status) do NOT dispropor
 affect loan decisions:
 """)
 
-df = pd.read_csv("data/loan_data.csv")
+df = load_loan_data()
 
 for attr in ['gender', 'married']:
     rates = df.groupby(attr)['loan_approved'].mean() * 100

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve
+from utils.model_utils import MODELS_DIR
 from utils.model_utils import load_model_results, load_model, load_scaler
 from utils.visualizations import plot_confusion_matrix, plot_roc_curve, plot_model_comparison
 import numpy as np
@@ -49,9 +50,9 @@ st.plotly_chart(fig_radar, use_container_width=True)
 st.markdown("---")
 st.subheader("📉 Confusion Matrices")
 
-cm_lr = np.load("models/cm_logistic.npy")
-cm_dt = np.load("models/cm_decision_tree.npy")
-cm_rf = np.load("models/cm_random_forest.npy")
+cm_lr = np.load(MODELS_DIR / "cm_logistic.npy")
+cm_dt = np.load(MODELS_DIR / "cm_decision_tree.npy")
+cm_rf = np.load(MODELS_DIR / "cm_random_forest.npy")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -78,19 +79,13 @@ st.markdown("""
 st.markdown("---")
 st.subheader("📈 ROC Curves")
 
-# We need to recompute ROC curves from test data
-# For simplicity, show placeholder curves based on AUC scores
+# Real test-set ROC points, saved by train_model.py — no approximations.
+curves = np.load(MODELS_DIR / "roc_curves.npz")
 fig, ax = plt.subplots(figsize=(10, 8))
 
-# Generate approximate ROC curves based on AUC
 for model_name, res in results.items():
-    auc = res['roc_auc']
-    # Approximate curve: parametric form
-    t = np.linspace(0, 1, 100)
-    # Simple parametric ROC approximation
-    fpr = t
-    tpr = t ** ((1 - auc) / auc) if auc > 0.5 else t
-    ax.plot(fpr, tpr, lw=2, label=f"{model_name.replace('_', ' ').title()} (AUC = {auc:.3f})")
+    ax.plot(curves[f"{model_name}_fpr"], curves[f"{model_name}_tpr"], lw=2,
+            label=f"{model_name.replace('_', ' ').title()} (AUC = {res['roc_auc']:.3f})")
 
 ax.plot([0, 1], [0, 1], 'k--', lw=2, label='Random Classifier')
 ax.fill_between([0, 1], [0, 1], alpha=0.1, color='gray')
@@ -158,9 +153,12 @@ biz_df = pd.DataFrame({
 
 st.dataframe(biz_df, use_container_width=True)
 
+# Whichever model actually earns the most — not whichever one we expected to.
+best_model = biz_df['net_profit'].idxmax()
+
 st.markdown(f"""
 <div style="background-color: #E8F5E9; padding: 15px; border-radius: 8px;">
     <strong>Scenario:</strong> 1,000 loan applications, avg loan $150K, 3% profit margin, 15% default rate on bad loans.<br>
-    <strong>Best Model:</strong> Random Forest with estimated net profit of <strong>${biz_rf['net_profit']:,.0f}</strong>
+    <strong>Best Model:</strong> {best_model} with estimated net profit of <strong>${biz_df.loc[best_model, 'net_profit']:,.0f}</strong>
 </div>
 """, unsafe_allow_html=True)

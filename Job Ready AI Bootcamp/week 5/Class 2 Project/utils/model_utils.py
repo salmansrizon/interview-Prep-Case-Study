@@ -3,33 +3,39 @@ Model loading, prediction, and explanation utilities.
 """
 import joblib
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 
+# Anchored to this file, not the working directory, so the app runs from anywhere.
+ROOT = Path(__file__).resolve().parents[1]
+MODELS_DIR = ROOT / "models"
+
 @st.cache_resource
 def load_model(model_name='random_forest'):
     """Load a trained classification model."""
-    return joblib.load(f"models/{model_name}.pkl")
+    return joblib.load(MODELS_DIR / f"{model_name}.pkl")
 
 @st.cache_resource
 def load_scaler():
     """Load the feature scaler."""
-    return joblib.load("models/scaler.pkl")
+    return joblib.load(MODELS_DIR / "scaler.pkl")
 
 @st.cache_resource
 def load_label_encoders():
     """Load label encoders for categorical features."""
-    return joblib.load("models/label_encoders.pkl")
+    return joblib.load(MODELS_DIR / "label_encoders.pkl")
 
 def load_feature_names():
     """Load feature names."""
-    with open("models/feature_names.json", "r") as f:
+    with open(MODELS_DIR / "feature_names.json", "r") as f:
         return json.load(f)
 
 def load_model_results():
     """Load model evaluation results."""
-    with open("models/model_results.json", "r") as f:
+    with open(MODELS_DIR / "model_results.json", "r") as f:
         return json.load(f)
 
 def preprocess_input(features_dict, label_encoders, scaler=None, for_model='random_forest'):
@@ -61,13 +67,15 @@ def preprocess_input(features_dict, label_encoders, scaler=None, for_model='rand
             else:
                 X[col] = 0  # Default to first class
 
-    X_array = X.values.astype(float)
+    # Stay a DataFrame the whole way: the models were fitted with feature names,
+    # and a bare array makes scikit-learn warn on every prediction.
+    X = X.astype(float)
 
     # Scale if needed
     if for_model == 'logistic_regression' and scaler is not None:
-        X_array = scaler.transform(X_array)
+        X = pd.DataFrame(scaler.transform(X), columns=X.columns)
 
-    return X_array
+    return X
 
 def predict_loan(features_dict, model_name='random_forest'):
     """

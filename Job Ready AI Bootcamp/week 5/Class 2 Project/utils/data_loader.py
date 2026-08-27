@@ -1,14 +1,19 @@
 """
 Data loading and preprocessing utilities for Loan Approval Predictor.
 """
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import streamlit as st
 
+# Anchored to this file, not the working directory, so the app runs from anywhere.
+ROOT = Path(__file__).resolve().parents[1]
+
 @st.cache_data
 def load_loan_data():
     """Load and preprocess loan dataset."""
-    df = pd.read_csv("data/loan_data.csv")
+    df = pd.read_csv(ROOT / "data" / "loan_data.csv")
     return df
 
 @st.cache_data
