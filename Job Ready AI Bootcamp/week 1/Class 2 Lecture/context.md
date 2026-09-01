@@ -1,4 +1,22 @@
 
+# সহজ ভাষায় Lecture Overview
+
+এই lecture-এর main topic হলো **Week 1 — Class 2: Advanced Python for AI**। এখানে technical term English-এ রাখা হয়েছে, আর explanation Bangla-তে দেওয়া হয়েছে—যাতে concept বোঝা, code পড়া এবং interview-তে explain করা তিনটিই সহজ হয়।
+
+## কেন এই Topic দরকার?
+
+Real-world AI system বানাতে শুধু library function call জানলেই হয় না। Input data কোথা থেকে আসে, algorithm কীভাবে decision নেয়, কোন limitation আছে এবং output কীভাবে validate করতে হয়—এই পুরো flow বোঝা দরকার। এই lecture সেই problem-solving mindset তৈরি করবে।
+
+## শেখার সহজ Workflow
+
+Problem বোঝা → Core concept ও intuition → Step-by-step workflow → Practical example → কখন ব্যবহার করবেন বা করবেন না।
+
+প্রতিটি section পড়ার সময় তিনটি প্রশ্ন করুন: **এটি কোন problem solve করে? কীভাবে কাজ করে? Alternative-এর তুলনায় কখন better?** এই প্রশ্নগুলোর উত্তর দিতে পারলে topic-টি শুধু মুখস্থ নয়, সত্যি বোঝা হয়েছে।
+
+> **Practical mindset:** Example code run করার আগে expected input এবং output লিখে নিন। Run করার পরে result expectation-এর সাথে compare করুন এবং ভুল হলে কোন pipeline step-এ সমস্যা হয়েছে তা isolate করুন।
+
+---
+
 ## Week 1 — Class 2: Advanced Python for AI
 
 ## 1. List Comprehensions

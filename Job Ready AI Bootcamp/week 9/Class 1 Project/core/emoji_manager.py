@@ -1,4 +1,6 @@
 """Emoji rendering and management."""
+import os
+
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -61,7 +63,7 @@ class EmojiManager:
             "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
             "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
             "/System/Library/Fonts/Apple Color Emoji.ttc",
-            "C:\Windows\Fonts\seguiemj.ttf",
+            r"C:\Windows\Fonts\seguiemj.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         ]
 

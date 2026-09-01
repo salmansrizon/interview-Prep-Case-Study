@@ -91,6 +91,7 @@ class DataLoader:
         for cat, items in PRODUCT_CATEGORIES.items():
             all_products.extend(items)
         all_products = all_products[:n_products]
+        allowed_products = set(all_products)
 
         # Association rules (items that frequently appear together)
         associations = [
@@ -110,6 +111,9 @@ class DataLoader:
 
             # Add associated items with probability
             for assoc, prob in associations:
+                assoc = [item for item in assoc if item in allowed_products]
+                if not assoc:
+                    continue
                 if random.random() < prob:
                     basket.update(assoc)
 

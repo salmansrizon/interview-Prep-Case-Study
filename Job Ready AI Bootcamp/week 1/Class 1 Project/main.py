@@ -63,7 +63,15 @@ def main():
 
     # 4. Execute sorting.
     print(f"[INFO] Running sort strategy: '{strategy}'")
-    result = sorter.sort(sample_file, output_dir)
+    try:
+        result = sorter.sort(sample_file, output_dir)
+    except RuntimeError as exc:
+        if strategy != "category":
+            raise
+        print(f"[WARN] {exc}")
+        print("[INFO] Falling back to offline alphabetical sorting.")
+        strategy = "alphabetical"
+        result = TextSorter(strategy=strategy).sort(sample_file, output_dir)
 
     # 5. Report results.
     print("\n[SUCCESS] Sorting complete! Output files:")

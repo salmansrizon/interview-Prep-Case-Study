@@ -22,7 +22,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import config
-from src.data.loader import DataLoader
+from src.data.loader import DataLoader, PRODUCT_CATEGORIES
 from src.data.preprocessor import DataPreprocessor
 from src.features.engineering import FeatureEngineer
 from src.models.kmeans_engine import KMeansEngine
@@ -255,12 +255,30 @@ if module == "🎯 K-Means Clustering":
 elif module == "📉 PCA & Dimensionality Reduction":
     st.subheader("2. Principal Component Analysis (PCA)")
 
+    df = load_data()
+    features_df = None
+    max_components = 0
+    if df is not None:
+        preprocessor = DataPreprocessor()
+        features_df = preprocessor.prepare_for_clustering(df)
+        max_components = min(features_df.shape[0], features_df.shape[1])
+
     col1, col2 = st.columns([2, 1])
 
     with col2:
         st.markdown("#### 🔧 Parameters")
-        n_components = st.slider("Number of Components", 2, 10, 2, 1)
-        auto_select = st.checkbox("Auto-select by variance threshold (95%)", value=False)
+        if max_components >= 2:
+            max_manual_components = min(10, max_components)
+            n_components = st.slider(
+                "Number of Components", 2, max_manual_components, 2, 1
+            )
+            auto_select = st.checkbox(
+                "Auto-select by variance threshold (95%)", value=False
+            )
+        else:
+            n_components = 0
+            auto_select = False
+            st.warning("PCA needs at least two numeric features and two rows.")
 
         st.markdown("---")
         st.markdown("#### 📚 About PCA")
@@ -275,19 +293,28 @@ elif module == "📉 PCA & Dimensionality Reduction":
         """)
 
     with col1:
-        df = load_data()
         if df is None:
             st.info("👈 Use the sidebar to generate or upload data.")
+        elif max_components < 2:
+            st.error("The dataset does not contain enough numeric data to run PCA.")
         else:
             st.markdown("**Dataset Preview**")
             st.dataframe(df.head(8), use_container_width=True)
 
-            preprocessor = DataPreprocessor()
-            features_df = preprocessor.prepare_for_clustering(df)
-
             if st.button("🚀 Run PCA", type="primary"):
                 with st.spinner("Reducing dimensions..."):
-                    pca = PCAEngine(n_components=n_components)
+                    selected_components = n_components
+                    if auto_select:
+                        selector = PCAEngine(n_components=max_components)
+                        selector.fit(features_df)
+                        selected_components = int(
+                            np.searchsorted(
+                                selector.cumulative_variance,
+                                config.PCA_VARIANCE_THRESHOLD,
+                            ) + 1
+                        )
+
+                    pca = PCAEngine(n_components=selected_components)
                     pca.fit(features_df)
                     st.session_state.pca_model = pca
 
@@ -350,7 +377,7 @@ elif module == "📉 PCA & Dimensionality Reduction":
                     st.plotly_chart(fig_heat, use_container_width=True)
 
                     # 2D scatter
-                    if n_components >= 2:
+                    if selected_components >= 2:
                         st.markdown("---")
                         st.markdown("**Data Projection (PC1 vs PC2)**")
 
@@ -413,7 +440,10 @@ else:
         st.markdown("**Generate Transaction Data**")
 
         n_transactions = st.number_input("Number of Transactions", 100, 10000, 1000, 100)
-        n_products = st.number_input("Number of Products", 10, 100, 50, 5)
+        catalog_size = sum(len(items) for items in PRODUCT_CATEGORIES.values())
+        n_products = st.number_input(
+            "Number of Products", 10, catalog_size, catalog_size, 1
+        )
 
         if st.button("🛒 Generate & Analyze", type="primary"):
             with st.spinner("Mining association rules..."):

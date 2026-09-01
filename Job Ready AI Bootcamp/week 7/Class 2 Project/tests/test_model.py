@@ -83,5 +83,8 @@ class TestModelBuilder:
             model = build_model(input_dim=10, hidden_units=hidden)
             assert model is not None
             # Should have dense layers matching hidden config
-            dense_count = sum(1 for l in model.layers if "dense" in l.name)
+            dense_count = sum(
+                1 for layer in model.layers
+                if isinstance(layer, tf.keras.layers.Dense)
+            )
             assert dense_count == len(hidden) + 1  # +1 for output layer

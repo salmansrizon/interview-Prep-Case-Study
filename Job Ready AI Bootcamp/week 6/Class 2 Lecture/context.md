@@ -1,3 +1,102 @@
+# সহজ ভাষায় আজকের ক্লাস
+
+এই ক্লাসে আমরা **Unsupervised Learning** শিখব। এখানে training data-তে correct label থাকে না। Model নিজে data-এর ভেতরের hidden group, direction এবং relationship খুঁজে বের করে।
+
+আমরা তিনটি topic cover করব:
+
+1. **K-Means Clustering** — similar customer-দের group করা
+2. **Principal Component Analysis (PCA)** — অনেক feature-কে কম dimension-এ summarize করা
+3. **Market Basket Analysis** — কোন product-গুলো একসাথে কেনা হয় তা বের করা
+
+## Unsupervised Learning কেন দরকার?
+
+একটি shop জানে customer কতবার এসেছে, কত টাকা spend করেছে এবং কী product কিনেছে। কিন্তু প্রতিটি customer-এর পাশে `Budget Shopper`, `Premium Buyer` বা `Loyal Customer` label লেখা থাকে না। Manually label করা expensive এবং subjective। Unsupervised Learning answer key ছাড়াই useful pattern-এর candidate খুঁজে দেয়।
+
+তবে এখানে ground-truth accuracy থাকে না। Mathematical metric-এর পাশাপাশি result business-এর জন্য meaningful কি না, সেটিও human expert-কে check করতে হয়।
+
+## K-Means — Customer-দের Meeting Point
+
+একটি মাঠে customer-রা তাদের behavior অনুযায়ী দাঁড়িয়ে আছে ভাবুন। আমরা `K`-টি flag রাখলাম:
+
+1. প্রতিটি customer nearest flag-এর কাছে যায়।
+2. প্রতিটি flag নিজের group-এর মাঝখানে move করে।
+3. Assignment এবং movement বারবার repeat হয়।
+4. Flag আর না সরলে cluster final হয়।
+
+**কী problem solve করেছে:** `spend > 500`-এর মতো arbitrary manual rule-এর বদলে একাধিক numeric feature একসাথে দেখে natural group খুঁজে দেয়।
+
+**কখন ভালো:** group-গুলো compact, roughly round এবং একই রকম size-এর হলে। Strong outlier, unusual shape বা খুব unequal cluster size হলে result misleading হতে পারে।
+
+**Scaling কেন mandatory:** `total_spend` যদি ০–১০,০০০ range-এ এবং `satisfaction` ১–৫ range-এ থাকে, spend distance-কে পুরো dominate করবে। StandardScaler feature-গুলোকে comparable scale-এ আনে।
+
+## PCA — Best Camera Angle
+
+একটি 3D object-এর 2D shadow কল্পনা করুন। সঠিক angle থেকে shadow নিলে object-এর shape-এর বেশিরভাগ information থাকে। PCA high-dimensional data-এর এমন direction খুঁজে বের করে যেখানে maximum variation দেখা যায়।
+
+- প্রথম best direction → `PC1`
+- এর perpendicular পরের best direction → `PC2`
+- এভাবে প্রয়োজনমতো আরও component
+
+**কী problem solve করেছে:** অনেক correlated feature model-কে slow করে, noise বাড়ায় এবং visualization কঠিন করে। PCA repeated information-কে কম component-এ compress করে।
+
+**কখন ভালো:** visualization, compression, noise reduction এবং downstream model fast করার জন্য। Trade-off হলো `PC1` original feature-এর মতো সহজে explain করা যায় না এবং কিছু information হারায়।
+
+**Example:** `annual_spend`, `average_order_value` এবং `items_purchased`—তিনটিই buying power-এর signal হতে পারে। PCA এদের shared information একটি component-এ summarize করতে পারে।
+
+## Market Basket Analysis — Shopping Habit খোঁজা
+
+Market Basket Analysis receipt দেখে এমন rule খুঁজে:
+
+```text
+{Bread, Butter} → {Jam}
+```
+
+এর মানে bread এবং butter কিনলে jam unusually often দেখা যায়; এটি প্রমাণ করে না যে bread jam কেনার কারণ।
+
+তিনটি main metric:
+
+- **Support:** সব transaction-এর কত অংশে complete combination আছে
+- **Confidence:** left side থাকলে right side কতবার থাকে
+- **Lift:** right side-এর normal popularity-এর তুলনায় rule কতটা stronger
+
+৯০% Confidence শুনতে impressive, কিন্তু যদি এমনিতেই ৯০% customer sugar কেনে, `{Coffee} → {Sugar}` rule নতুন information দেয় না। তখন Lift প্রায় ১ হবে।
+
+**কী problem solve করেছে:** সব possible product combination brute-force check করলে computation explode করে। Apriori frequent না এমন ছোট combination বাদ দিয়ে তার সব বড় combination-ও prune করে।
+
+## তিনটি Method কীভাবে একসাথে কাজ করতে পারে?
+
+```text
+Customer Table
+   ↓
+Scaling
+   ↓
+PCA (optional compression)
+   ↓
+K-Means
+   ↓
+Customer Segments
+
+Transaction Baskets
+   ↓
+Apriori
+   ↓
+Association Rules
+```
+
+PCA correlated noise কমিয়ে K-Means-কে faster করতে পারে। কিন্তু অতিরিক্ত component বাদ দিলে useful cluster pattern-ও হারাতে পারে। PCA-এর আগে এবং পরে cluster quality compare করা উচিত।
+
+## Label ছাড়া Result Judge করব কীভাবে?
+
+| Method | কী Check করবেন | Warning |
+|---|---|---|
+| K-Means | Elbow, Silhouette, cluster size, stability, business meaning | `K` বাড়লে Inertia সবসময় কমে |
+| PCA | Explained variance, cumulative variance, loadings | High variance সবসময় useful information নয় |
+| Basket Rules | Support, Confidence, Lift, transaction count | Association causation প্রমাণ করে না |
+
+> **মনে রাখবেন:** Unsupervised model pattern-এর candidate দেয়; final meaning, segment name এবং business action human/domain expert validate করে।
+
+---
+
 # Part 1: K-Means Clustering
 
 ## Topic

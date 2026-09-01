@@ -15,6 +15,9 @@ import pandas as pd
 import numpy as np
 import yaml
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 # WHY THIS BLOCK? So `python main.py` works no matter which directory you
 # launch it from. PROJECT_ROOT is the folder holding this file; every path
 # below is built from it instead of from your shell's current directory.

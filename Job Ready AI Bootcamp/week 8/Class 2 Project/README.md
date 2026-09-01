@@ -1,5 +1,28 @@
 # 🔢 High-Accuracy MNIST Digit Classifier
 
+## সহজ ভাষায় Project Overview
+
+**🔢 High-Accuracy MNIST Digit Classifier** project-এ lecture-এর theory-কে working software বা executable notebook-এ convert করা হয়েছে। লক্ষ্য শুধু final output দেখা নয়; input থেকে preprocessing, core logic/model, evaluation এবং output—পুরো pipeline বোঝা।
+
+### কোন Problem Solve করে?
+
+Manual বা disconnected workflow-কে repeatable code pipeline-এ আনে। এর ফলে একই process নতুন data-তে আবার চালানো, result compare করা, error trace করা এবং future feature add করা সহজ হয়।
+
+### কীভাবে কাজ করে?
+
+Input/Data → Validation ও Preprocessing → Core Algorithm/Model → Evaluation → UI, Report বা Saved Output। নিচের detailed section-গুলোতে project-specific command, feature এবং architecture দেওয়া আছে।
+
+### কেন এই Approach ভালো?
+
+- **Repeatable:** একই input দিলে একই workflow follow করে।
+- **Testable:** প্রতিটি stage আলাদাভাবে verify করা যায়।
+- **Explainable:** কোন step কী কাজ করছে তা code এবং output দিয়ে দেখা যায়।
+- **Portfolio-ready:** শুধু notebook result নয়, setup, structure এবং usage-সহ complete project হিসেবে দেখানো যায়।
+
+> **Run করার নিয়ম:** আগে virtual environment তৈরি করে dependency install করুন। তারপর README-এর Quick Start follow করুন, sample input দিয়ে smoke test করুন এবং expected metric/output-এর সাথে result compare করুন।
+
+---
+
 A production-grade Streamlit application that builds, trains, and compares
 three convolutional neural network variants — **Baseline**, **With
 Dropout**, and **Fully Optimized** — on the classic MNIST handwritten

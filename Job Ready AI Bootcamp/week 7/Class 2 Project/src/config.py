@@ -76,7 +76,7 @@ class Config:
         """Load configuration from YAML file."""
         if not os.path.exists(path):
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            path = os.path.join(script_dir, "..", "..", path)
+            path = os.path.join(script_dir, "..", path)
 
         with open(path, "r", encoding="utf-8") as f:
             raw = yaml.safe_load(f)

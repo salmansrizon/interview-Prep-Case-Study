@@ -1,3 +1,103 @@
+# সহজ ভাষায় আজকের ক্লাস
+
+এই ক্লাসে আমরা তিনটি **Classification Algorithm** শিখব: **Naive Bayes, Support Vector Machine (SVM), এবং K-Nearest Neighbors (KNN)**। তিনটিই নতুন data-কে আগে থেকে জানা কোনো label বা category-তে রাখে, কিন্তু decision নেওয়ার পদ্ধতি আলাদা।
+
+উদাহরণ:
+
+- Email → `spam` অথবা `ham`
+- Customer message → `purchase`, `support`, অথবা `complaint`
+- Transaction → `fraud` অথবা `normal`
+
+Training data-তে correct label থাকে বলে একে **Supervised Learning** বলা হয়।
+
+## কোন Problem Solve করে?
+
+ধরুন একটি company প্রতিদিন ৫০,০০০ customer message পায়। সব message manually পড়ে category select করা slow, expensive এবং inconsistent। শুধু fixed rule লিখলেও সমস্যা হয়:
+
+```text
+Message-এ "free" থাকলে spam
+```
+
+কিন্তু `Are you free tomorrow?` একটি normal message। Machine Learning একটি word-এর বদলে অনেকগুলো pattern একসাথে শিখে decision নেয়।
+
+## Naive Bayes — Clue গুনে Probability বের করা
+
+Naive Bayes-কে একজন detective-এর মতো ভাবুন। সে জানে `prize`, `winner`, `urgent` word spam-এ বেশি আসে; আর `meeting`, `report`, `lunch` normal message-এ বেশি আসে। নতুন message-এর clue গুলোর probability combine করে যে class-এর score বেশি হয়, সেটি predict করে।
+
+এটি ধরে নেয় প্রতিটি feature অন্য feature থেকে independent। Assumption-টি পুরোপুরি সত্য না হলেও calculation অনেক fast করে দেয়।
+
+**কখন ভালো:**
+
+- Training data কম হলে
+- Text-এর মতো হাজার হাজার feature থাকলে
+- Fast baseline দরকার হলে
+- কম CPU-তে real-time prediction দরকার হলে
+
+**কী problem solve করেছে:** সব word-এর সাথে সব word-এর relationship calculate না করে simple count এবং probability দিয়ে high-dimensional text classify করা সম্ভব করেছে।
+
+**Example:** `prize` যদি spam message-এর ৬০%-এ এবং normal message-এর মাত্র ১%-এ থাকে, তাহলে নতুন message-এ `prize` দেখা spam-এর পক্ষে strong evidence।
+
+## SVM — সবচেয়ে Wide Safety Boundary
+
+Spam-কে red dot এবং normal message-কে blue dot ভাবুন। দুই group-এর মাঝে অনেক line আঁকা সম্ভব। SVM এমন line বা **hyperplane** বেছে নেয়, যার দুই পাশে সবচেয়ে বেশি empty space বা **margin** থাকে।
+
+Boundary-এর সবচেয়ে কাছের point-গুলোকেই **Support Vector** বলা হয়। এই point-গুলো সরলে boundary-ও বদলাতে পারে।
+
+**কখন ভালো:**
+
+- TF-IDF-এর মতো high-dimensional sparse data হলে
+- Strong classification accuracy দরকার হলে
+- Dataset small-to-medium হলে
+- Class-গুলোর মধ্যে clear separation থাকলে
+
+**কী problem solve করেছে:** শুধু training example মুখস্থ না করে wide margin তৈরি করে unseen data-তে safer decision নেওয়া।
+
+`C` parameter model training mistake এবং wide margin-এর মধ্যে balance control করে। বড় `C` mistake কমাতে বেশি চেষ্টা করে; ছোট `C` কিছু mistake accept করে wider margin রাখতে পারে।
+
+## KNN — কাছের Example-দের Vote
+
+KNN নতুন item-এর সবচেয়ে কাছের `K`-টি training example খুঁজে তাদের vote নেয়। `K=5` হলে closest পাঁচটি message-এর মধ্যে চারটি `support` হলে prediction হবে `support`।
+
+**কখন ভালো:**
+
+- Dataset ছোট হলে
+- Similar example দিয়ে decision explain করতে হলে
+- Local neighborhood meaningful হলে
+
+**কী problem solve করেছে:** complex equation বা boundary train না করেও past similar example ব্যবহার করে prediction দেওয়া।
+
+KNN-কে **Lazy Learner** বলা হয়, কারণ training-এর সময় data store করা ছাড়া খুব বেশি কাজ করে না। Heavy distance calculation prediction-এর সময় হয়। তাই training fast হলেও large dataset-এ prediction slow।
+
+## Raw Text থেকে Prediction কীভাবে হয়?
+
+```text
+Raw Text
+   ↓
+Cleaning ও Tokenization
+   ↓
+TF-IDF দিয়ে Number-এ Conversion
+   ↓
+Train/Test Split
+   ↓
+Naive Bayes / SVM / KNN
+   ↓
+Prediction ও Evaluation
+```
+
+TF-IDF common word-কে কম importance এবং একটি document-এর informative word-কে বেশি importance দেয়। Vectorizer শুধু training data-তে `fit` করতে হবে; test data-তে fit করলে **data leakage** হবে।
+
+## Quick Comparison
+
+| Situation | ভালো Starting Choice | কারণ |
+|---|---|---|
+| Fast text baseline | Naive Bayes | মূলত count ও probability শেখে |
+| High-dimensional text-এ strong performance | Linear SVM | Wide-margin boundary sparse data-তে ভালো কাজ করে |
+| Small dataset এবং neighbor-based explanation | KNN | Similar example সরাসরি দেখা যায় |
+| Large dataset-এ fast prediction | Naive Bayes বা Linear SVM | KNN prediction expensive |
+
+> **মনে রাখবেন:** কোনো algorithm সব ক্ষেত্রে best নয়। Validation score, prediction speed, memory, explainability এবং ভুল decision-এর business cost দেখে final model select করতে হয়।
+
+---
 
 # Part 1: Naive Bayes
 

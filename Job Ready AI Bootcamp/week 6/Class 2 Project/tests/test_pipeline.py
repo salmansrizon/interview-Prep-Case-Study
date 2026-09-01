@@ -72,3 +72,15 @@ def test_market_basket():
         assert "lift" in rules.columns
         assert "confidence" in rules.columns
         assert "support" in rules.columns
+
+
+def test_transaction_generator_respects_product_limit():
+    transactions = DataLoader.generate_transaction_data(
+        n_transactions=100,
+        n_products=10,
+    )
+    allowed = {
+        "Laptop", "Phone", "Tablet", "Headphones", "Charger", "Camera",
+        "Smartwatch", "Milk", "Bread", "Eggs",
+    }
+    assert set().union(*map(set, transactions)) <= allowed

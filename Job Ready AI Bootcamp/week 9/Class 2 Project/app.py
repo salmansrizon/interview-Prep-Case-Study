@@ -307,7 +307,7 @@ def main():
             frame_placeholder.image(
                 rgb_frame,
                 channels="RGB",
-                column_width="always",
+                width="stretch",
             )
 
         time.sleep(0.01)
@@ -318,7 +318,7 @@ def main():
         placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
         cv2.putText(placeholder, "Camera Off", (200, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (100, 100, 100), 2)
         cv2.putText(placeholder, "Click Start Camera to begin", (140, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (80, 80, 80), 1)
-        frame_placeholder.image(placeholder, channels="RGB", column_width="always")
+        frame_placeholder.image(placeholder, channels="RGB", width="stretch")
 
 
 if __name__ == "__main__":

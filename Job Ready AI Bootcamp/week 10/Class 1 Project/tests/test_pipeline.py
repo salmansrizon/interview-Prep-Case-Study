@@ -74,7 +74,7 @@ def _build_minimal_pdf_bytes(text: str) -> bytes:
     footprint identical to the app's own requirements.txt.
     """
     from pypdf import PdfWriter
-    from pypdf.generic import ContentStream, NameObject
+    from pypdf.generic import ContentStream, DictionaryObject, NameObject
 
     writer = PdfWriter()
     page = writer.add_blank_page(width=200, height=200)
@@ -87,19 +87,19 @@ def _build_minimal_pdf_bytes(text: str) -> bytes:
 
     # A page needs a font resource referenced by the content stream above.
     page[NameObject("/Resources")] = writer._add_object(
-        {
+        DictionaryObject({
             NameObject("/Font"): writer._add_object(
-                {
+                DictionaryObject({
                     NameObject("/F1"): writer._add_object(
-                        {
+                        DictionaryObject({
                             NameObject("/Type"): NameObject("/Font"),
                             NameObject("/Subtype"): NameObject("/Type1"),
                             NameObject("/BaseFont"): NameObject("/Helvetica"),
-                        }
+                        })
                     )
-                }
+                })
             )
-        }
+        })
     )
 
     buf = io.BytesIO()

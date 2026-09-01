@@ -37,8 +37,11 @@ class BaseClassifier(ABC):
             return self.model.predict_proba(X)
         # SVM and some KNN configs may need decision_function or manual fallback
         if hasattr(self.model, "decision_function"):
-            # Convert decision scores to pseudo-probabilities via softmax
+            # Convert decision scores to normalized confidence estimates.
             scores = self.model.decision_function(X)
+            if scores.ndim == 1:
+                positive = 1.0 / (1.0 + np.exp(-scores))
+                return np.column_stack((1.0 - positive, positive))
             exp_scores = np.exp(scores - np.max(scores, axis=1, keepdims=True))
             return exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
         raise NotImplementedError(f"{self.name} does not support probability estimates.")

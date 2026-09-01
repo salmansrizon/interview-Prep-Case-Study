@@ -1,5 +1,30 @@
 # Week 5 — Class 1 Project: House Price Predictor (Linear Regression Dashboard)
 
+## সহজ ভাষায় Project Overview
+
+**🏠 House Price Predictor — Production-Grade ML Dashboard** project-এ lecture-এর theory-কে working software বা executable notebook-এ convert করা হয়েছে। লক্ষ্য শুধু final output দেখা নয়; input থেকে preprocessing, core logic/model, evaluation এবং output—পুরো pipeline বোঝা।
+
+### কোন Problem Solve করে?
+
+Manual বা disconnected workflow-কে repeatable code pipeline-এ আনে। এর ফলে একই process নতুন data-তে আবার চালানো, result compare করা, error trace করা এবং future feature add করা সহজ হয়।
+
+### কীভাবে কাজ করে?
+
+Input/Data → Validation ও Preprocessing → Core Algorithm/Model → Evaluation → UI, Report বা Saved Output। নিচের detailed section-গুলোতে project-specific command, feature এবং architecture দেওয়া আছে।
+
+### কেন এই Approach ভালো?
+
+- **Repeatable:** একই input দিলে একই workflow follow করে।
+- **Testable:** প্রতিটি stage আলাদাভাবে verify করা যায়।
+- **Explainable:** কোন step কী কাজ করছে তা code এবং output দিয়ে দেখা যায়।
+- **Portfolio-ready:** শুধু notebook result নয়, setup, structure এবং usage-সহ complete project হিসেবে দেখানো যায়।
+
+> **Run করার নিয়ম:** আগে virtual environment তৈরি করে dependency install করুন। তারপর README-এর Quick Start follow করুন, sample input দিয়ে smoke test করুন এবং expected metric/output-এর সাথে result compare করুন।
+
+---
+
+A complete Streamlit application for predicting real estate values using Linear Regression,
+with interactive educational modules covering the full ML pipeline.
 
 ## Achievement
 কাঁচা real estate data থেকে একটা **explainable price prediction system** বানানো — একটা multi-page Streamlit dashboard, যেখানে মডেল শুধু দাম বলে না, **কেন** ওই দাম বলল সেটাও ডলার ধরে ভেঙে দেখায়। যা যা ব্যবহার হবে:

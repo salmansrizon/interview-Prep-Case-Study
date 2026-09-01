@@ -29,7 +29,7 @@ st.markdown("---")
 
 st.subheader("📐 The Four Key Metrics")
 
-st.markdown("""
+st.markdown(r"""
 | Metric | Formula | Interpretation | Goal |
 |--------|---------|----------------|------|
 | **MSE** | (1/n) · Σ(y - ŷ)² | Average squared error | Minimize |

@@ -49,14 +49,22 @@ def load_joblib(path: str) -> Any:
 
 
 def set_seed(seed: int = 42) -> None:
-    """Set random seeds for reproducibility."""
+    """Set available random seeds for reproducibility.
+
+    TensorFlow is optional for data-generation and preprocessing commands,
+    so only seed it when the deep-learning dependency is installed.
+    """
     import random
-    import tensorflow as tf
 
     random.seed(seed)
     np.random.seed(seed)
-    tf.random.set_seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
+
+    try:
+        import tensorflow as tf
+    except ImportError:
+        return
+    tf.random.set_seed(seed)
 
 
 def format_number(n: float, decimals: int = 2) -> str:
