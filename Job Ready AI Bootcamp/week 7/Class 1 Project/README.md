@@ -35,12 +35,16 @@ A production-grade, 100% offline educational platform for learning Neural Networ
 ## Quick Start
 
 ```bash
-cd neural-network-lab
-python -m venv venv
+cd "week 7/Class 1 Project"
+python3 -m venv .venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
+python3 -m pip install -r requirements.txt
+python3 -m streamlit run app.py
 ```
+
+Open http://localhost:8501 if Streamlit does not open the browser automatically.
+
+The lecture notebook is `../Class 1 Leacture/Class13_Neural_Network_Lab.ipynb`; the shorter project walkthrough is `notebooks/01_eda.ipynb`.
 
 ## Modules
 
@@ -87,3 +91,12 @@ This project proves that neural networks are not magic — they are:
 3. **Gradient descent** (weight updates)
 
 Understanding these three concepts is 90% of deep learning.
+
+## Run the Tests
+
+```bash
+python3 -m pytest -q
+python3 -m compileall -q app.py config.py src tests
+```
+
+The tests cover neuron arithmetic, activation behavior, matrix shapes, and the XOR hidden-layer requirement.
