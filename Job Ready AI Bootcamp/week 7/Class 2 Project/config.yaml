@@ -36,7 +36,7 @@ data:
     - "facility_location"
 
 model:
-  input_dim: 19          # 10 numeric + 3 categorical (one-hot expanded)
+  input_dim: 26          # Current catalog: 10 numeric + 16 one-hot columns; trainer infers actual width
   hidden_units: [128, 64, 32]
   dropout_rate: 0.3
   learning_rate: 0.001
