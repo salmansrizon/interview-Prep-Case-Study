@@ -4,6 +4,7 @@ Home / Dashboard Overview Page.
 
 import os
 import json
+import sys
 
 import streamlit as st
 import pandas as pd
@@ -62,7 +63,7 @@ def render():
             with st.spinner("Running pipeline... This may take a few minutes."):
                 import subprocess
                 result = subprocess.run(
-                    ["python", "run_pipeline.py"],
+                    [sys.executable, "run_pipeline.py"],
                     capture_output=True,
                     text=True,
                 )
@@ -76,7 +77,7 @@ def render():
         if st.button("🔄 Regenerate Data", use_container_width=True):
             with st.spinner("Generating new synthetic data..."):
                 import subprocess
-                subprocess.run(["python", "-m", "src.data.generator"], check=True)
+                subprocess.run([sys.executable, "-m", "src.data.generator"], check=True)
                 st.success("Data regenerated!")
                 st.rerun()
 
