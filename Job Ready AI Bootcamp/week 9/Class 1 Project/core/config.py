@@ -1,4 +1,4 @@
-"""Production configuration for Emoji Webcam App."""
+"""Production configuration for Face Effects Cam."""
 import os
 from dataclasses import dataclass
 from typing import Tuple
@@ -19,12 +19,8 @@ class AppConfig:
     FACE_DETECTION_MIN_NEIGHBORS: int = 5
     FACE_DETECTION_MIN_SIZE: Tuple[int, int] = (80, 80)
 
-    # Emoji overlay
-    EMOJI_SCALE_FACTOR: float = 1.4  # Emoji size relative to face width
-    EMOJI_VERTICAL_OFFSET: float = 0.1  # Shift emoji up by 10% of face height
-
     # UI
-    STREAMLIT_PAGE_TITLE: str = "Emoji Cam"
+    STREAMLIT_PAGE_TITLE: str = "Face Effects Cam"
     STREAMLIT_LAYOUT: str = "wide"
 
     # Performance

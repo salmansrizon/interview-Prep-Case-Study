@@ -1,8 +1,8 @@
-# 📷 Emoji Cam
+# 📷 Face Effects Cam
 
 ## সহজ ভাষায় Project Overview
 
-**📷 Emoji Cam** project-এ lecture-এর theory-কে working software বা executable notebook-এ convert করা হয়েছে। লক্ষ্য শুধু final output দেখা নয়; input থেকে preprocessing, core logic/model, evaluation এবং output—পুরো pipeline বোঝা।
+**📷 Face Effects Cam** project-এ lecture-এর theory-কে working software বা executable notebook-এ convert করা হয়েছে। লক্ষ্য শুধু final output দেখা নয়; input থেকে preprocessing, core logic/model, evaluation এবং output—পুরো pipeline বোঝা।
 
 ### কোন Problem Solve করে?
 
@@ -23,7 +23,7 @@ Input/Data → Validation ও Preprocessing → Core Algorithm/Model → Evaluat
 
 ---
 
-A production-grade real-time emoji overlay application using Python, OpenCV, and Streamlit. Detects faces via webcam and overlays customizable emojis with smooth alpha blending.
+A real-time face effects application using Python, OpenCV, and Streamlit. It detects faces via webcam and applies selectable effects only to each detected face.
 
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![OpenCV](https://img.shields.io/badge/opencv-4.8+-green.svg)
@@ -31,9 +31,9 @@ A production-grade real-time emoji overlay application using Python, OpenCV, and
 
 ## ✨ Features
 
-- 🎭 **40+ Emojis** — Choose from a wide variety of fun characters
+- ✨ **Four Face Effects** — Blur, Pixelate, Grayscale, and Negative
 - 🧠 **Real-time Face Detection** — Haar Cascade classifier optimized for speed
-- 🎨 **Smooth Alpha Blending** — Professional-quality emoji overlay with transparency
+- 🎨 **Face-only Processing** — The background remains unchanged
 - ⚡ **Threaded Camera Capture** — Non-blocking frame acquisition prevents UI lag
 - 📊 **Performance HUD** — Live FPS, frame count, and processing stats
 - 🐛 **Debug Mode** — Visualize face detection bounding boxes
@@ -59,7 +59,7 @@ The app will open in your browser at `http://localhost:8501`.
 ## 📁 Project Structure
 
 ```
-emoji_webcam_app/
+face_effects_app/
 ├── app.py                 # Streamlit UI and main loop
 ├── requirements.txt       # Python dependencies
 ├── README.md             # This file
@@ -68,8 +68,7 @@ emoji_webcam_app/
     ├── config.py         # App configuration (immutable dataclass)
     ├── camera.py         # Threaded camera capture with queue management
     ├── face_detector.py  # Haar Cascade face detection
-    ├── emoji_manager.py  # Emoji rendering, caching, and alpha blending
-    └── processor.py      # Frame processing pipeline orchestration
+    └── processor.py      # Face effects and pipeline orchestration
 ```
 
 ## ⚙️ Configuration
@@ -101,8 +100,8 @@ Environment variables (all optional):
          ┌─────────────┼─────────────┐
          ▼             ▼             ▼
     ┌─────────┐  ┌──────────┐  ┌──────────┐
-    │  Face   │  │  Emoji   │  │   HUD    │
-    │Detector │  │  Overlay │  │  Overlay │
+    │  Face   │  │  Effect  │  │   HUD    │
+    │Detector │  │  Filter  │  │  Overlay │
     └─────────┘  └──────────┘  └──────────┘
                        │
                        ▼
@@ -112,27 +111,9 @@ Environment variables (all optional):
               └─────────────────┘
 ```
 
-## 🛠️ Development
+## 🛠️ Effects
 
-### Adding New Emojis
-
-Edit `EMOJI_MAP` in `core/emoji_manager.py`:
-
-```python
-EMOJI_MAP: Dict[str, str] = {
-    "😀": "grinning",
-    "🎉": "party",  # Add your emoji here
-}
-```
-
-### Custom Emoji Size
-
-Adjust in `core/config.py`:
-
-```python
-EMOJI_SCALE_FACTOR: float = 1.4  # Relative to face width
-EMOJI_VERTICAL_OFFSET: float = 0.1  # Shift up by 10%
-```
+Choose **Blur**, **Pixelate**, **Grayscale**, or **Negative** from the live selector. Effects are implemented with OpenCV in `core/processor.py`.
 
 ## 📜 License
 

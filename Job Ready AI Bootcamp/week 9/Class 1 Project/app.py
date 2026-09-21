@@ -1,8 +1,8 @@
 """
-Emoji Webcam App - Production Grade Streamlit Application
+Face Effects Cam - Streamlit Application
 ============================================================
 
-A real-time emoji overlay application using OpenCV face detection
+A real-time face effects application using OpenCV face detection
 and Streamlit for the web interface.
 
 Usage:
@@ -12,13 +12,10 @@ import streamlit as st
 import cv2
 import numpy as np
 import time
-from PIL import Image
-import base64
-import io
 
 from core.config import CONFIG
 from core.camera import ThreadedCamera
-from core.processor import FrameProcessor, ProcessResult
+from core.processor import FrameProcessor
 
 
 # Page configuration
@@ -45,23 +42,6 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 2rem;
     }
-    .emoji-btn {
-        font-size: 2rem;
-        padding: 0.5rem;
-        border-radius: 12px;
-        border: 2px solid transparent;
-        background: #f0f2f6;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .emoji-btn:hover {
-        background: #e0e2e6;
-        transform: scale(1.1);
-    }
-    .emoji-btn.selected {
-        border-color: #FF6B6B;
-        background: #fff0f0;
-    }
     .stats-card {
         background: #f8f9fa;
         border-radius: 10px;
@@ -86,7 +66,8 @@ def init_session_state():
         "camera": None,
         "processor": None,
         "is_running": False,
-        "selected_emoji": "😀",
+        "camera_enabled": False,
+        "selected_effect": FrameProcessor.EFFECTS[0],
         "show_debug": False,
         "frame_count": 0,
         "start_time": None,
@@ -111,7 +92,7 @@ def start_camera():
         return False
 
     processor = FrameProcessor()
-    processor.current_emoji = st.session_state.selected_emoji
+    processor.current_effect = st.session_state.selected_effect
     processor.show_debug = st.session_state.show_debug
 
     st.session_state.camera = camera
@@ -132,26 +113,40 @@ def stop_camera():
     st.session_state.is_running = False
 
 
-def render_emoji_grid(available_emojis: list, cols: int = 6):
-    """Render emoji selection grid."""
-    for i in range(0, len(available_emojis), cols):
-        row_emojis = available_emojis[i:i + cols]
-        cols_ui = st.columns(cols)
+def toggle_camera():
+    """Start or stop the camera when the sidebar toggle changes."""
+    if st.session_state.camera_enabled:
+        if not start_camera():
+            st.session_state.camera_enabled = False
+    else:
+        stop_camera()
 
-        for idx, emoji_char in enumerate(row_emojis):
-            with cols_ui[idx]:
-                is_selected = emoji_char == st.session_state.selected_emoji
-                btn_class = "emoji-btn selected" if is_selected else "emoji-btn"
 
-                if st.button(
-                    emoji_char,
-                    key=f"emoji_{emoji_char}",
-                    use_container_width=True,
-                ):
-                    st.session_state.selected_emoji = emoji_char
-                    if st.session_state.processor:
-                        st.session_state.processor.current_emoji = emoji_char
-                    st.rerun()
+@st.fragment(run_every=0.1)
+def render_camera_feed():
+    """Render one camera frame without blocking the rest of the app."""
+    if st.session_state.is_running and st.session_state.camera and st.session_state.processor:
+        frame = st.session_state.camera.read()
+        if frame is None:
+            st.caption("Waiting for camera frame...")
+            return
+
+        result = st.session_state.processor.process(frame)
+        st.session_state.frame_count += 1
+        st.image(cv2.cvtColor(result.frame, cv2.COLOR_BGR2RGB), channels="RGB", width="stretch")
+        return
+
+    placeholder_img = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.putText(
+        placeholder_img,
+        "Camera Off",
+        (200, 240),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.5,
+        (100, 100, 100),
+        2,
+    )
+    st.image(placeholder_img, channels="RGB", width="stretch")
 
 
 def main():
@@ -159,27 +154,16 @@ def main():
     init_session_state()
 
     # Header
-    st.markdown('<div class="main-header">📷 Emoji Cam</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Real-time face detection with emoji overlays</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">📷 Face Effects Cam</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Real-time face detection with live effects</div>', unsafe_allow_html=True)
 
     # Sidebar controls
     with st.sidebar:
         st.header("⚙️ Controls")
 
-        # Start/Stop
-        if not st.session_state.is_running:
-            if st.button("▶️ Start Camera", type="primary", use_container_width=True):
-                with st.spinner("Initializing camera..."):
-                    if start_camera():
-                        st.success("Camera started!")
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.error(st.session_state.camera_error or "Unknown error")
-        else:
-            if st.button("⏹️ Stop Camera", type="secondary", use_container_width=True):
-                stop_camera()
-                st.rerun()
+        st.toggle("📷 Camera", key="camera_enabled", on_change=toggle_camera)
+        if st.session_state.camera_error:
+            st.error(st.session_state.camera_error)
 
         st.divider()
 
@@ -230,8 +214,7 @@ def main():
     main_col, side_col = st.columns([3, 1])
 
     with main_col:
-        # Camera feed placeholder
-        frame_placeholder = st.empty()
+        render_camera_feed()
 
         # Status indicator
         status_col, _ = st.columns([1, 3])
@@ -242,72 +225,14 @@ def main():
                 st.info("⏸️ Camera Off")
 
     with side_col:
-        st.subheader("🎭 Emoji Selector")
-
+        st.subheader("✨ Face Effect")
+        selected_effect = st.selectbox(
+            "Effect",
+            options=FrameProcessor.EFFECTS,
+            key="selected_effect",
+        )
         if st.session_state.processor:
-            available = st.session_state.processor.get_available_emojis()
-        else:
-            # Temporary processor just to get emoji list
-            temp = FrameProcessor()
-            available = temp.get_available_emojis()
-
-        render_emoji_grid(available)
-
-        st.divider()
-        st.caption(f"Selected: **{st.session_state.selected_emoji}**")
-
-    # Main processing loop
-    if st.session_state.is_running and st.session_state.camera and st.session_state.processor:
-        camera = st.session_state.camera
-        processor = st.session_state.processor
-
-        # Run for a limited time per rerun to prevent browser timeout
-        # Streamlit will auto-rerun, creating a continuous loop effect
-        max_frames_per_run = 60  # ~2 seconds at 30fps
-
-        for _ in range(max_frames_per_run):
-            frame = camera.read()
-
-            if frame is None:
-                time.sleep(0.01)
-                continue
-
-            # Process frame
-            result = processor.process(frame)
-            st.session_state.frame_count += 1
-
-            # Convert BGR to RGB for Streamlit
-            rgb_frame = cv2.cvtColor(result.frame, cv2.COLOR_BGR2RGB)
-
-            # Display
-            frame_placeholder.image(
-                rgb_frame,
-                channels="RGB",
-                use_container_width=True,
-            )
-
-        # Auto-rerun to continue stream
-        time.sleep(0.01)
-        st.rerun()
-    else:
-        # Show placeholder when camera is off
-        placeholder_img = np.zeros((480, 640, 3), dtype=np.uint8)
-        # Add "Camera Off" text
-        cv2.putText(
-            placeholder_img,
-            "Camera Off",
-            (200, 240),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.5,
-            (100, 100, 100),
-            2,
-        )
-        frame_placeholder.image(
-            placeholder_img,
-            channels="RGB",
-            use_container_width=True,
-        )
-
+            st.session_state.processor.current_effect = selected_effect
 
 if __name__ == "__main__":
     main()
