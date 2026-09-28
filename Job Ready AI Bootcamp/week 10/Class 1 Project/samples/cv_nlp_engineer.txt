@@ -1,0 +1,23 @@
+Sample CV — NLP Engineer
+
+This is a fictional CV for testing the Semantic CV-to-Job Matcher. It contains no personal contact details.
+
+Profile
+Software engineer focused on language AI. Built Python applications that classify support tickets, retrieve relevant documents, and compare short texts by meaning. Comfortable taking prototypes through evaluation and deployment.
+
+Experience
+NLP Engineer | Example Analytics Studio | 2023–2025
+- Built a support-ticket routing model using transformer representations and measured precision and recall on a held-out dataset.
+- Created a document-search service with sentence embeddings and cosine similarity, then reviewed mismatched results with domain experts.
+- Exposed model predictions through a tested Python API and packaged the service with Docker.
+- Tracked response time, data drift, and common failure cases after release.
+
+Machine Learning Intern | Example Product Lab | 2022–2023
+- Cleaned and labeled text datasets; documented ambiguous examples and annotation rules.
+- Compared baseline keyword matching with semantic retrieval on customer questions.
+
+Skills
+Python, PyTorch, Hugging Face Transformers, sentence embeddings, text classification, semantic search, model evaluation, API development, Docker, and reproducible pipelines.
+
+Education
+BSc in Computer Science (fictional example).

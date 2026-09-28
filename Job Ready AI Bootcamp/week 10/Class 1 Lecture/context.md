@@ -1,14 +1,16 @@
 # সহজ ভাষায় Lecture Overview
 
-এই lecture-এর main topic হলো **1. Topic: NLP Basics & Transformers — Tokenization, Word Embeddings, Attention**। এখানে technical term English-এ রাখা হয়েছে, আর explanation Bangla-তে দেওয়া হয়েছে—যাতে concept বোঝা, code পড়া এবং interview-তে explain করা তিনটিই সহজ হয়।
+এই lecture-এর বিষয় **NLP Basics & Transformers: Tokenization, Word Embeddings, Attention**। Technical term English-এ, ব্যাখ্যা Bangla-তে। সঙ্গে থাকা notebook-এ আগে ছোট, offline হিসাব; তারপর চাইলে pretrained model দিয়ে বাস্তব উদাহরণ।
 
 ## কেন এই Topic দরকার?
 
-Real-world AI system বানাতে শুধু library function call জানলেই হয় না। Input data কোথা থেকে আসে, algorithm কীভাবে decision নেয়, কোন limitation আছে এবং output কীভাবে validate করতে হয়—এই পুরো flow বোঝা দরকার। এই lecture সেই problem-solving mindset তৈরি করবে।
+একই দক্ষতা CV-তে **"ML"** আর job description-এ **"machine learning"** লেখা থাকতে পারে। শুধু শব্দ মেলালে প্রাসঙ্গিক CV বাদ পড়বে। টেক্সট কীভাবে token, vector, contextual representation, তারপর similarity score হয়—এই ধাপগুলো বুঝলে ফলাফল ব্যাখ্যা ও যাচাই করা যায়।
 
 ## শেখার সহজ Workflow
 
-Problem বোঝা → Core concept ও intuition → Step-by-step workflow → Practical example → কখন ব্যবহার করবেন বা করবেন না।
+Job description ও CV → tokenization → embedding → attention/context → sentence embedding → cosine similarity → ranking।
+
+**ক্লাস শেষে পারবেন:** (১) ছোট corpus-এ BPE merge দেখাতে, (২) static ও contextual embedding-এর পার্থক্য বলতে, (৩) attention weight হিসাবের অর্থ বুঝতে, (৪) cosine score দিয়ে CV rank করতে এবং score-এর সীমা ব্যাখ্যা করতে।
 
 প্রতিটি section পড়ার সময় তিনটি প্রশ্ন করুন: **এটি কোন problem solve করে? কীভাবে কাজ করে? Alternative-এর তুলনায় কখন better?** এই প্রশ্নগুলোর উত্তর দিতে পারলে topic-টি শুধু মুখস্থ নয়, সত্যি বোঝা হয়েছে।
 
@@ -48,11 +50,10 @@ Week 2-এ আমরা শিখেছিলাম **Dot Product** এবং **
 **Byte-Pair Encoding (BPE)** এই সমস্যার সমাধান করে সাব-ওয়ার্ড (sub-word) লেভেলে ভেঙে:
 
 ```
-"unhappiness" ──▶ ["un", "happi", "ness"]
-"tokenization" ──▶ ["token", "ization"]
+"unhappiness" ──▶ ["un", "happi", "ness"]  (illustration; exact split vocabulary-নির্ভর)
 ```
 
-BPE কাজ করে সবচেয়ে বেশি রিপিট হওয়া ক্যারেক্টার-পেয়ার একসাথে জোড়া লাগিয়ে লাগিয়ে — ফলে কমন শব্দ (the, is) একটাই টোকেন হয়ে যায়, আর বিরল/নতুন শব্দ ছোট ছোট চেনা টুকরায় ভেঙে যায় (unknown শব্দের সমস্যা প্রায় থাকে না)। GPT, BERT — প্রায় সব আধুনিক LLM-ই BPE বা তার কোনো ভ্যারিয়েন্ট ব্যবহার করে।
+BPE ট্রেনিংয়ে সবচেয়ে ঘনঘন পাশাপাশি আসা token pair ধাপে ধাপে merge হয়। ফলে সাধারণ অংশগুলো বড় token হতে পারে, বিরল শব্দ ছোট অংশে থাকে। **BERT-এর WordPiece** একই subword লক্ষ্য পূরণ করে, কিন্তু তার vocabulary শেখার নিয়ম BPE-এর মতো নয়। Notebook-এ আগে BPE-এর ছোট উদাহরণ, পরে ঐচ্ছিক BERT tokenizer দেখা যাবে।
 
 ### 3.2 Word Embeddings — অর্থকে সংখ্যায় ধরা
 
@@ -65,7 +66,7 @@ vector("king")  - vector("man") + vector("woman")  ≈  vector("queen")
 * **Word2Vec** — একটা শব্দ তার আশেপাশের শব্দ (context) দেখে প্রেডিক্ট করার চেষ্টা করে ট্রেইন হয়; এই প্রক্রিয়ায় ভেক্টরগুলো নিজে থেকেই অর্থ ধারণ করতে শেখে।
 * **GloVe** — পুরো কর্পাসে কোন শব্দ কোন শব্দের কাছাকাছি কতবার এসেছে (co-occurrence statistics) তার ওপর ভিত্তি করে ভেক্টর তৈরি করে।
 
-**সীমাবদ্ধতা:** Word2Vec/GloVe-তে প্রতিটা শব্দের **একটাই** ভেক্টর থাকে, তার মানে "bank" (নদীর তীর) আর "bank" (ব্যাংক) — দুটোই একই ভেক্টর পায়, প্রসঙ্গ (context) যাই হোক না কেন। এই সীমাবদ্ধতা দূর করার জন্যই Transformer-এর জন্ম।
+**সীমাবদ্ধতা:** Word2Vec/GloVe-তে প্রতিটা শব্দের **একটাই** ভেক্টর থাকে; "bank" (নদীর তীর) আর "bank" (আর্থিক প্রতিষ্ঠান) একই vector পায়। Contextual model-এ বাক্য অনুসারে representation বদলায়।
 
 ### 3.3 Transformer Attention — প্রসঙ্গ বোঝা
 
@@ -76,7 +77,7 @@ Query (আমি কী খুঁজছি) · Key (প্রতিটা শব
 Attention Score → Softmax → Weighted sum of Value vectors
 ```
 
-এই মেকানিজমের মূল অঙ্কটা আসলে Week 2-এর **Scaled Dot-Product** — $\dfrac{Q \cdot K^T}{\sqrt{d_k}}$। প্রতিটা শব্দ (Query) বাক্যের বাকি সব শব্দের (Key) সাথে ডট প্রোডাক্ট করে দেখে কার সাথে কতটা "সম্পর্কিত"। যে শব্দগুলোর সাথে সম্পর্ক বেশি (dot product বেশি), তাদের ভ্যালু (Value) বেশি ওজন পেয়ে ফাইনাল রিপ্রেজেন্টেশনে যোগ হয়। এআই যেভাবে "চিন্তা করে" — অর্থাৎ কোন শব্দ কোন শব্দের সাথে সংযুক্ত করে অর্থ বুঝছে — তার মূলে এই ডট প্রোডাক্ট।
+এর সূত্র $\operatorname{softmax}(QK^T/\sqrt{d_k})V$। $QK^T$ token pair-এর learned compatibility score; $\sqrt{d_k}$ দিয়ে scale করলে softmax স্থিতিশীল থাকে। Softmax-এ প্রতিটি query-এর weight-গুলোর যোগফল ১; সেই weight দিয়ে $V$-এর weighted sum নেওয়া হয়। **Attention weight একা কোনো মডেলের সিদ্ধান্তের সম্পূর্ণ ব্যাখ্যা নয়।** Notebook-এ ছোট NumPy উদাহরণে ধাপগুলো দেখা যাবে।
 
 ### 3.4 Sentence Embeddings — পুরো বাক্যকে একটা ভেক্টরে ধরা
 
@@ -99,11 +100,11 @@ Attention Score → Softmax → Weighted sum of Value vectors
 
 ### 4.2 "Local Model" মানে কী — Sovereign AI-এর সাথে সামঞ্জস্যপূর্ণ কীভাবে?
 
-`paraphrase-MiniLM-L3-v2` HuggingFace Hub থেকে **প্রথমবার রান করার সময়** ডাউনলোড হয় (ইন্টারনেট লাগবে), কিন্তু এরপর থেকে এটা সম্পূর্ণ **লোকাল**ভাবে চলে — কোনো ইন্টারনেট বা এপিআই কল লাগে না। এটা OpenAI-এর মতো ক্লাউড এমবেডিং সার্ভিসের থেকে সম্পূর্ণ ভিন্ন, যেখানে প্রতিটা রিকোয়েস্টই ইন্টারনেটে পাঠাতে হয় এবং প্রতি কলে খরচ হয়। **"একবার ডাউনলোড, তারপর চিরকাল অফলাইন"** — এটাই এই কোর্সের "Sovereign AI" দর্শনের মূল কথা: ডেটা নিজের মেশিনে থাকে, কোনো থার্ড-পার্টি সার্ভারে যায় না।
+`paraphrase-MiniLM-L3-v2` প্রথমবার HuggingFace Hub থেকে ডাউনলোড করতে ইন্টারনেট লাগে। প্রয়োজনীয় model files cache-এ থাকলে inference লোকালি করা যায়; cache মুছে গেলে বা নতুন environment-এ আবার download লাগবে। CV-এর ব্যক্তিগত তথ্য নিয়ে কাজের আগে কোথায় inference হচ্ছে, ডেটা কোথায় সংরক্ষিত হচ্ছে এবং কাদের access আছে—এসবও যাচাই করতে হবে।
 
 ### 4.3 Why Dot Product, Not Euclidean Distance, for Text Similarity?
 
-Cosine Similarity (dot product normalized) টেক্সট এমবেডিংয়ে বেশি ব্যবহার হয় কারণ এটা ভেক্টরের **ম্যাগনিচিউড** (length) নয়, শুধু **দিক** (direction) মাপে। একটা লম্বা CV আর একটা ছোট জব ডেসক্রিপশন — দুটোর ভেক্টরের ম্যাগনিচিউড ভিন্ন হতে পারে টেক্সটের length-এর কারণে, কিন্তু যদি তারা একই বিষয় নিয়ে কথা বলে, তাদের **দিক** একই থাকবে — cosine similarity সেটাই ধরে।
+Cosine Similarity $\frac{A\cdot B}{\|A\|\|B\|}$ ভেক্টরের **দিক** মাপে; ভেক্টরের magnitude বাড়লেও স্কোর বদলায় না। কিন্তু text length সরাসরি vector magnitude নয়, আর বড় CV-তে অনেক অপ্রাসঙ্গিক বিষয় থাকলে অর্থ সংকুচিত করার সময় দরকারি তথ্য হারাতে পারে। **স্কোর হলো model-এর similarity estimate, যোগ্যতা বা নিয়োগের সিদ্ধান্ত নয়।** Zero vector-এর cosine undefined; বাস্তব pipeline-এ এই edge case সামলাতে হয়।
 
 ---
 
@@ -125,7 +126,7 @@ Cosine Similarity (dot product normalized) টেক্সট এমবেডি
 
 ## Achievement: Semantic CV-to-Job Matcher (Preview)
 
-সম্পূর্ণ প্রোডাকশন-গ্রেড অ্যাপ **`Class 1 Project/`** ফোল্ডারে আছে — একটা জব ডেসক্রিপশন (পেস্ট করা টেক্সট) এবং একাধিক CV (পেস্ট করা টেক্সট বা PDF/DOCX আপলোড) নিয়ে, `paraphrase-MiniLM-L3-v2` দিয়ে এমবেড করে, cosine similarity অনুযায়ী র‍্যাঙ্ক করে দেখাবে কোন CV সবচেয়ে বেশি ম্যাচ করছে। এই লেকচারের কম্প্যানियন নোটবুক (`nlp_embeddings_lecture.ipynb`)-এ BPE টোকেনাইজেশন, GloVe word-analogy ডেমো, এবং একটা ছোট সেন্টেন্স-এমবেডিং সিমিলারিটি ডেমো — তিনটাই হাতে-কলমে দেখানো আছে।
+সম্পূর্ণ অ্যাপ **`Class 1 Project/`** ফোল্ডারে আছে — job description এবং একাধিক CV নিয়ে `paraphrase-MiniLM-L3-v2` দিয়ে embedding তৈরি করে cosine similarity অনুযায়ী rank করে। কম্প্যানিয়ন notebook-এ offline BPE, toy vector, attention ও cosine demo চালানো যায়। BERT tokenizer, GloVe এবং pretrained sentence embedding demo চালাতে `RUN_PRETRAINED = True`, অতিরিক্ত dependency ও প্রথমবার internet লাগবে।
 
 ---
 

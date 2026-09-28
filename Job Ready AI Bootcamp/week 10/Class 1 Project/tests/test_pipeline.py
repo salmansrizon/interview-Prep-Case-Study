@@ -47,6 +47,12 @@ def test_extract_text_dispatcher_plain():
     assert "FastAPI" in result
 
 
+def test_extract_text_dispatcher_uploaded_txt_bytes():
+    assert extract_text("NLP engineer — Python".encode("utf-8"), filetype="txt") == "NLP engineer — Python"
+    with pytest.raises(ExtractionError, match="UTF-8"):
+        extract_text(b"\xff", filetype="txt")
+
+
 def test_extract_text_dispatcher_rejects_empty_plain_text():
     with pytest.raises(ExtractionError):
         extract_text("   ", filetype="plain")

@@ -1,0 +1,23 @@
+Sample CV — Search Engineer
+
+Fictional candidate; no personal contact details.
+
+Profile
+Engineer who helps users find relevant information in large collections of support articles and product documents. Builds Python retrieval services and evaluates whether the returned passages answer a user's question.
+
+Experience
+Search Engineer | Example Knowledge Systems | 2022–2025
+- Built a question-to-document retrieval service using dense vector representations and nearest-neighbor search.
+- Compared retrieved passages with human relevance judgments and analyzed cases where important answers were missed.
+- Developed Python APIs for indexing and querying documents, with automated tests and latency monitoring.
+- Partnered with support specialists to improve search quality and explain trade-offs between speed and relevance.
+
+Software Engineer | Example Web Tools | 2020–2022
+- Maintained data ingestion jobs for product manuals and help-center articles.
+- Added monitoring for stale indexes and failed document processing.
+
+Skills
+Python, information retrieval, vector search, relevance evaluation, API development, Docker, and production monitoring.
+
+Education
+BSc in Software Engineering (fictional example).

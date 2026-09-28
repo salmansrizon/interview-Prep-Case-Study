@@ -1,0 +1,22 @@
+Sample CV — Data Analyst
+
+Fictional candidate; no personal contact details.
+
+Profile
+Data analyst experienced in cleaning business datasets, building dashboards, and explaining trends to operations teams. Has basic Python experience and has explored simple customer-feedback analysis.
+
+Experience
+Data Analyst | Example Retail Insights | 2022–2025
+- Built SQL queries and dashboards for sales, returns, and customer-support volume.
+- Cleaned spreadsheet and CSV data, checked missing values, and documented data quality issues.
+- Summarized survey comments with keyword counts and manually reviewed unusual responses.
+- Presented findings to business teams and tracked reporting accuracy.
+
+Operations Analyst | Example Services | 2020–2022
+- Maintained weekly KPI reports and investigated changes in service response times.
+
+Skills
+SQL, Excel, Python, pandas, data visualization, dashboarding, and basic text analysis.
+
+Education
+BSc in Statistics (fictional example).

@@ -135,8 +135,8 @@ def extract_text(source: str | bytes, filetype: str) -> str:
     """Unified dispatcher: extract plain text from any supported source.
 
     Args:
-        source: Either a plain-text string (filetype="txt"/"plain") or raw
-            file bytes (filetype="pdf"/"docx").
+        source: A plain-text string or UTF-8 bytes (filetype="txt"/"plain"),
+            or raw file bytes (filetype="pdf"/"docx").
         filetype: One of "plain", "txt", "pdf", "docx" (case-insensitive).
 
     Returns:
@@ -157,8 +157,13 @@ def extract_text(source: str | bytes, filetype: str) -> str:
     ft = filetype.lower().lstrip(".")
 
     if ft in ("plain", "txt"):
+        if isinstance(source, (bytes, bytearray)):
+            try:
+                source = source.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ExtractionError("Plain-text file must be UTF-8 encoded.") from exc
         if not isinstance(source, str):
-            raise ExtractionError("Plain-text source must be a str.")
+            raise ExtractionError("Plain-text source must be text or UTF-8 bytes.")
         text = extract_text_from_plain(source)
     elif ft == "pdf":
         if not isinstance(source, (bytes, bytearray)):

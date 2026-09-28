@@ -1,0 +1,20 @@
+Sample Job Description — Machine Learning Engineer (NLP)
+
+This is fictional sample content for testing the Semantic CV-to-Job Matcher.
+
+We are seeking a Machine Learning Engineer to build and maintain natural language processing features for a customer-support platform. The role involves turning unstructured text into useful signals, evaluating model quality, and deploying reliable inference services.
+
+Responsibilities:
+- Develop text classification, semantic search, and document-matching solutions.
+- Prepare and validate text data; investigate labeling errors and model failures.
+- Train or adapt transformer-based language models and sentence embeddings.
+- Measure precision, recall, and latency; explain trade-offs to product teams.
+- Package Python services for deployment and monitor their behavior in production.
+
+Requirements:
+- Practical Python experience with machine learning and NLP libraries.
+- Experience with embeddings, vector similarity, and model evaluation.
+- Ability to build reproducible data pipelines, tests, and APIs.
+- Clear communication of assumptions, limitations, and results.
+
+Nice to have: PyTorch, Hugging Face Transformers, Docker, and cloud deployment experience.

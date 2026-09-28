@@ -1,0 +1,22 @@
+Sample CV — Backend Engineer
+
+Fictional candidate; no personal contact details.
+
+Profile
+Backend developer who designs reliable web services. Strong at API design, testing, containerization, and deployment, with limited experience in machine learning or text processing.
+
+Experience
+Backend Engineer | Example Platform Team | 2021–2025
+- Built Python and FastAPI services for account management and order processing.
+- Added unit tests, database migrations, logging, and deployment checks.
+- Containerized services with Docker and monitored request latency and errors.
+- Collaborated with product teams on API contracts and incident response.
+
+Junior Developer | Example Commerce | 2019–2021
+- Implemented REST endpoints and maintained PostgreSQL integrations.
+
+Skills
+Python, FastAPI, PostgreSQL, Docker, CI, automated testing, and production operations.
+
+Education
+BSc in Computer Science (fictional example).
