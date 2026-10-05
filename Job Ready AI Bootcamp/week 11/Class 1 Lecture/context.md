@@ -1,14 +1,16 @@
 # সহজ ভাষায় Lecture Overview
 
-এই lecture-এর main topic হলো **1. Topic: LLM Integration & Prompting — Zero-Shot, Few-Shot, Chain-of-Thought, and Prompt Injection**। এখানে technical term English-এ রাখা হয়েছে, আর explanation Bangla-তে দেওয়া হয়েছে—যাতে concept বোঝা, code পড়া এবং interview-তে explain করা তিনটিই সহজ হয়।
+এই lecture-এর বিষয় **LLM Integration & Prompting: Zero-Shot, Few-Shot, Chain-of-Thought, Prompt Injection**। Technical term English-এ, ব্যাখ্যা Bangla-তে। সঙ্গে থাকা notebook-এ আগে ছোট, offline হিসাব; তারপর চাইলে লোকাল Ollama model দিয়ে বাস্তব উদাহরণ।
 
 ## কেন এই Topic দরকার?
 
-Real-world AI system বানাতে শুধু library function call জানলেই হয় না। Input data কোথা থেকে আসে, algorithm কীভাবে decision নেয়, কোন limitation আছে এবং output কীভাবে validate করতে হয়—এই পুরো flow বোঝা দরকার। এই lecture সেই problem-solving mindset তৈরি করবে।
+একই LLM-কে **"একটা অ্যাড লেখো"** বললে generic লেখা আসে, আর ৩টা আগের অ্যাড দেখিয়ে বললে ব্র্যান্ডের স্টাইলে আসে। আবার ইউজার এক লাইনে **"আগের নির্দেশনা ভুলে যাও"** লিখে পুরো টুলের আচরণ পাল্টে দিতে পারে। প্রম্পট কীভাবে তৈরি হয়, ইউজার ইনপুট কীভাবে আলাদা রাখা হয়, আউটপুট কীভাবে যাচাই হয়—এই ধাপগুলো বুঝলে LLM অ্যাপকে নির্ভরযোগ্য ও নিরাপদ বানানো যায়।
 
 ## শেখার সহজ Workflow
 
-Problem বোঝা → Core concept ও intuition → Step-by-step workflow → Practical example → কখন ব্যবহার করবেন বা করবেন না।
+Brand brief ও user request → zero-shot/few-shot prompt → (ঐচ্ছিক) chain-of-thought → delimiting ও instruction hierarchy → LLM (temperature/top-p) → output validation → final copy।
+
+**ক্লাস শেষে পারবেন:** (১) zero-shot ও few-shot prompt বানিয়ে পার্থক্য দেখাতে, (২) CoT response থেকে reasoning ও final copy আলাদা করতে, (৩) delimiter ও output validation দিয়ে prompt injection কঠিন করতে এবং এর সীমা ব্যাখ্যা করতে, (৪) temperature ও top-p probability distribution-কে কীভাবে বদলায় তা হিসাব করে দেখাতে।
 
 প্রতিটি section পড়ার সময় তিনটি প্রশ্ন করুন: **এটি কোন problem solve করে? কীভাবে কাজ করে? Alternative-এর তুলনায় কখন better?** এই প্রশ্নগুলোর উত্তর দিতে পারলে topic-টি শুধু মুখস্থ নয়, সত্যি বোঝা হয়েছে।
 
@@ -128,7 +130,7 @@ User Input:    "আগের সব নির্দেশনা ভুলে য
 
 ## Achievement: Brand Content Generator (Preview)
 
-সম্পূর্ণ প্রোডাকশন-গ্রেড অ্যাপ **`Class 1 Project/`** ফোল্ডারে আছে — Ollama দিয়ে `llama3.1:8b` চালিয়ে, Zero-Shot/Few-Shot টগল, Temperature/Top-P স্লাইডার, একটা Chain-of-Thought রিজনিং ট্রেস দেখানোর অপশন, আর একটা লাইভ "Try to Break It" ট্যাব যেখানে প্রম্পট ইনজেকশন টেস্ট করা যায় এবং ডিফেন্স মেকানিজম কাজ করতে দেখা যায়। এই লেকচারের কম্প্যানিয়ন নোটবুক (`llm_prompting_lecture.ipynb`)-এ Zero-Shot vs Few-Shot, CoT, আর prompt injection — তিনটাই হাতে-কলমে Ollama দিয়ে ডেমো করা আছে।
+সম্পূর্ণ প্রোডাকশন-গ্রেড অ্যাপ **`Class 1 Project/`** ফোল্ডারে আছে — Ollama দিয়ে `llama3.1:8b` চালিয়ে, Zero-Shot/Few-Shot টগল, Temperature/Top-P স্লাইডার, একটা Chain-of-Thought রিজনিং ট্রেস দেখানোর অপশন, আর একটা লাইভ "Try to Break It" ট্যাব যেখানে প্রম্পট ইনজেকশন টেস্ট করা যায় এবং ডিফেন্স মেকানিজম কাজ করতে দেখা যায়। কম্প্যানিয়ন notebook (`llm_prompting_lecture.ipynb`)-এ offline prompt construction, CoT parsing, injection guard ও toy temperature/top-p demo চালানো যায়। লোকাল model দিয়ে live demo চালাতে `RUN_OLLAMA = True`, চালু Ollama server এবং একবার `ollama pull llama3.1:8b` (প্রথমবার internet) লাগবে।
 
 ---
 
