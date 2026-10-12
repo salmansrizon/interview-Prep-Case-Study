@@ -6,3 +6,6 @@ seaborn
 scikit-learn
 streamlit
 opencv-python
+langchain-core
+langchain-ollama
+pydantic
