@@ -33,7 +33,7 @@ class WebSearchTests(unittest.TestCase):
             max_results=5,
         )
 
-    def test_raises_when_no_readable_pages_are_found(self):
+    def test_falls_back_to_pdf_results_when_no_html_pages(self):
         client = Mock()
         client.search.return_value = {
             "results": [
@@ -46,7 +46,24 @@ class WebSearchTests(unittest.TestCase):
         }
 
         with patch("src.tools.tools._get_tavily_client", return_value=client):
-            with self.assertRaisesRegex(RuntimeError, "no readable web pages"):
+            results = run_web_search("AI research")
+
+        self.assertIn("PDF report", results)
+
+    def test_raises_when_search_returns_nothing(self):
+        client = Mock()
+        client.search.return_value = {"results": []}
+
+        with patch("src.tools.tools._get_tavily_client", return_value=client):
+            with self.assertRaisesRegex(RuntimeError, "no results"):
+                run_web_search("AI research")
+
+    def test_surfaces_tavily_errors(self):
+        client = Mock()
+        client.search.side_effect = Exception("rate limit exceeded")
+
+        with patch("src.tools.tools._get_tavily_client", return_value=client):
+            with self.assertRaisesRegex(RuntimeError, "rate limit exceeded"):
                 run_web_search("AI research")
 
 

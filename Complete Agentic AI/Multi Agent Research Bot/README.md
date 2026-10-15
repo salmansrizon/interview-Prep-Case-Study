@@ -37,7 +37,7 @@ The pipeline updates its stage status and progress as work completes. The final 
 ## Requirements
 
 - Python 3.10 or newer.
-- A [Groq API key](https://console.groq.com/keys) for report generation and review.
+- A [OpenRouter API key](https://console.groq.com/keys) for report generation and review.
 - A [Tavily API key](https://app.tavily.com/) for web search.
 - Internet access while the agents search and retrieve source pages.
 
@@ -88,7 +88,7 @@ python -m pip install -r requirements.txt
 Create a file named `.env` in this app directory and add your own keys:
 
 ```dotenv
-GROQ_API_KEY=your_groq_api_key
+OpenRouter_API_KEY=your_openrouter_api_key
 TAVILY_API_KEY=your_tavily_api_key
 ```
 
@@ -145,7 +145,7 @@ The tests cover Tavily result normalization and PDF filtering, report overview a
 
 ## Troubleshooting
 
-- **Missing API key:** check that `.env` is in the app directory, the variable names are exactly `GROQ_API_KEY` and `TAVILY_API_KEY`, and the values are valid.
+- **Missing API key:** check that `.env` is in the app directory, the variable names are exactly `OpenRouter_API_KEY` and `TAVILY_API_KEY`, and the values are valid.
 - **Package import error:** activate the project virtual environment and run `python -m pip install -r requirements.txt` again.
 - **Port already in use:** start Streamlit with another port, for example `streamlit run app.py --server.port 8502`.
 - **Search returns no usable pages:** confirm the Tavily key and internet connection, then try a more specific topic.

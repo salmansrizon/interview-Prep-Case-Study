@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
 def extract_sources(*texts: str) -> list[str]:
@@ -143,7 +143,7 @@ def create_report_pdf(report: str, title: str) -> bytes:
         bottomMargin=0.75 * inch,
         title=title,
     )
-    story = [Paragraph(escape(title), styles["ReportTitle"])]
+    story: list[Flowable] = [Paragraph(escape(title), styles["ReportTitle"])]
     paragraph_lines = []
 
     def flush_paragraph():
@@ -192,7 +192,7 @@ def create_report_pdf(report: str, title: str) -> bytes:
                     ("TOPPADDING", (0, 0), (-1, -1), 5),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
                 ]))
-                story.extend((table, Spacer(1, 8)))
+                story.extend((table, Spacer(1, 8))) # type: ignore
             continue
 
         bullet = re.match(r"^(?:[-*]\s+|\d+[.)]\s+)(.+)$", line)

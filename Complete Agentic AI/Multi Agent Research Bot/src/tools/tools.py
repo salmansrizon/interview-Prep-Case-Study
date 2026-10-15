@@ -31,29 +31,23 @@ def search_tavily(query: str):
 
     client = _get_tavily_client()
     if client is None:
-        print("TAVILY_API_KEY is missing. Set it in your environment before using the web search tool.")
-        return []
+        raise RuntimeError("TAVILY_API_KEY is missing. Add it to your .env file.")
 
     try:
         response = client.search(query=query, max_results=5)
-        if isinstance(response, dict):
-            raw_results = response.get("results") or []
-        else:
-            raw_results = response or []
-
-        output = []
-        for result in raw_results:
-            if not isinstance(result, dict):
-                continue
-            output.append({
-                "title": result.get("title"),
-                "url": result.get("url"),
-                "snippet": result.get("snippet") or result.get("content"),
-            })
-        return output
     except Exception as exc:
-        print(f"Error occurred while searching Tavily: {exc}")
-        return []
+        raise RuntimeError(f"Tavily search failed: {exc}") from exc
+
+    raw_results = response.get("results") or [] if isinstance(response, dict) else response or []
+    return [
+        {
+            "title": result.get("title"),
+            "url": result.get("url"),
+            "snippet": result.get("snippet") or result.get("content"),
+        }
+        for result in raw_results
+        if isinstance(result, dict)
+    ]
 
 
 web_search = search_tavily

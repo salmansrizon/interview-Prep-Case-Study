@@ -2,6 +2,7 @@ import os
 from html import escape
 import streamlit as st
 import time
+from langchain_core.messages import HumanMessage
 from src.agents.agents import run_web_search, build_reader_agent, writer_chain, critic_chain
 from src.reporting import create_report_pdf, extract_overview, extract_sources
 
@@ -478,7 +479,7 @@ if run_btn:
 
     else:
         missing_keys = [
-            key for key in ("GROQ_API_KEY", "TAVILY_API_KEY")
+            key for key in ("OpenRouter_API_KEY", "TAVILY_API_KEY")
             if not os.getenv(key)
         ]
         if missing_keys:
@@ -522,11 +523,12 @@ if st.session_state.running and not st.session_state.done:
         with st.spinner("📄 Reader Agent is scraping top resources…"):
             reader_agent = build_reader_agent()
             response = reader_agent.invoke({
-                "messages": [(
-                    "user",
-                    f"Based on the following search results about '{topic_val}', "
-                    f"pick the most relevant URL and scrape it for deeper content.\n\n"
-                    f"Search Results:\n{results['search'][:800]}",
+                "messages": [HumanMessage(
+                    content=(
+                        f"Based on the following search results about '{topic_val}', "
+                        f"pick the most relevant URL and scrape it for deeper content.\n\n"
+                        f"Search Results:\n{results['search'][:800]}"
+                    )
                 )]
             })
             results["reader"] = response["messages"][-1].content

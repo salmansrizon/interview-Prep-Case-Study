@@ -6,7 +6,7 @@ from langchain.agents import create_agent
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-
+from pydantic import SecretStr
 from src.tools import scrape_url, web_search
 
 
@@ -14,11 +14,16 @@ load_dotenv()
 
 
 def get_llm():
-    api_key = os.getenv("GROQ_API_KEY") or "missing-groq-api-key"
+    api_key = os.getenv("OpenRouter_API_KEY") or "missing-api-key"
+    # Groq keys start with "gsk_"; anything else is treated as an OpenRouter key.
+    if api_key.startswith("gsk_"):
+        model, base_url = "openai/gpt-oss-120b", "https://api.groq.com/openai/v1"
+    else:
+        model, base_url = "nvidia/nemotron-3-ultra-550b-a55b:free", "https://openrouter.ai/api/v1"
     return ChatOpenAI(
-        model="openai/gpt-oss-120b",
-        api_key=api_key,
-        base_url="https://api.groq.com/openai/v1",
+        model=model,
+        api_key=SecretStr(api_key),
+        base_url=base_url,
         temperature=0,
     )
 
@@ -27,22 +32,20 @@ llm = get_llm()
 
 
 def run_web_search(query: str) -> str:
-    results = web_search.invoke({"query": query})
-    pages = []
-    for result in results:
-        url = result.get("url")
-        if not isinstance(url, str) or not url.strip():
-            continue
-        if urlsplit(url).path.lower().endswith(".pdf"):
-            continue
-        pages.append(
-            f"Title: {result.get('title') or 'Untitled result'}\n"
-            f"URL: {url}\n"
-            f"Snippet: {result.get('snippet') or 'No summary available.'}"
-        )
-    if not pages:
-        raise RuntimeError("Web search returned no readable web pages. Try a different topic.")
-    return "\n\n".join(pages)
+    results = [
+        r for r in web_search.invoke({"query": query})
+        if isinstance(r.get("url"), str) and r["url"].strip()
+    ]
+    if not results:
+        raise RuntimeError("Web search returned no results. Try a different topic.")
+    # Prefer HTML pages the reader can scrape; fall back to PDF snippets if that's all there is.
+    pages = [r for r in results if not urlsplit(r["url"]).path.lower().endswith(".pdf")] or results
+    return "\n\n".join(
+        f"Title: {r.get('title') or 'Untitled result'}\n"
+        f"URL: {r['url']}\n"
+        f"Snippet: {r.get('snippet') or 'No summary available.'}"
+        for r in pages
+    )
 
 
 # 2nd Agent: Scrape Agent
