@@ -1,0 +1,138 @@
+{
+  "audit_timestamp": "2026-09-01T14:24:29.302235",
+  "original_shape": {
+    "rows": 210,
+    "columns": 8
+  },
+  "columns": {
+    "customer_id": {
+      "dtype": "str",
+      "missing_count": 0,
+      "missing_pct": 0.0,
+      "unique_count": 200,
+      "memory_bytes": 3704,
+      "top_values": {
+        "CUST_0015": 2,
+        "CUST_0030": 2,
+        "CUST_0045": 2,
+        "CUST_0069": 2,
+        "CUST_0095": 2
+      }
+    },
+    "age": {
+      "dtype": "float64",
+      "missing_count": 16,
+      "missing_pct": 7.62,
+      "unique_count": 62,
+      "memory_bytes": 1812,
+      "stats": {
+        "mean": 54.94845360824742,
+        "median": 50.0,
+        "std": 71.85432458333216,
+        "min": -5.0,
+        "max": 999.0
+      },
+      "outliers": {
+        "count": 3,
+        "pct": 1.43,
+        "lower_bound": -14.625,
+        "upper_bound": 112.375
+      }
+    },
+    "income": {
+      "dtype": "float64",
+      "missing_count": 28,
+      "missing_pct": 13.33,
+      "unique_count": 173,
+      "memory_bytes": 1812,
+      "stats": {
+        "mean": 197987.78021978022,
+        "median": 91602.5,
+        "std": 893669.3815595409,
+        "min": -10000.0,
+        "max": 9999999.0
+      },
+      "outliers": {
+        "count": 3,
+        "pct": 1.43,
+        "lower_bound": -32545.625,
+        "upper_bound": 220161.375
+      }
+    },
+    "signup_date": {
+      "dtype": "object",
+      "missing_count": 10,
+      "missing_pct": 4.76,
+      "unique_count": 163,
+      "memory_bytes": 23734
+    },
+    "country": {
+      "dtype": "str",
+      "missing_count": 0,
+      "missing_pct": 0.0,
+      "unique_count": 14,
+      "memory_bytes": 2684,
+      "top_values": {
+        "USA": 27,
+        "U.S.": 23,
+        "Germany": 21,
+        "GB": 21,
+        "Canada": 18
+      }
+    },
+    "is_active": {
+      "dtype": "str",
+      "missing_count": 0,
+      "missing_pct": 0.0,
+      "unique_count": 9,
+      "memory_bytes": 2706,
+      "top_values": {
+        "False": 91,
+        "True": 87,
+        "nan": 6,
+        "true": 5,
+        "yes": 5
+      }
+    },
+    "category": {
+      "dtype": "str",
+      "missing_count": 0,
+      "missing_pct": 0.0,
+      "unique_count": 4,
+      "memory_bytes": 3166,
+      "top_values": {
+        "premium": 82,
+        "basic": 57,
+        "standard": 56,
+        "nan": 15
+      }
+    },
+    "purchase_amount": {
+      "dtype": "float64",
+      "missing_count": 16,
+      "missing_pct": 7.62,
+      "unique_count": 178,
+      "memory_bytes": 1812,
+      "stats": {
+        "mean": 2404.312369170387,
+        "median": 76.51378672620919,
+        "std": 13729.815352479762,
+        "min": -500.0,
+        "max": 99999.0
+      },
+      "outliers": {
+        "count": 17,
+        "pct": 8.1,
+        "lower_bound": -127.18495821909784,
+        "upper_bound": 295.9679565720325
+      }
+    }
+  },
+  "overall": {
+    "total_cells": 1680,
+    "missing_cells": 70,
+    "missing_pct": 4.17,
+    "duplicate_rows": 10,
+    "memory_usage_mb": 0.04
+  }
+}

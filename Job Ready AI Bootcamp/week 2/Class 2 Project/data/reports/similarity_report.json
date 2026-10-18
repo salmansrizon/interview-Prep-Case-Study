@@ -1,0 +1,193 @@
+{
+  "array": {
+    "shape": [
+      16,
+      128
+    ],
+    "ndim": 2,
+    "dtype": "float32",
+    "itemsize_bytes": 4,
+    "strides": [
+      512,
+      4
+    ],
+    "nbytes": 8192,
+    "memory_kb": 8.0,
+    "c_contiguous": true,
+    "f_contiguous": false,
+    "vocabulary_size": 101,
+    "n_documents": 16,
+    "sparsity_pct": 93.55
+  },
+  "memory": {
+    "as_float32_kb": 8.0,
+    "as_float64_kb": 16.0,
+    "as_python_list_kb": 64.0,
+    "current_dtype": "float32",
+    "current_kb": 8.0
+  },
+  "views_and_copies": {
+    "slice_is_view": true,
+    "copy_is_view": false,
+    "fancy_index_is_view": false,
+    "source_before": 0.0,
+    "source_after_view_write": 999.0,
+    "source_after_copy_write": 0.0
+  },
+  "benchmark": {
+    "n_elements": 1000000,
+    "python_loop_ms": 151.24,
+    "numpy_vectorized_ms": 8.41,
+    "speedup_x": 18.0,
+    "results_match": true
+  },
+  "memory_layout": {
+    "matrix": [
+      3000,
+      3000
+    ],
+    "sum_axis1_c_order_ms": 5.98,
+    "sum_axis1_f_order_ms": 3.48,
+    "c_order_strides": [
+      24000,
+      8
+    ],
+    "f_order_strides": [
+      8,
+      24000
+    ],
+    "transpose_copies_data": false
+  },
+  "similarity": {
+    "n_documents": 16,
+    "dimensions": 128,
+    "metric": "cosine",
+    "normalized": true,
+    "diagonal_is_one": true,
+    "matrix_is_symmetric": true,
+    "mean_off_diagonal_similarity": 0.1184,
+    "max_off_diagonal_similarity": 0.639,
+    "most_similar_pair": {
+      "doc_a": "the cat sat quietly on the warm mat",
+      "doc_b": "my cat refuses to share the mat with the dog",
+      "score": 0.639
+    }
+  },
+  "searches": {
+    "gpu memory model": [
+      {
+        "document": "gpu memory limits how large a model can be",
+        "score": 0.5774
+      },
+      {
+        "document": "deep learning models need gpu memory to train",
+        "score": 0.3651
+      },
+      {
+        "document": "numpy arrays store numbers in contiguous memory",
+        "score": 0.2182
+      }
+    ],
+    "cats and dogs": [
+      {
+        "document": "dogs and cats are popular household pets",
+        "score": 0.6547
+      },
+      {
+        "document": "transformers use attention to weigh every token",
+        "score": 0.2182
+      },
+      {
+        "document": "embeddings turn text into vectors of numbers",
+        "score": 0.2182
+      }
+    ],
+    "fast numpy code without loops": [
+      {
+        "document": "vectorized numpy code runs at c speed without python loops",
+        "score": 0.5657
+      },
+      {
+        "document": "numpy arrays store numbers in contiguous memory",
+        "score": 0.169
+      },
+      {
+        "document": "attention is a scaled dot product between queries and keys",
+        "score": 0.1414
+      }
+    ]
+  },
+  "attention": {
+    "seq_len": 6,
+    "d_k": 16,
+    "causal_mask": true,
+    "scaled": true,
+    "scores_shape": [
+      6,
+      6
+    ],
+    "output_shape": [
+      6,
+      16
+    ],
+    "rows_sum_to_one": true,
+    "max_weight_scaled": 0.6064,
+    "max_weight_unscaled": 0.9971,
+    "nonzero_per_row": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "causal_structure_correct": true
+  },
+  "skill_check": {
+    "score": 0.0,
+    "total": 8,
+    "pct": 0.0,
+    "results": [
+      {
+        "name": "1. make_batch (shape + dtype)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "2. add_bias (broadcasting)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "3. scale_rows (new axis)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "4. feature_means (axis)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "5. normalize_rows (keepdims)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "6. count_above (boolean mask)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "7. pairwise_cosine (matmul)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      },
+      {
+        "name": "8. top_k (argsort)",
+        "status": "TODO",
+        "detail": "not attempted yet"
+      }
+    ]
+  }
+}

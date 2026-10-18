@@ -1,0 +1,23 @@
+
+# Model Training Configuration
+# WHY YAML? Comments like this one explain settings to humans.
+
+model:
+  name: "llama-3.2-7b"          # Base model identifier
+  quantization: "Q4_K_M"        # Memory-efficient weight format
+  context_window: 8192           # Max tokens in a single prompt
+
+training:
+  learning_rate: 0.0001          # Reduced after epoch 5 to prevent overfitting
+  batch_size: 32
+  epochs: 10
+  warmup_steps: 100              # Gradual LR increase at start
+
+data:
+  train_path: "data/train.jsonl"
+  val_path: "data/val.jsonl"
+  max_seq_length: 512
+
+logging:
+  wandb_project: "ai-engineering-course"
+  log_every: 100

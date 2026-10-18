@@ -1,0 +1,9 @@
+keys: ['cell_type', 'metadata', 'source']
+id: None
+metadata: {}
+code keys: ['cell_type', 'execution_count', 'metadata', 'outputs', 'source']
+id: None
+execution_count: None
+outputs: []
+source type: <class 'list'> 21
+md source type <class 'list'> 
