@@ -1,21 +1,19 @@
 """
-Central config — Travel Agent (Week 13, Class 2: The ReAct Loop).
+Central config — Deterministic Function-Calling Travel Agent (Week 13, Class 2).
 
 HIGHLIGHTS: সব tunable value এখানে data হিসেবে থাকে, agent code-এর ভেতরে
 magic number হিসেবে না। frozen dataclass + singleton — week 7/10/11/12-এর
 একই Config pattern।
 
-── LLM Model Reference Table (ReAct / tool-calling এর দৃষ্টিকোণ থেকে) ──
+── LLM Model Reference Table (ReAct / tool-calling-এর দৃষ্টিকোণ থেকে) ──
+(BFCL v4 leaderboard, 2026-04-12 snapshot)
 
 | Model | Use Case | Advantage | Limitation |
 |---|---|---|---|
-| **`llama3.1:8b`** (default) | Multi-step reasoning + tool use | Instruction/JSON format ভালো মানে, tool-calling-এর জন্য train করা | ~16GB RAM লাগে, 8GB মেশিনে ধীর |
-| `mistral:7b` | দ্রুত general-purpose agent | llama3.1-এর কাছাকাছি size, latency প্রায়ই কম | Format মাঝে মাঝে ভাঙে, extra prose মিশিয়ে ফেলে |
-| `llama3.2:3b` | Low-RAM মেশিন, সহজ task | ছোট ও দ্রুত, 8GB-এও চলে | বেশি step-এ হারিয়ে যায়, ভুল argument বানায়, loop-এ আটকায় |
-| Cloud (GPT-4 / Claude) | সবচেয়ে নির্ভরযোগ্য agent | Planning ও tool use সবচেয়ে ভালো | Local না — খরচ আছে, data বাইরে যায় (Sovereign AI-র বিপরীত) |
-
-ছোট model-এ ReAct loop-এর failure handling (retry, max_steps, loop
-detection) বেশি দরকার হয় — এটাই Class 2-এর মূল শিক্ষা।
+| **`llama3.1:8b`** (default, ADR 0006) | Course standard agent | Native tool calling, parallel call পারে | BFCL multi-turn ~11% — loop guard ছাড়া আটকে যায় |
+| `qwen3:8b` | ভালো local agent | BFCL multi-turn ~42%, irrelevance ~79% | Course standard না; thinking mode ধীর |
+| `llama3.2:3b` | Low-RAM মেশিন | ছোট ও দ্রুত, 8GB-এও চলে | BFCL multi-turn ~4%, ভুল argument বানায় |
+| Cloud (GPT / Claude) | সবচেয়ে নির্ভরযোগ্য agent | Strict schema, forced tool choice | Local না — খরচ, data বাইরে যায় (Sovereign AI-র বিপরীত) |
 """
 from __future__ import annotations
 
@@ -29,23 +27,44 @@ BASE_DIR = Path(__file__).resolve().parent
 class LLMConfig:
     host: str = "http://localhost:11434"
     model: str = "llama3.1:8b"
-    compare_models: tuple = ("llama3.1:8b", "mistral:7b", "llama3.2:3b")
-    temperature: float = 0.0      # agent-এ determinism দরকার, creativity না
-    timeout_seconds: int = 120
+    compare_models: tuple[str, ...] = ("llama3.1:8b", "llama3.2:3b")
+    # HIGHLIGHTS: Ollama-র default temperature 0.8, context ছোট, num_predict
+    # অসীম। Agent-এ তিনটাই বিপজ্জনক, তাই explicitly set করা।
+    temperature: float = 0.0
+    seed: int = 42
+    num_ctx: int = 8192
+    num_predict: int = 512
+    timeout_seconds: float = 120.0
 
 
 @dataclass(frozen=True)
 class AgentConfig:
-    # HIGHLIGHTS: এই তিনটা সংখ্যাই failure-handling-এর "লাগাম"।
-    max_steps: int = 8             # Thought->Action->Observation চক্রের সর্বোচ্চ সংখ্যা
-    max_llm_retries: int = 2       # LLM call fail হলে কতবার আবার চেষ্টা
-    max_repeat_actions: int = 2    # একই action+input এর বেশি হলে loop ধরা হবে
+    # HIGHLIGHTS: loop-এর পাঁচটা "লাগাম"। প্রতিটা আলাদা typed stop reason দেয়।
+    mode: str = "native"              # "native" (Ollama tool_calls) | "text" (classic Thought/Action)
+    nudge_after_tools: bool = True    # llama3.1 template workaround, see src/agent/react_agent.py
+    max_steps: int = 8                # LLM call-এর সর্বোচ্চ সংখ্যা
+    max_repeat_calls: int = 2         # একই (tool, args) এর বেশি হলে loop ধরা হবে
+    max_consecutive_errors: int = 3   # পরপর এতগুলো invalid call হলে error budget শেষ
+    deadline_seconds: float = 180.0   # পুরো run-এর wall-clock সীমা
+    max_llm_retries: int = 2          # transport failure-এ কতবার আবার চেষ্টা
+    max_results: int = 5              # search observation compact রাখা (context বাঁচায়)
 
 
 @dataclass(frozen=True)
 class DataConfig:
-    flights_path: str = str(BASE_DIR / "data" / "flights.json")
-    bookings_path: str = str(BASE_DIR / "data" / "bookings.json")
+    flights_path: Path = BASE_DIR / "data" / "flights.json"
+
+
+@dataclass(frozen=True)
+class AppConfig:
+    page_title: str = "Travel Agent"
+    page_icon: str = "✈️"
+    examples: tuple[str, ...] = (
+        "Find me flights from DAC to CXB on 2026-11-05",
+        "Book the cheapest DAC to CXB flight on 2026-11-05 for Rahim",
+        "Book BG102 for Karim",
+        "Fly me from DAC to Paris tomorrow",
+    )
 
 
 @dataclass(frozen=True)
@@ -53,6 +72,7 @@ class Config:
     llm: LLMConfig = field(default_factory=LLMConfig)
     agent: AgentConfig = field(default_factory=AgentConfig)
     data: DataConfig = field(default_factory=DataConfig)
+    app: AppConfig = field(default_factory=AppConfig)
 
 
 _cfg: Config | None = None

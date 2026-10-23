@@ -1,6 +1,7 @@
 [
   {"id": "BG101", "origin": "DAC", "destination": "CXB", "date": "2026-11-05", "departs": "08:00", "duration_min": 55, "price_bdt": 6500, "seats_left": 5},
   {"id": "BG102", "origin": "DAC", "destination": "CXB", "date": "2026-11-05", "departs": "16:30", "duration_min": 55, "price_bdt": 7200, "seats_left": 0},
+  {"id": "US103", "origin": "DAC", "destination": "CXB", "date": "2026-11-05", "departs": "12:10", "duration_min": 60, "price_bdt": 6500, "seats_left": 2},
   {"id": "BG201", "origin": "DAC", "destination": "CGP", "date": "2026-11-05", "departs": "09:15", "duration_min": 45, "price_bdt": 5400, "seats_left": 12},
   {"id": "BG301", "origin": "DAC", "destination": "JSR", "date": "2026-11-06", "departs": "07:40", "duration_min": 40, "price_bdt": 4800, "seats_left": 3},
   {"id": "BS401", "origin": "DAC", "destination": "CXB", "date": "2026-11-06", "departs": "11:00", "duration_min": 60, "price_bdt": 6900, "seats_left": 9},
@@ -8,5 +9,6 @@
   {"id": "BG501", "origin": "CXB", "destination": "DAC", "date": "2026-11-08", "departs": "10:00", "duration_min": 55, "price_bdt": 6600, "seats_left": 4},
   {"id": "BG502", "origin": "CGP", "destination": "DAC", "date": "2026-11-08", "departs": "18:00", "duration_min": 45, "price_bdt": 5500, "seats_left": 8},
   {"id": "EK601", "origin": "DAC", "destination": "DXB", "date": "2026-11-10", "departs": "02:30", "duration_min": 330, "price_bdt": 38500, "seats_left": 20},
-  {"id": "EK602", "origin": "DXB", "destination": "DAC", "date": "2026-11-15", "departs": "04:10", "duration_min": 330, "price_bdt": 39200, "seats_left": 15}
+  {"id": "EK602", "origin": "DXB", "destination": "DAC", "date": "2026-11-15", "departs": "04:10", "duration_min": 330, "price_bdt": 39200, "seats_left": 15},
+  {"id": "QR701", "origin": "DAC", "destination": "DXB", "date": "2026-11-10", "departs": "19:45", "duration_min": 345, "price_bdt": 36900, "seats_left": 1}
 ]
