@@ -1,3 +1,6 @@
-langgraph>=1.0
-ollama>=0.4
-pytest>=7.4
+langgraph>=1.2
+langgraph-checkpoint-sqlite>=3.0
+ollama>=0.6
+streamlit>=1.40
+pandas>=2.0
+pytest>=8.0

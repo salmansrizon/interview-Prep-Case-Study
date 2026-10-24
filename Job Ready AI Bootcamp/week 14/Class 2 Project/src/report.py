@@ -1,4 +1,6 @@
 """Save the final report to a Markdown file."""
+from __future__ import annotations
+
 import re
 from datetime import datetime
 from pathlib import Path
