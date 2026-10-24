@@ -23,7 +23,8 @@ st.title(f"{CFG.app.page_icon} Math & File Inspector")
 st.caption("Local tool-calling agent on Ollama. The model only *requests* tools; Python runs them.")
 
 with st.sidebar:
-    model = st.selectbox("Model", [CFG.llm.model, CFG.llm.fallback_model, "qwen3:8b"])
+    model = CFG.llm.model
+    st.markdown(f"**Model:** `{model}`")
     max_steps = st.slider("max_steps", 1, 10, CFG.agent.max_steps)
     st.markdown("**Sandbox files**")
     st.code(list_files(CFG.agent.sandbox_dir), language="text")

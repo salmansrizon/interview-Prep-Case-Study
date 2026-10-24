@@ -274,7 +274,7 @@ Bootcamp scale-এ: ১০-২০টা golden task, expected end state সহ; 
 1. **Exit Prediction:** `max_repeat_calls=1` আর `max_consecutive_errors=1` দিয়ে notebook-এর প্রতিটা scripted scenario চালানোর আগে লিখে ফেলুন কোন status আসবে। কয়টা মিলল?
 2. **Stop Sequence:** Text mode-এ `stop` sequence সরিয়ে দিন। Model কি নিজের "Observation:" বানায়? বানানো observation আর আসল observation-এর পার্থক্য trace-এ কীভাবে ধরবেন?
 3. **New Golden Task:** "Book BS401 for Rahim and Karim" যোগ করুন। Expected end state কী? Agent কি দুটো আলাদা `book_flight` call করে — parallel না sequential?
-4. **Template Detective:** `qwen3:8b` pull করে `ollama show qwen3:8b --template` দেখুন। Tool list কোথায় বসে? `nudge_after_tools=False` দিয়ে qwen3-এ eval চালান — nudge কি এখনো দরকার?
+4. **Template Detective:** `ollama show llama3.1:8b --template` পুরোটা পড়ুন। `ipython` role-এ tool result কীভাবে বসে? `tool_name` কি template-এ কোথাও ব্যবহার হয়? এই template-এর জন্য nudge-এর চেয়ে ভালো কোনো workaround ভাবতে পারেন?
 5. **Paraphrase pass^k:** প্রতিটা golden task-এর ৩টা ভিন্ন phrasing লিখে evaluation চালান। Success rate কি ৬/৮-এর আশেপাশে থাকে, নাকি phrasing বদলালে ভেঙে পড়ে?
 
 ---

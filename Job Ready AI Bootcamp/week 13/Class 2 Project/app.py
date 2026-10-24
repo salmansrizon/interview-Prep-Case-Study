@@ -34,7 +34,8 @@ if "tools" not in ss:
 
 with st.sidebar:
     st.header("Settings")
-    model = st.selectbox("Model", list(dict.fromkeys([cfg.llm.model, *cfg.llm.compare_models, "qwen3:8b"])))
+    model = cfg.llm.model
+    st.markdown(f"**Model:** `{model}`")
     mode = st.radio("ReAct mode", ["native", "text"], horizontal=True,
                     help="native = Ollama tool_calls; text = classic Thought/Action/Observation parsing")
     require_approval = st.toggle("Require my approval before booking", value=True)

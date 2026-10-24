@@ -27,7 +27,6 @@ BASE_DIR = Path(__file__).resolve().parent
 class LLMConfig:
     host: str = "http://localhost:11434"
     model: str = "llama3.1:8b"
-    compare_models: tuple[str, ...] = ("llama3.1:8b", "llama3.2:3b")
     # HIGHLIGHTS: Ollama-র default temperature 0.8, context ছোট, num_predict
     # অসীম। Agent-এ তিনটাই বিপজ্জনক, তাই explicitly set করা।
     temperature: float = 0.0

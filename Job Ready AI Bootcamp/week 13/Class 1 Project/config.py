@@ -28,7 +28,6 @@ BASE_DIR = Path(__file__).resolve().parent
 class LLMConfig:
     host: str = "http://localhost:11434"
     model: str = "llama3.1:8b"
-    fallback_model: str = "llama3.2:3b"
     # HIGHLIGHTS: Ollama-র default temperature 0.8 আর context ছোট (4k)।
     # Tool argument-এ creativity চাই না, আর history বড় হলে tool definition
     # কেটে যেতে পারে — তাই তিনটাই explicitly set করা।

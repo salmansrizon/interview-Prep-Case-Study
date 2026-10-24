@@ -243,7 +243,7 @@ Model ভুল নাম পাঠায়, field বানায়, type ভ
 2. **Schema Experiment:** `calculate`-এর description থেকে "even simple sums — never compute numbers yourself" মুছে দিন। "What is 17 + 25?" প্রশ্নে model কি এখনো tool ডাকে?
 3. **Function-as-tool Trap:** `def convert(amount: float, currency: Literal["USD","EUR"])` সরাসরি `tools=[convert]` হিসেবে দিন, তারপর `ollama._utils.convert_function_to_tool(convert)` print করুন। `enum` কোথায় গেল?
 4. **Over-anchoring Fix:** "capital of France" প্রশ্নের জন্য এমন একটা fix ভাবুন যেটা file প্রশ্ন ভাঙে না। (Hint: tools ছাড়া একটা ছোট "router" call, বা `format=` দিয়ে classification।)
-5. **Model Comparison:** `qwen3:8b` pull করে notebook-এর একই প্রশ্নগুলো চালান। BFCL-এর পার্থক্য কি আপনার ছোট পরীক্ষায় দেখা যায়?
+5. **Own Mini-Benchmark:** notebook-এর প্রশ্নগুলোর সাথে আরও ১০টা প্রশ্ন যোগ করে llama3.1:8b-এ চালান — কয়টায় ঠিক tool, ঠিক argument? BFCL-এর ~71% simple-call score-এর সাথে আপনার সংখ্যা কতটা মেলে?
 
 ---
 

@@ -2,7 +2,6 @@
 
   python cli.py "Book the cheapest DAC to CXB flight on 2026-11-05 for Rahim"
   python cli.py --mode text "..."            # classic Thought/Action/Observation text ReAct
-  python cli.py --compare "..."              # same task on every model in config.compare_models
   python cli.py --eval -k 3                  # golden-task evaluation, pass^3
 """
 from __future__ import annotations
@@ -51,13 +50,12 @@ def main() -> None:
     p.add_argument("task", nargs="?")
     p.add_argument("--model", default=cfg.llm.model)
     p.add_argument("--mode", choices=["native", "text"], default=cfg.agent.mode)
-    p.add_argument("--compare", action="store_true", help="run on every model in config.compare_models")
     p.add_argument("--yes", action="store_true", help="auto-approve bookings")
     p.add_argument("--eval", action="store_true", help="run the golden-task evaluation")
     p.add_argument("-k", type=int, default=1, help="trials per task for pass^k")
     p.add_argument("--no-nudge", action="store_true", help="disable the llama3.1 tool-visibility nudge")
     args = p.parse_args()
-    models = cfg.llm.compare_models if args.compare else (args.model,)
+    models = (args.model,)
     if args.eval:
         for m in models:
             tools = TravelTools(cfg.data.flights_path, max_results=cfg.agent.max_results)

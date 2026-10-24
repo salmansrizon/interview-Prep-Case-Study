@@ -48,7 +48,7 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 # 3. Dependencies
 pip install -r requirements.txt
 
-# 4. One-time model pull (~4.9GB). 8GB RAM হলে llama3.2:3b
+# 4. One-time model pull (~4.9GB)
 ollama pull llama3.1:8b
 
 # 5. Ollama server (চালু না থাকলে)
@@ -59,7 +59,7 @@ streamlit run app.py
 
 # 6b. অথবা CLI
 python cli.py "What is (12+8)*3 divided by 4?"
-python cli.py --model llama3.2:3b "What is the launch code in notes.txt?"
+python cli.py "What is the launch code in notes.txt?"
 ```
 
 Ollama বন্ধ থাকলে app crash করে না — friendly message দেখায়।
@@ -140,7 +140,6 @@ Class 1 Project/
 | Setting | Default | কেন |
 |---|---|---|
 | `llm.model` | `llama3.1:8b` | Course standard (ADR 0006) |
-| `llm.fallback_model` | `llama3.2:3b` | 8GB RAM machine |
 | `llm.temperature` / `seed` | `0.0` / `42` | Tool argument-এ creativity চাই না; run reproducible হয় (তবে bit-exact না) |
 | `llm.num_ctx` | `8192` | Ollama-র default context ছোট; history বাড়লে tool definition কেটে যেতে পারে |
 | `agent.max_steps` | `5` | সর্বোচ্চ LLM call — infinite loop ও খরচ (OWASP LLM10) আটকায় |

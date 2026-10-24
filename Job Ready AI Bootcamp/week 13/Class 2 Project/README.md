@@ -41,14 +41,13 @@
 cd "Job Ready AI Bootcamp/week 13/Class 2 Project"
 python -m venv venv && source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-ollama pull llama3.1:8b                            # 8GB RAM হলে: llama3.2:3b
+ollama pull llama3.1:8b
 ollama serve                                       # চালু না থাকলে
 
 streamlit run app.py                               # chat UI
 
 python cli.py "Book the cheapest DAC to CXB flight on 2026-11-05 for Rahim"   # approval চাইবে
 python cli.py --mode text "..."                    # classic text ReAct
-python cli.py --compare "..."                      # llama3.1:8b vs llama3.2:3b
 python cli.py --eval                               # golden tasks, native mode
 python cli.py --eval --mode text -k 3              # text mode, pass^3
 
