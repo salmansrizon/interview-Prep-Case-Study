@@ -1,16 +1,21 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-python-multipart>=0.0.9
-pydantic>=2.7
-pydantic-settings>=2.3
-httpx>=0.27
-pytest>=7.4
-# Week 12 pipeline-এর নিজস্ব dependencies (শুধু real backend চালালে লাগে, tests-এ না):
-chromadb>=0.4
-sentence-transformers>=2.2
-ollama>=0.1.7
-pypdf>=3.17
-numpy>=1.24
-
-# Class 30: monitoring
-langfuse>=3  # optional (শুধু Langfuse sink চালালে)
+# Tested versions (2026-10). Python 3.11+ (Starlette 1.x needs it); 3.12 recommended.
+# API
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+pydantic==2.14.1
+pydantic-settings==2.16.1
+httpx==0.28.1
+# RAG core (only the real backend needs these; tests use fakes)
+chromadb==1.5.9
+sentence-transformers==6.2.0
+ollama==0.6.3
+pypdf==6.21.2
+# Monitoring (Class 2)
+prometheus-client==0.26.0
+opentelemetry-sdk==1.45.1
+opentelemetry-exporter-otlp-proto-http==1.45.1
+# Dev / tests / notebook
+pytest==9.1.1
+fpdf2==2.8.9
+pandas==3.1.0                 # notebook tables

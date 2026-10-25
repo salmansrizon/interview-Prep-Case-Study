@@ -1,58 +1,80 @@
-"""FastAPI app: routes + error handling + request-id/timing middleware.
+"""FastAPI app: versioned routes, SSE streaming, auth, request IDs, structured errors.
 
-চালানো:  uvicorn app.main:app --port 8000   →  http://localhost:8000/docs
+Run:  uvicorn app.main:app --port 8000      ->  http://localhost:8000/docs
+      RAG_BACKEND=fake uvicorn app.main:app  (no Ollama/Chroma needed)
+
+HIGHLIGHTS:
+* ``lifespan`` (not the removed ``on_event``) creates heavy resources once per process.
+* Every endpoint is ``async def`` and pushes blocking work to the threadpool via the service layer.
+* ``/v1/...`` = versioned API: prompt, model or schema changes alter behaviour, so clients pin a version.
+* ``/health`` = liveness (process up), ``/ready`` = readiness (Ollama reachable + model pulled).
+* SSE via FastAPI's built-in ``fastapi.sse`` (0.135+): events ``citations`` → ``token``... → ``done``.
 """
+from __future__ import annotations
 
-import asyncio
-import re
+import json
 import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.concurrency import run_in_threadpool
+from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, Request, Security, UploadFile
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
+from fastapi.sse import EventSourceResponse, format_sse_event
+from starlette.background import BackgroundTask
 
 from .backend import make_backend
-from .errors import ServiceError
-from .schemas import (AskRequest, AskResponse, ErrorResponse, HealthResponse,
-                      SourcesResponse, UploadResponse)
+from .errors import ServiceError, Unauthorized
+from .schemas import (AskRequest, AskResponse, Citation, ErrorResponse, HealthResponse, ReadyResponse,
+                      SourcesResponse, UploadResponse, Usage)
 from .service import RagService
 from .settings import get_settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # HIGHLIGHTS: heavy resource (Chroma client, embedding model) একবার বানাই, প্রতি request-এ না।
-    # Tests dependency_overrides দিয়ে get_service বদলায়, তাই real backend শুধু প্রথম
-    # ব্যবহারে lazily তৈরি হয় (get_service) — import/startup-এ Ollama/Chroma লাগে না।
-    app.state.settings = get_settings()
+    s = app.state.settings = get_settings()
     app.state.service = None
+    app.state.make_service = lambda: RagService(make_backend(s), max_concurrent=s.max_concurrent_llm,
+                                                queue_timeout_s=s.queue_timeout_s, cache_size=s.cache_size)
+    if s.warmup and s.backend == "real":
+        # Pay the cold start (embedding model load, Chroma open, Ollama model load) BEFORE the first user
+        # does. Measured with a cold Ollama: first request TTFT 8.4 s without this, ~2.5 s with it.
+        app.state.service = svc = app.state.make_service()
+        await run_in_threadpool(svc.backend.warmup)
     yield
 
 
-app = FastAPI(
-    title="rag-api",
-    version="1.0.0",
-    description="Week 12 RAG Q&A bot as a web service. Upload PDFs, ask questions, get cited answers.",
-    lifespan=lifespan,
-)
+app = FastAPI(title="rag-api", version="2.0.0", lifespan=lifespan,
+              description="Local RAG Q&A as a service: upload PDFs, ask questions, get cited (optionally streamed) "
+                          "answers. Runs on Ollama llama3.1:8b + ChromaDB, fully offline.")
 
 
 def get_service(request: Request) -> RagService:
     st = request.app.state
     if st.service is None:
-        st.service = RagService(make_backend(st.settings))
+        st.service = st.make_service()
     return st.service
 
 
+_api_key = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def require_key(request: Request, key: str | None = Security(_api_key)) -> None:
+    expected = request.app.state.settings.api_key
+    if expected and key != expected:
+        raise Unauthorized("Missing or invalid X-API-Key header")
+
+
 Svc = Annotated[RagService, Depends(get_service)]
+v1 = APIRouter(prefix="/v1", dependencies=[Depends(require_key)])
 
 
 @app.middleware("http")
 async def request_context(request: Request, call_next):
-    # HIGHLIGHTS: request_id + total latency header — Class 30 এখানে access log যোগ করতে পারে
     rid = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
     request.state.request_id = rid
     t0 = time.perf_counter()
@@ -62,14 +84,14 @@ async def request_context(request: Request, call_next):
     return response
 
 
-def _err(request: Request, status: int, error: str, detail: str) -> JSONResponse:
+def _err(request: Request, status: int, error: str, detail: str, headers=None) -> JSONResponse:
     body = ErrorResponse(error=error, detail=detail, request_id=getattr(request.state, "request_id", None))
-    return JSONResponse(status_code=status, content=body.model_dump())
+    return JSONResponse(status_code=status, content=body.model_dump(), headers=headers)
 
 
 @app.exception_handler(ServiceError)
 async def service_error_handler(request: Request, exc: ServiceError):
-    return _err(request, exc.status_code, exc.code, str(exc))
+    return _err(request, exc.status_code, exc.code, str(exc), exc.headers)
 
 
 @app.exception_handler(HTTPException)
@@ -80,64 +102,102 @@ async def http_error_handler(request: Request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_handler(request: Request, exc: RequestValidationError):
     first = exc.errors()[0]
-    loc = ".".join(str(p) for p in first["loc"])
-    return _err(request, 422, "validation_error", f"{loc}: {first['msg']}")
+    return _err(request, 422, "validation_error", f"{'.'.join(map(str, first['loc']))}: {first['msg']}")
 
 
 @app.exception_handler(Exception)
 async def unhandled_handler(request: Request, exc: Exception):
-    # stack trace client-কে leak না করে generic message
-    return _err(request, 500, "internal_error", "Unexpected server error")
+    return _err(request, 500, "internal_error", "Unexpected server error")   # never leak a stack trace
 
 
-ERRORS = {503: {"model": ErrorResponse}, 422: {"model": ErrorResponse}}
+def _citations(hits) -> list[Citation]:
+    return [Citation(n=i, source=h.source, page=h.page, chunk_id=h.chunk_id, distance=round(h.distance, 2),
+                     snippet=h.text[:200]) for i, h in enumerate(hits, 1)]
 
 
+def _usage(u) -> Usage | None:
+    return None if u is None else Usage(prompt_tokens=u.prompt_tokens, completion_tokens=u.completion_tokens,
+                                        tokens_per_s=u.tokens_per_s, ttft_ms=u.ttft_ms, load_ms=round(u.load_ms, 1),
+                                        prefill_ms=round(u.prefill_ms, 1))
+
+
+# ── ops ───────────────────────────────────────────────────────────────
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
-async def health(request: Request, svc: Svc):
-    # HIGHLIGHTS: async + threadpool, তাই লম্বা /ask চলাকালীনও /health দ্রুত উত্তর দেয়
-    srcs = await svc.sources()
-    return HealthResponse(status="ok", backend=request.app.state.settings.backend, indexed_documents=len(srcs))
+async def health():
+    return HealthResponse(status="ok")          # liveness: never touches Ollama or Chroma
 
 
-@app.get("/sources", response_model=SourcesResponse, tags=["documents"])
-async def sources(svc: Svc):
+@app.get("/ready", response_model=ReadyResponse, tags=["ops"], responses={503: {"model": ErrorResponse}})
+async def ready(request: Request, svc: Svc):
+    ok, msg = await svc.ready()
+    body = ReadyResponse(status="ready" if ok else "not_ready", backend=svc.backend.name, llm=msg,
+                         indexed_documents=len(await svc.sources()) if ok else 0)
+    return JSONResponse(body.model_dump(), status_code=200 if ok else 503)
+
+
+# ── documents ─────────────────────────────────────────────────────────
+@v1.get("/documents", response_model=SourcesResponse, tags=["documents"])
+async def list_documents(svc: Svc):
     return SourcesResponse(sources=await svc.sources())
 
 
-@app.post("/ask", response_model=AskResponse, responses=ERRORS, tags=["qa"])
-async def ask(body: AskRequest, request: Request, svc: Svc):
-    t0 = time.perf_counter()
-    rid = request.state.request_id
-    res = await svc.ask(body.question, body.source, body.top_k, request_id=rid)
-    return res.model_copy(update={"request_id": rid, "latency_ms": round((time.perf_counter() - t0) * 1000, 1)})
-
-
-@app.post("/ask/stream", tags=["qa"])
-async def ask_stream(body: AskRequest, request: Request, svc: Svc):
-    """Word-by-word streaming (text/plain)।
-
-    Honest limitation: Week 12 `generate()` non-streaming, তাই আগে পুরো উত্তর তৈরি হয়,
-    তারপর stream হয়। আসল token streaming-এর জন্য ollama `stream=True` দরকার (lecture দেখুন)।
-    """
-    res = await svc.ask(body.question, body.source, body.top_k, request_id=request.state.request_id)
-
-    async def gen():
-        for word in re.findall(r"\S+\s*", res.answer):
-            yield word
-            await asyncio.sleep(0)  # event loop-কে অন্যদের সুযোগ দেওয়া
-
-    return StreamingResponse(gen(), media_type="text/plain")
-
-
-@app.post("/upload", response_model=UploadResponse, status_code=201, responses=ERRORS, tags=["documents"])
+@v1.post("/documents", response_model=UploadResponse, status_code=201, tags=["documents"],
+         responses={413: {"model": ErrorResponse}, 415: {"model": ErrorResponse}, 422: {"model": ErrorResponse}})
 async def upload(request: Request, svc: Svc, file: UploadFile = File(...)):
-    name = file.filename or "document.pdf"
+    name = (file.filename or "document.pdf").replace("/", "_").replace("\\", "_")
     if not name.lower().endswith(".pdf"):
         raise HTTPException(415, "Only .pdf files are supported")
-    mb = request.app.state.settings.max_upload_mb
-    data = await file.read(mb * 1024 * 1024 + 1)  # limit+1 পড়ি: বড় হলে ধরা যায়, পুরোটা memory-তে না নিয়ে
-    if len(data) > mb * 1024 * 1024:
-        raise HTTPException(413, f"File larger than {mb} MB")
-    n = await svc.ingest(name, data, request_id=request.state.request_id)
-    return UploadResponse(filename=name, chunks_indexed=n, request_id=request.state.request_id)
+    limit = request.app.state.settings.max_upload_mb * 1024 * 1024
+    data = await file.read(limit + 1)                 # read limit+1: detect "too big" without loading it all
+    if len(data) > limit:
+        raise HTTPException(413, f"File larger than {request.app.state.settings.max_upload_mb} MB")
+    res = await svc.ingest(name, data, request_id=request.state.request_id)
+    return UploadResponse(filename=name, pages=res.pages, chunks=res.chunks, new_chunks=res.new_chunks,
+                          request_id=request.state.request_id)
+
+
+# ── questions ─────────────────────────────────────────────────────────
+@v1.post("/ask", response_model=AskResponse, tags=["qa"],
+         responses={503: {"model": ErrorResponse}, 401: {"model": ErrorResponse}})
+async def ask(body: AskRequest, request: Request, svc: Svc):
+    res, cached = await svc.ask(body.question, body.source, body.top_k, request_id=request.state.request_id)
+    return AskResponse(answer=res.answer, found=res.found, degraded=res.degraded, cached=cached,
+                       citations=_citations(res.hits) if res.found else [], timings_ms=res.timings_ms,
+                       usage=_usage(res.usage), request_id=request.state.request_id)
+
+
+# NOTE: no response_class=EventSourceResponse here — with that, FastAPI expects the endpoint itself to be a
+# generator. We return the response object ourselves so the slot can be claimed (or 503 raised) first.
+@v1.post("/ask/stream", tags=["qa"],
+         responses={200: {"content": {"text/event-stream": {}}, "description": "SSE stream"},
+                    503: {"model": ErrorResponse}})
+async def ask_stream(body: AskRequest, request: Request, svc: Svc):
+    """Server-Sent Events: `citations` (once) → `token` (many) → `done` (answer, found, timings, usage).
+
+    The LLM slot is claimed before the response starts, so overload is a normal HTTP 503."""
+    handle = await svc.open_stream(body.question, body.source, body.top_k, request_id=request.state.request_id)
+
+    async def events():
+        async for kind, value in handle.events():
+            if await request.is_disconnected():       # stop generating for a client that left
+                break
+            if kind == "hits":
+                yield sse("citations", [c.model_dump() for c in _citations(value)])
+            elif kind == "token":
+                yield sse("token", value)
+            elif kind == "done":
+                yield sse("done", {
+                    "answer": value.answer, "found": value.found, "degraded": value.degraded,
+                    "timings_ms": value.timings_ms, "usage": (_usage(value.usage).model_dump() if value.usage else None),
+                    "request_id": request.state.request_id})
+
+    return EventSourceResponse(events(), background=BackgroundTask(handle.close),
+                               headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+def sse(event: str, data) -> bytes:
+    """One Server-Sent Event: `event: <name>` + `data: <json>` + blank line."""
+    return format_sse_event(event=event, data_str=json.dumps(data, ensure_ascii=False))
+
+
+app.include_router(v1)

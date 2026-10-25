@@ -1,34 +1,69 @@
-"""Service config — env var দিয়ে override করা যায় (prefix ``RAG_``).
+"""Service config — every value can be overridden by an env var with prefix ``RAG_`` (e.g. RAG_API_KEY).
 
-HIGHLIGHTS: Week 12-এ config একটা frozen dataclass ছিল; এখানে pydantic-settings
-ব্যবহার করা হয়েছে কারণ service-এর config deploy-time-এ env var দিয়ে বদলাতে হয়
-(Docker/K8s), আর type validation বিনামূল্যে পাওয়া যায়।
+HIGHLIGHTS: Week 10-14-এ config ছিল frozen dataclass। Service-এ pydantic-settings, কারণ
+deploy-time-এ (Docker/K8s) env var দিয়ে বদলাতে হয়, আর type validation বিনামূল্যে।
+
+── Model / server reference (course runs only llama3.1:8b) ──
+| Choice | Use case | Advantage | Limitation |
+|---|---|---|---|
+| **Ollama + llama3.1:8b** (chosen) | এক মেশিনে local RAG API | Setup সহজ, offline | Default-এ model-প্রতি ১টা request একসাথে; continuous batching নেই |
+| vLLM / TGI | অনেক concurrent user, GPU server | Continuous batching, PagedAttention | Setup ভারী, CUDA GPU লাগে |
+| llama.cpp server | CPU/edge, ছোট deploy | হালকা, parallel slot | কম feature |
+| Cloud API | সর্বোচ্চ quality, scale | কোনো local compute নেই | খরচ, data বাইরে যায় |
 """
-
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-# week 15/Class 1 Project -> ../../week 12/Class 2 Project
-_DEFAULT_WEEK12 = PROJECT_DIR.parent.parent / "week 12" / "Class 2 Project"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RAG_")
 
-    # Week 12 project-এর root (যেখানে config.py আর src/ আছে)
-    week12_dir: Path = _DEFAULT_WEEK12
-    # Chroma data এই project-এর ভেতরে থাকে, যাতে week 12-এর data ছোঁয়া না হয়
-    chroma_dir: Path = PROJECT_DIR / "data" / "chroma_db"
-    max_upload_mb: int = 20
-    # "real" = Week 12 pipeline, "fake" = Ollama/Chroma ছাড়া demo (benchmark)
-    backend: str = "real"
+    backend: str = "real"                 # "real" = Ollama + Chroma, "fake" = no dependencies (tests, benchmark)
     fake_delay_s: float = 0.2
-    # Class 30 monitoring
-    monitor_db: Path = PROJECT_DIR / "data" / "monitor.db"  # SQLite fallback log
-    model_name: str = "llama3.1:8b"
-    price_key: str = "small-cloud"  # pricing.py table key — illustrative cloud-equivalent
+    warmup: bool = True                   # load models at startup instead of on the first request
+
+    # LLM (Ollama)
+    ollama_host: str = "http://localhost:11434"
+    model: str = "llama3.1:8b"
+    temperature: float = 0.2
+    num_ctx: int = 8192
+    num_predict: int = 512
+    llm_timeout_s: float = 120.0
+
+    # Retrieval
+    embedding_model: str = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+    chroma_dir: Path = PROJECT_DIR / "data" / "chroma_db"
+    collection: str = "rag_api"
+    top_k: int = 4
+    chunk_size: int = 300                 # chars; smaller chunks = sharper embeddings + exact citations
+    chunk_overlap: int = 60
+    # L2 distance guardrail: no chunk closer than this -> "not found" without calling the LLM.
+    # Calibrated on samples/employee_handbook.pdf (chunk 300): on-topic max 25.2, off-topic min 27.2.
+    # Re-calibrate on YOUR documents + questions (notebooks/01_exploration.ipynb shows how).
+    max_distance: float = 26.0
+
+    # Protection
+    # Requests allowed into the LLM at once. Match OLLAMA_NUM_PARALLEL (default 1): a bigger gate only moves
+    # the queue inside Ollama, where we can't time it out or measure it.
+    max_concurrent_llm: int = 1
+    queue_timeout_s: float = 30.0         # wait this long for a slot, then 503 + Retry-After
+    max_upload_mb: int = 20
+    max_pages: int = 300
+    api_key: str | None = None            # set RAG_API_KEY to require the X-API-Key header
+    cache_size: int = 256                 # exact-match answer cache (0 = off)
+
+    # Monitoring (Class 2)
+    monitor_db: Path = PROJECT_DIR / "data" / "monitor.db"   # per-request SQLite log
+    log_text: bool = True                 # False = store only a hash of questions/answers (PII)
+    otlp_endpoint: str | None = None      # e.g. http://localhost:6006/v1/traces (Phoenix); unset = no tracing
+    otlp_headers: str | None = None       # "k=v,k2=v2", e.g. Langfuse "Authorization=Basic <base64>"
+    trace_content: bool = False           # put question/answer text on spans (opt-in, per OTel GenAI spec)
+    slo_availability: float = 0.99        # share of requests that must not fail (503 counts as failure)
+    slo_latency_s: float = 10.0           # an answer slower than this is "slow"...
+    slo_latency_target: float = 0.95      # ...and at least this share must be fast
 
 
 def get_settings() -> Settings:

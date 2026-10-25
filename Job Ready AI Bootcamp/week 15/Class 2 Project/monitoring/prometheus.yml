@@ -1,0 +1,14 @@
+# Scrape the RAG API and evaluate SLO rules.
+#   prometheus --config.file=monitoring/prometheus.yml      ->  http://localhost:9090
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: rag-api
+    metrics_path: /metrics          # plain FastAPI route, so no 307 redirect to /metrics/
+    static_configs:
+      - targets: ["localhost:8000"]

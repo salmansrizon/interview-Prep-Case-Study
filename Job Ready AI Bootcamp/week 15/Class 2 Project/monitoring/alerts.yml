@@ -1,0 +1,63 @@
+# SLO alerting for the RAG API (Google SRE Workbook, "multiwindow, multi-burn-rate alerts").
+# Availability SLO 99%  ->  error budget 1%.  Burn rate = error ratio / 0.01.
+#   page:   1h AND 5m  burn > 14.4   (2% of a 30-day budget gone in 1 hour)
+#   page:   6h AND 30m burn > 6      (5% of the budget gone in 6 hours)
+# Quality signals are sampled and noisy -> they open tickets, they never page.
+# `or vector(0)`: with zero 5xx ever, the 5xx series does not exist and the ratio would be EMPTY, not 0.
+groups:
+  - name: rag-slo-recording
+    rules:
+      - record: rag:request_errors:ratio_rate5m
+        expr: (sum(rate(rag_http_requests_total{route=~"/v1/ask.*",status=~"5.."}[5m])) or vector(0)) / sum(rate(rag_http_requests_total{route=~"/v1/ask.*"}[5m]))
+      - record: rag:request_errors:ratio_rate30m
+        expr: (sum(rate(rag_http_requests_total{route=~"/v1/ask.*",status=~"5.."}[30m])) or vector(0)) / sum(rate(rag_http_requests_total{route=~"/v1/ask.*"}[30m]))
+      - record: rag:request_errors:ratio_rate1h
+        expr: (sum(rate(rag_http_requests_total{route=~"/v1/ask.*",status=~"5.."}[1h])) or vector(0)) / sum(rate(rag_http_requests_total{route=~"/v1/ask.*"}[1h]))
+      - record: rag:request_errors:ratio_rate6h
+        expr: (sum(rate(rag_http_requests_total{route=~"/v1/ask.*",status=~"5.."}[6h])) or vector(0)) / sum(rate(rag_http_requests_total{route=~"/v1/ask.*"}[6h]))
+      - record: rag:ask_latency_seconds:p95_5m
+        expr: histogram_quantile(0.95, sum by (le) (rate(rag_request_duration_seconds_bucket{route="/v1/ask"}[5m])))
+
+  - name: rag-slo-alerts
+    rules:
+      - alert: RagErrorBudgetFastBurn
+        expr: rag:request_errors:ratio_rate1h > (14.4 * 0.01) and rag:request_errors:ratio_rate5m > (14.4 * 0.01)
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: "RAG API burning error budget 14x (503s / 5xx). Check /ready, Ollama, rag_llm_in_flight."
+      - alert: RagErrorBudgetSlowBurn
+        expr: rag:request_errors:ratio_rate6h > (6 * 0.01) and rag:request_errors:ratio_rate30m > (6 * 0.01)
+        for: 15m
+        labels: {severity: page}
+        annotations:
+          summary: "RAG API burning error budget 6x over 6h."
+      - alert: RagLLMDegraded
+        expr: sum(rate(rag_answers_total{outcome="degraded"}[5m])) > 0
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "Answers are served retrieval-only: Ollama is down or timing out."
+      - alert: RagSlowAnswers
+        expr: rag:ask_latency_seconds:p95_5m > 10
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: "p95 /v1/ask latency above 10s (prompt too long? GPU contention? queueing?)."
+      - alert: RagSaturated
+        expr: avg_over_time(rag_llm_in_flight[10m]) > 0.9
+        for: 10m
+        labels: {severity: ticket}
+        annotations:
+          summary: "LLM slot busy >90% of the time: add a replica before latency SLO breaks."
+      - alert: RagNotFoundRateHigh
+        expr: sum(rate(rag_answers_total{outcome="not_found"}[1h])) / sum(rate(rag_answers_total{outcome=~"answered|not_found"}[1h])) > 0.3
+        for: 30m
+        labels: {severity: ticket}
+        annotations:
+          summary: ">30% of questions are 'not found': missing documents or a too-strict max_distance."
+      - alert: RagUnsupportedNumbers
+        expr: increase(rag_quality_flags_total{flag="unsupported_number"}[1h]) > 3
+        labels: {severity: ticket}
+        annotations:
+          summary: "Answers contain numbers that are not in their passages. Review traces in the dashboard."

@@ -1,0 +1,38 @@
+# Unit tests for the alert rules:  promtool test rules monitoring/alerts_test.yml
+rule_files:
+  - alerts.yml
+evaluation_interval: 1m
+
+tests:
+  # 20% of /v1/ask requests fail (503) -> burn rate 20x on every window -> fast-burn page.
+  - interval: 1m
+    input_series:
+      - series: 'rag_http_requests_total{method="POST",route="/v1/ask",status="200"}'
+        values: '0+80x120'
+      - series: 'rag_http_requests_total{method="POST",route="/v1/ask",status="503"}'
+        values: '0+20x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: RagErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels: {severity: page}
+            exp_annotations:
+              summary: "RAG API burning error budget 14x (503s / 5xx). Check /ready, Ollama, rag_llm_in_flight."
+    promql_expr_test:
+      - expr: round(rag:request_errors:ratio_rate1h, 0.01)     # float math: 0.19999...
+        eval_time: 70m
+        exp_samples:
+          - labels: '{}'
+            value: 0.2
+
+  # 1% errors = exactly the budget (burn 1x) -> no page.
+  - interval: 1m
+    input_series:
+      - series: 'rag_http_requests_total{method="POST",route="/v1/ask",status="200"}'
+        values: '0+99x120'
+      - series: 'rag_http_requests_total{method="POST",route="/v1/ask",status="503"}'
+        values: '0+1x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: RagErrorBudgetFastBurn
+        exp_alerts: []
