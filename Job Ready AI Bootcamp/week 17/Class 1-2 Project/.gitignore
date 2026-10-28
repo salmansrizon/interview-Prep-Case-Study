@@ -1,0 +1,6 @@
+data/chroma_db/
+output/
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
