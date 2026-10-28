@@ -1,0 +1,94 @@
+{
+ "version": "2025.1",
+ "seed": 16,
+ "synthetic": true,
+ "disclaimer": "SYNTHETIC DATA. Every company, ticker, price and headline here is invented for teaching. Any match with a real listing is coincidental. Not investment advice.",
+ "start": "2025-01-02",
+ "end": "2025-12-19",
+ "trading_days": 252,
+ "tickers": [
+  {
+   "ticker": "ACME",
+   "name": "Acme Robotics",
+   "sector": "Industrials",
+   "start_price": 84.0,
+   "drift": 0.1,
+   "volatility": 0.28,
+   "shock_days": []
+  },
+  {
+   "ticker": "ZEPH",
+   "name": "Zephyr Wind Power",
+   "sector": "Utilities",
+   "start_price": 41.0,
+   "drift": 0.06,
+   "volatility": 0.22,
+   "shock_days": []
+  },
+  {
+   "ticker": "KRYO",
+   "name": "Kryo Cold Chain Logistics",
+   "sector": "Logistics",
+   "start_price": 57.0,
+   "drift": 0.04,
+   "volatility": 0.18,
+   "shock_days": []
+  },
+  {
+   "ticker": "LUMA",
+   "name": "Luma Optics",
+   "sector": "Semiconductors",
+   "start_price": 132.0,
+   "drift": 0.18,
+   "volatility": 0.38,
+   "shock_days": []
+  },
+  {
+   "ticker": "QBIT",
+   "name": "Qubit Compute",
+   "sector": "Technology",
+   "start_price": 23.0,
+   "drift": 0.25,
+   "volatility": 0.55,
+   "shock_days": []
+  },
+  {
+   "ticker": "HELX",
+   "name": "Helix Biotherapeutics",
+   "sector": "Biotechnology",
+   "start_price": 68.0,
+   "drift": 0.05,
+   "volatility": 0.45,
+   "shock_days": [
+    180
+   ]
+  },
+  {
+   "ticker": "MRDN",
+   "name": "Meridian Pantry Foods",
+   "sector": "Consumer Staples",
+   "start_price": 49.0,
+   "drift": 0.05,
+   "volatility": 0.14,
+   "shock_days": []
+  },
+  {
+   "ticker": "VALT",
+   "name": "Valtara Payments",
+   "sector": "Financials",
+   "start_price": 76.0,
+   "drift": 0.08,
+   "volatility": 0.3,
+   "shock_days": [
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102
+   ]
+  }
+ ]
+}

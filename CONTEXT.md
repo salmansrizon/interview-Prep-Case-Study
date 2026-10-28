@@ -16,7 +16,7 @@ The single Project for a week whose two Class Sessions share one achievement in 
 A bundled, versioned local copy of external data (e.g. Week 16's market prices and news) that a Project reads by default. Its agents and analysis run only against the local store. An optional ingestion step may refresh the snapshot from live sources. That refresh is the only network-touching step, and nothing downstream needs it to run.
 
 ## Risk Score
-Week 16's 0–100 per-ticker number, computed deterministically by code from fixed quantitative metrics (volatility, drawdown, VaR) and news sentiment using documented weights. An agent may choose which tools to call and explain the result, but never sets or adjusts the number itself.
+Week 16's 0–100 per-ticker number, computed deterministically by code from fixed quantitative metrics (volatility, drawdown, VaR) and news sentiment using documented weights. It is computed as of the last price date: news dated after that is excluded (no look-ahead). An agent may choose which tools to call and explain the result, but never sets or adjusts the number itself.
 
 ## News Scout Agent
 Week 16's first agent. It surfaces relevant financial news for a ticker from the Offline Snapshot and attaches sentiment. `Course Module.pdf` calls it the "Researcher Agent"; this is the canonical name.
