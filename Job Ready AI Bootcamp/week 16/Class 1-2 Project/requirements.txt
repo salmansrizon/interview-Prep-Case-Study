@@ -1,0 +1,21 @@
+# Tested versions (2026-10). Python 3.11-3.13 (CrewAI needs <= 3.13). Test suite run on 3.13.
+# Agents
+crewai==1.15.30
+# API + UI
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic-settings==2.16.1
+httpx==0.28.1
+streamlit==1.66.1
+# PDF memo
+fpdf2==2.8.9
+# FinBERT sentiment (loaded lazily on the first uncached headline; tests use a fake).
+# Resolved for Python 3.13, not installed in the test venv. CPU-only torch is enough:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch
+transformers==5.21.0
+torch==2.14.1
+# Optional live refresh (`python cli.py refresh ...`), the only network step. Uncomment to use:
+# yfinance==1.7.0
+# feedparser==6.0.14
+# Dev / tests
+pytest==9.1.1

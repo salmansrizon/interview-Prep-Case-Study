@@ -1,0 +1,426 @@
+[
+ {
+  "id": "news:ACME:1",
+  "ticker": "ACME",
+  "date": "2025-01-09",
+  "headline": "Acme Robotics opens second assembly plant to meet warehouse demand",
+  "summary": "The new plant doubles annual output of the company's picking arms.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:2",
+  "ticker": "ACME",
+  "date": "2025-02-27",
+  "headline": "Acme Robotics reports quarterly revenue in line with guidance",
+  "summary": "Revenue matched the range management gave three months earlier.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:3",
+  "ticker": "ACME",
+  "date": "2025-05-06",
+  "headline": "Acme Robotics wins multi-year contract from a regional grocery chain",
+  "summary": "The contract covers automation for twelve distribution centers.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:4",
+  "ticker": "ACME",
+  "date": "2025-07-04",
+  "headline": "Acme Robotics recalls 1,200 picking arms over a gripper sensor fault",
+  "summary": "The company expects the recall to cost one quarter of service margin.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:5",
+  "ticker": "ACME",
+  "date": "2025-08-26",
+  "headline": "Acme Robotics beats third-quarter earnings estimates as recall costs fade",
+  "summary": "Earnings per share came in above the analyst consensus.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:6",
+  "ticker": "ACME",
+  "date": "2025-10-16",
+  "headline": "Acme Robotics names new chief financial officer",
+  "summary": "The incoming CFO previously ran finance at an industrial supplier.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ACME:7",
+  "ticker": "ACME",
+  "date": "2025-12-04",
+  "headline": "Acme Robotics raises full-year outlook on strong service revenue",
+  "summary": "Management lifted its revenue forecast for the second time this year.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:1",
+  "ticker": "HELX",
+  "date": "2025-01-16",
+  "headline": "Helix Biotherapeutics starts Phase 3 trial of its lead arthritis drug",
+  "summary": "The trial will enroll about 900 patients.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:2",
+  "ticker": "HELX",
+  "date": "2025-03-31",
+  "headline": "Helix Biotherapeutics reports positive early safety data",
+  "summary": "No serious side effects were seen in the first patient group.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:3",
+  "ticker": "HELX",
+  "date": "2025-06-12",
+  "headline": "Helix Biotherapeutics extends cash runway with a new credit facility",
+  "summary": "The facility funds operations into the following year.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:4",
+  "ticker": "HELX",
+  "date": "2025-09-11",
+  "headline": "Helix Biotherapeutics Phase 3 trial misses its primary endpoint",
+  "summary": "The drug did not reduce joint pain more than placebo.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:5",
+  "ticker": "HELX",
+  "date": "2025-09-15",
+  "headline": "Analysts downgrade Helix Biotherapeutics after trial failure",
+  "summary": "Several analysts cut their price targets by more than half.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:6",
+  "ticker": "HELX",
+  "date": "2025-10-30",
+  "headline": "Helix Biotherapeutics announces 30 percent workforce reduction to cut costs",
+  "summary": "The company will focus on two early-stage programs.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:HELX:7",
+  "ticker": "HELX",
+  "date": "2025-12-04",
+  "headline": "Helix Biotherapeutics explores strategic alternatives, including a sale",
+  "summary": "The board hired an adviser to review options.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:1",
+  "ticker": "KRYO",
+  "date": "2025-01-14",
+  "headline": "Kryo Cold Chain adds 40 refrigerated trucks to its fleet",
+  "summary": "The expansion targets growing demand for temperature-controlled food delivery.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:2",
+  "ticker": "KRYO",
+  "date": "2025-03-27",
+  "headline": "Kryo Cold Chain reports steady volumes in pharmaceutical shipping",
+  "summary": "Shipment volumes were flat compared with the previous quarter.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:3",
+  "ticker": "KRYO",
+  "date": "2025-06-05",
+  "headline": "Kryo Cold Chain fined for temperature logging gaps at one depot",
+  "summary": "An inspector found missing records for three weeks of shipments.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:4",
+  "ticker": "KRYO",
+  "date": "2025-07-31",
+  "headline": "Kryo Cold Chain renews contract with its largest vaccine distributor",
+  "summary": "The renewal runs for four more years.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:5",
+  "ticker": "KRYO",
+  "date": "2025-10-09",
+  "headline": "Kryo Cold Chain quarterly profit flat as fuel costs offset price increases",
+  "summary": "Higher diesel prices absorbed the gain from new contract rates.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:KRYO:6",
+  "ticker": "KRYO",
+  "date": "2025-12-11",
+  "headline": "Kryo Cold Chain completes acquisition of a regional warehouse operator",
+  "summary": "The deal adds six cold-storage sites.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:1",
+  "ticker": "LUMA",
+  "date": "2025-01-23",
+  "headline": "Luma Optics unveils faster photonic interconnect chip",
+  "summary": "The chip moves data between servers at twice the previous speed.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:2",
+  "ticker": "LUMA",
+  "date": "2025-03-11",
+  "headline": "Luma Optics shares slide after a key customer delays orders",
+  "summary": "The customer pushed deliveries into the next quarter.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:3",
+  "ticker": "LUMA",
+  "date": "2025-05-12",
+  "headline": "Luma Optics revenue jumps 35 percent on data center demand",
+  "summary": "Sales of interconnect chips drove the increase.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:4",
+  "ticker": "LUMA",
+  "date": "2025-07-15",
+  "headline": "Luma Optics warns of supply constraints for specialty wafers",
+  "summary": "A single supplier provides most of the wafers the company uses.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:5",
+  "ticker": "LUMA",
+  "date": "2025-09-11",
+  "headline": "Luma Optics announces share buyback program",
+  "summary": "The board approved repurchases worth about 3 percent of shares outstanding.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:6",
+  "ticker": "LUMA",
+  "date": "2025-11-10",
+  "headline": "Luma Optics cuts guidance as two large customers pause spending",
+  "summary": "Management lowered its full-year revenue forecast.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:LUMA:7",
+  "ticker": "LUMA",
+  "date": "2025-12-16",
+  "headline": "Luma Optics to present at an industry technology conference",
+  "summary": "The chief technology officer will give a product update.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:1",
+  "ticker": "MRDN",
+  "date": "2025-01-30",
+  "headline": "Meridian Pantry Foods raises dividend for the 12th straight year",
+  "summary": "The quarterly dividend increases by 4 percent.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:2",
+  "ticker": "MRDN",
+  "date": "2025-04-10",
+  "headline": "Meridian Pantry Foods reports stable sales of packaged staples",
+  "summary": "Volumes were unchanged from the same quarter last year.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:3",
+  "ticker": "MRDN",
+  "date": "2025-06-26",
+  "headline": "Meridian Pantry Foods passes higher grain costs to customers with modest price increases",
+  "summary": "Prices on cereal and pasta products rise by about 2 percent.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:4",
+  "ticker": "MRDN",
+  "date": "2025-08-28",
+  "headline": "Meridian Pantry Foods quarterly earnings meet analyst expectations",
+  "summary": "Margins held steady despite higher input costs.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:5",
+  "ticker": "MRDN",
+  "date": "2025-11-20",
+  "headline": "Meridian Pantry Foods expands distribution to two new regions",
+  "summary": "Its products will reach about 800 more grocery stores.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:MRDN:6",
+  "ticker": "MRDN",
+  "date": "2025-12-18",
+  "headline": "Meridian Pantry Foods recalls one batch of canned soup as a precaution",
+  "summary": "The company said the recall affects less than 0.1 percent of annual sales.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:1",
+  "ticker": "QBIT",
+  "date": "2025-01-07",
+  "headline": "Qubit Compute shares fall after dilutive secondary offering",
+  "summary": "The company sold new shares to fund research, diluting existing holders.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:2",
+  "ticker": "QBIT",
+  "date": "2025-02-20",
+  "headline": "Qubit Compute demonstrates 128-qubit processor in lab test",
+  "summary": "The test showed lower error rates than the previous generation.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:3",
+  "ticker": "QBIT",
+  "date": "2025-04-21",
+  "headline": "Qubit Compute net loss widens as research spending grows",
+  "summary": "Operating expenses rose faster than revenue.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:4",
+  "ticker": "QBIT",
+  "date": "2025-06-19",
+  "headline": "Qubit Compute signs pilot agreement with a national laboratory",
+  "summary": "The pilot gives researchers cloud access to the company's processors.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:5",
+  "ticker": "QBIT",
+  "date": "2025-08-21",
+  "headline": "Short seller report questions Qubit Compute revenue recognition",
+  "summary": "The report claims some pilot revenue was booked too early.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:6",
+  "ticker": "QBIT",
+  "date": "2025-10-23",
+  "headline": "Qubit Compute responds to short seller report and reaffirms its financial statements",
+  "summary": "The audit committee said its review found no errors.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:QBIT:7",
+  "ticker": "QBIT",
+  "date": "2025-12-09",
+  "headline": "Qubit Compute shares rally after cloud partnership announcement",
+  "summary": "A cloud provider will offer the company's processors to its customers.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:1",
+  "ticker": "VALT",
+  "date": "2025-01-28",
+  "headline": "Valtara Payments processes record transaction volume in January",
+  "summary": "Holiday returns and new merchants lifted payment volume.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:2",
+  "ticker": "VALT",
+  "date": "2025-04-03",
+  "headline": "Valtara Payments launches instant payouts for small merchants",
+  "summary": "Merchants can now receive funds within minutes instead of days.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:3",
+  "ticker": "VALT",
+  "date": "2025-05-15",
+  "headline": "Regulator opens investigation into Valtara Payments anti-money-laundering controls",
+  "summary": "The investigation covers how the company checks new merchants.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:4",
+  "ticker": "VALT",
+  "date": "2025-05-23",
+  "headline": "Valtara Payments suspends merchant onboarding during regulatory review",
+  "summary": "Existing merchants are not affected by the pause.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:5",
+  "ticker": "VALT",
+  "date": "2025-07-31",
+  "headline": "Valtara Payments reports slower growth as merchant onboarding stays paused",
+  "summary": "Revenue growth slowed to its lowest rate in three years.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:6",
+  "ticker": "VALT",
+  "date": "2025-10-09",
+  "headline": "Valtara Payments reaches settlement with regulator and resumes onboarding",
+  "summary": "The company agreed to pay a fine and hire an independent monitor.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:VALT:7",
+  "ticker": "VALT",
+  "date": "2025-12-12",
+  "headline": "Valtara Payments quarterly revenue returns to growth",
+  "summary": "New merchant sign-ups recovered after onboarding resumed.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:1",
+  "ticker": "ZEPH",
+  "date": "2025-01-20",
+  "headline": "Zephyr Wind Power commissions 300 MW offshore array",
+  "summary": "The array is the company's largest project to date.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:2",
+  "ticker": "ZEPH",
+  "date": "2025-03-20",
+  "headline": "Zephyr Wind Power output falls as calm weather lowers generation",
+  "summary": "Quarterly generation was 14 percent below the long-term average.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:3",
+  "ticker": "ZEPH",
+  "date": "2025-05-19",
+  "headline": "Zephyr Wind Power keeps quarterly dividend unchanged",
+  "summary": "The board held the payout at the same level as last year.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:4",
+  "ticker": "ZEPH",
+  "date": "2025-07-17",
+  "headline": "Regulator approves Zephyr Wind Power grid connection fee increase",
+  "summary": "The higher fee adds a stable stream of regulated revenue.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:5",
+  "ticker": "ZEPH",
+  "date": "2025-09-25",
+  "headline": "Zephyr Wind Power delays turbine order after supplier backlog",
+  "summary": "Two onshore projects will start about six months later than planned.",
+  "source": "synthetic"
+ },
+ {
+  "id": "news:ZEPH:6",
+  "ticker": "ZEPH",
+  "date": "2025-11-28",
+  "headline": "Zephyr Wind Power signs 15-year power purchase agreement with a data center operator",
+  "summary": "The agreement fixes the price for most of one wind farm's output.",
+  "source": "synthetic"
+ }
+]

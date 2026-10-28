@@ -1,0 +1,9 @@
+venv/
+.venv/
+data/chroma_db/
+output/
+__pycache__/
+.pytest_cache/
+notebooks/
+tests/
+samples/

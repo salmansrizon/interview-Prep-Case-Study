@@ -1,0 +1,21 @@
+# UI image: Streamlit + httpx only. ui.py calls the API over HTTP (HC_API_URL); no torch, no chromadb here.
+#
+# HIGHLIGHTS: প্রতিটা service-এর নিজের dependency তালিকা। API-র requirements এখানে দিলে UI image-এ
+# torch, sentence-transformers, chromadb ঢুকত — এক GB-এর বেশি, যার একটাও UI ব্যবহার করে না।
+# Streamlit-এর usage statistics বন্ধ থাকে .streamlit/config.toml দিয়ে (Streamlit সেটা CWD = /app থেকে পড়ে)।
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+RUN useradd --create-home appuser
+WORKDIR /app
+
+COPY app/requirements-ui.txt .
+RUN pip install -r requirements-ui.txt
+
+USER appuser
+COPY --chown=appuser app/.streamlit ./.streamlit
+COPY --chown=appuser app/ui.py ./
+
+EXPOSE 8501
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD ["python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8501/_stcore/health', timeout=4)"]
+CMD ["streamlit", "run", "ui.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

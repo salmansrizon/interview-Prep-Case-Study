@@ -1,0 +1,19 @@
+# NVIDIA GPU override: merges onto docker-compose.yml and touches ONLY the ollama service.
+#   ./start.sh --gpu   |   .\start.ps1 --gpu   |   make gpu
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#   or once in .env:  COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml   (Windows separator: ;)
+#
+# HIGHLIGHTS: Host-এ NVIDIA driver + NVIDIA Container Toolkit লাগে (`nvidia-ctk runtime configure`)।
+# এগুলো ছাড়া machine-এ এই file দিলে `up` ব্যর্থ হয়: could not select device driver "nvidia" — তাই
+# base file-এ রাখা হয়নি, CPU-ই default। শুধু ollama GPU পায়: API-র MiniLM embedding CPU-তে কয়েক ms,
+# GPU দিলে CUDA torch-এর কয়েক GB লাগত, লাভ প্রায় শূন্য। প্রমাণ: `docker compose exec ollama nvidia-smi`
+# আর `docker compose exec ollama ollama ps`-এ PROCESSOR = 100% GPU। Mac-এর Docker Desktop-এ GPU passthrough নেই।
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

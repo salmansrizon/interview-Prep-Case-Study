@@ -1,0 +1,9 @@
+# Tested versions (2026-10). Python 3.11-3.13. Local dev + tests (outside Docker).
+# Each image installs only its own list: requirements-api.txt (Dockerfile.api), requirements-ui.txt (Dockerfile.ui).
+-r requirements-api.txt
+-r requirements-ui.txt
+# Dev / tests / PDF handbook
+pytest==9.1.1
+httpx2==2.16.0                # Starlette 1.10 TestClient prefers it over httpx (warns otherwise)
+fpdf2==2.8.9
+PyYAML==6.0.3                 # tests/test_deploy.py parses the compose files
