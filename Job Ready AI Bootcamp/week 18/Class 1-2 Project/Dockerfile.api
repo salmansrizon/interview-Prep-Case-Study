@@ -1,0 +1,46 @@
+# API image: FastAPI + guardrails + MiniLM embedder + Chroma HTTP client. Ollama and Chroma are separate services.
+# Build context = project root (see docker-compose.yml); .dockerignore keeps .env, tests and caches out.
+#
+# HIGHLIGHTS: Layer-এর ক্রম = যা কম বদলায় উপরে, যা বেশি বদলায় নিচে।
+#   1. requirements + CPU-only torch (ভারী, কালেভদ্রে বদলায়)
+#   2. embedding model bake (USER appuser-এর পরে, তাই file শুরু থেকেই appuser-এর; chown -R লাগে না)
+#   3. HF_HUB_OFFLINE=1 (bake-এর পরে: runtime-এ HuggingFace Hub কখনো ডাকা হয় না)
+#   4. app code সবার শেষে: code edit করলে শুধু এই layer আবার build হয়, model আবার download হয় না
+#      (Week 17-এর Dockerfile-এ bake ছিল code COPY-এর পরে — প্রতিটা edit-এ model আবার নামত)।
+# CPU-only torch: এই container শুধু embedding বানায়; LLM চলে ollama container-এ। Default wheel-এর CUDA
+# library কয়েক GB, যার একটাও এখানে কাজে লাগে না।
+#
+# Embedding model baked here (build arg EMBEDDING_MODEL = HC_EMBEDDING_MODEL in .env):
+# | Model | Use Case | Advantage | Limitation |
+# |---|---|---|---|
+# | sentence-transformers/paraphrase-MiniLM-L3-v2 (chosen, ADR 0004) | ছোট English handbook-এ semantic search | ~61 MB, CPU-তে দ্রুত, bake করলে image প্রায় বাড়ে না | Acronym আর medical synonym দুর্বল |
+# | sentence-transformers/all-MiniLM-L6-v2 | General English retrieval | ভালো quality, এখনো ~90 MB | একটু ধীর; বদলালে পুরো KB re-embed + HC_MAX_DISTANCE আবার calibrate |
+# | pritamdeka/S-PubMedBert-MS-MARCO | Biomedical retrieval | PubMed vocabulary | ~440 MB, image ভারী, CPU-তে ধীর |
+# | Ollama embedding (nomic-embed-text) | API image থেকে torch পুরো বাদ দিতে চাইলে | API image ১ GB+ হালকা | code বদলাতে হয়; Ollama-র slot-এর জন্য LLM-এর সাথে লড়াই |
+FROM python:3.12-slim
+
+ARG EMBEDDING_MODEL=sentence-transformers/paraphrase-MiniLM-L3-v2
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/home/appuser/.cache/huggingface HF_HUB_DISABLE_TELEMETRY=1 ANONYMIZED_TELEMETRY=False \
+    HC_EMBEDDING_MODEL=${EMBEDDING_MODEL}
+
+# Empty dirs only, so this chown copies nothing heavy: output/ for "cli.py eval --out", chroma_db/ for HC_CHROMA_HOST="".
+RUN useradd --create-home appuser && mkdir -p /app/output /app/data/chroma_db && chown -R appuser /app
+WORKDIR /app
+
+COPY app/requirements-api.txt .
+RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1 \
+ && pip install -r requirements-api.txt
+
+USER appuser
+RUN python -c "import os; from sentence_transformers import SentenceTransformer as S; S(os.environ['HC_EMBEDDING_MODEL'])"
+ENV HF_HUB_OFFLINE=1
+
+COPY --chown=appuser app/src ./src
+COPY --chown=appuser app/data/kb ./data/kb
+COPY --chown=appuser app/data/eval ./data/eval
+COPY --chown=appuser app/cli.py ./
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s CMD ["python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health', timeout=4)"]
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

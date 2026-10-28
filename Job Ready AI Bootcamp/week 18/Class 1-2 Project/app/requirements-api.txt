@@ -1,0 +1,11 @@
+# Tested versions (2026-10). Python 3.11-3.13. API image only (Dockerfile.api).
+# torch is NOT listed: Dockerfile.api installs torch==2.14.1 from the CPU-only index first, then this file.
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.1
+httpx==0.28.1
+# chromadb client pin == chromadb/chroma server image tag (CHROMA_TAG in .env.example); upgrade both together
+chromadb==1.5.9
+sentence-transformers==6.2.0
+ollama==0.6.3

@@ -1,0 +1,128 @@
+# Week 18 Shared Project: the Week 17 Healthcare Assistant as one Compose stack.
+#   ./start.sh  |  .\start.ps1  |  make up          single click (copies .env.example -> .env, waits for /ready)
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d     NVIDIA GPU for ollama only
+#
+# HIGHLIGHTS: Startup order (প্রতিটা ধাপ আগেরটার condition পূরণ না হওয়া পর্যন্ত অপেক্ষা করে):
+#   ollama (healthy: `ollama list`)  ─▶ ollama-init (show || pull, তারপর exit 0) ─┐
+#   chroma (healthy: /api/v2/heartbeat) ─────────────────────────────────────────┴▶ api (healthy: /health) ─▶ ui
+# * Container-দের মধ্যে service name দিয়ে ডাকা হয় (http://ollama:11434, chroma:8000, http://api:8000) —
+#   container-এর ভেতরে localhost মানে সে নিজে। Healthcheck-এ localhost ঠিক আছে, কারণ নিজেকেই check করে।
+# * Host-এ publish শুধু ui আর api, দুটোই 127.0.0.1-এ। Ollama আর Chroma-র কোনো auth নেই, তাই ports নেই।
+# * Image tag .env থেকে, ${VAR:?} দিয়ে: tag না থাকলে Compose থামে, চুপচাপ `latest` টানে না।
+# * Named volume + top-level `name:`: folder rename করলেও একই volume, model আবার download হয় না।
+name: healthcare-assistant
+
+services:
+  ollama:
+    image: ollama/ollama:${OLLAMA_TAG:?set OLLAMA_TAG in .env (copy .env.example)}
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      # the image has no curl; the CLI calls the local server and fails if it is not up
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  # HIGHLIGHTS: One-shot init container। `ollama show` local volume দেখে — model থাকলে network ছোঁয়াই হয় না,
+  # তাই internet ছাড়াও দ্বিতীয় run চলে (শুধু `ollama pull` হলে offline-এ exit 1, api কখনো start হতো না)।
+  # Download আসলে করে ollama server, model যায় তার volume-এ; init শুধু অনুরোধ পাঠিয়ে exit 0 দেয়।
+  # LLM (HC_MODEL in .env):
+  # | Model | Use Case | Advantage | Limitation |
+  # |---|---|---|---|
+  # | llama3.1:8b Q4_K_M (chosen, ADR 0006) | Healthcare Assistant-এর grounded উত্তর | ≈4.9 GB, course standard, CPU-তে চলে, ৮ GB+ GPU-তে দ্রুত | CPU-তে ধীর (প্রতি উত্তরে কয়েক সেকেন্ড থেকে মিনিট); RAM ≥ 8 GB free লাগে |
+  # | llama3.1:8b Q8_0 | ১২-১৬ GB GPU, একটু বেশি quality | FP16-এর কাছের quality | ≈8.5 GB; একই GPU-তে decode ধীর |
+  # | llama3.2:3b Q4_K_M | ৮ GB RAM laptop, CPU-only VM (ADR 0006 fallback) | ≈2 GB, CPU-তেও চলনসই | Citation format বেশি ভাঙে, grounding দুর্বল; eval আবার চালান |
+  # | Host-এর native Ollama (HC_OLLAMA_HOST=http://host.docker.internal:11434) | Mac-এ Metal GPU | GPU পায় | আর single click না; model host-এ আলাদা pull |
+  ollama-init:
+    image: ollama/ollama:${OLLAMA_TAG:?set OLLAMA_TAG in .env (copy .env.example)}
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["sh", "-c", "ollama show ${HC_MODEL:-llama3.1:8b} >/dev/null 2>&1 || ollama pull ${HC_MODEL:-llama3.1:8b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+  chroma:
+    image: chromadb/chroma:${CHROMA_TAG:?set CHROMA_TAG in .env (copy .env.example)}
+    environment:
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - chroma_data:/data
+    healthcheck:
+      # no curl in the image, but bash is there: a raw HTTP GET over /dev/tcp to Chroma 1.x's heartbeat
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8000 && printf 'GET /api/v2/heartbeat HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q ' 200 ' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        EMBEDDING_MODEL: ${HC_EMBEDDING_MODEL:-sentence-transformers/paraphrase-MiniLM-L3-v2}
+    environment:
+      # wiring: fixed for this stack (service names, never localhost)
+      HC_BACKEND: real
+      HC_OLLAMA_HOST: http://ollama:11434
+      HC_CHROMA_HOST: chroma
+      HC_CHROMA_PORT: "8000"
+      HC_AUTO_INGEST: "true"
+      HC_KB_DIR: /app/data/kb
+      # tunables: .env (defaults == src/settings.py)
+      HC_MODEL: ${HC_MODEL:-llama3.1:8b}
+      HC_EMBEDDING_MODEL: ${HC_EMBEDDING_MODEL:-sentence-transformers/paraphrase-MiniLM-L3-v2}
+      HC_MAX_DISTANCE: ${HC_MAX_DISTANCE:-0.56}
+      HC_TOP_K: ${HC_TOP_K:-4}
+      HC_TEMPERATURE: ${HC_TEMPERATURE:-0.1}
+      HC_NUM_CTX: ${HC_NUM_CTX:-4096}
+      HC_NUM_PREDICT: ${HC_NUM_PREDICT:-400}
+      HC_LLM_TIMEOUT_S: ${HC_LLM_TIMEOUT_S:-120}
+      HC_COLLECTION: ${HC_COLLECTION:-clinic_kb}
+      HC_LOG_LEVEL: ${HC_LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      chroma:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    healthcheck:
+      # liveness only; /ready (Ollama model + indexed KB) is what start.sh / start.ps1 wait for
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    environment:
+      HC_API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:${UI_PORT:-8501}:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8501/_stcore/health', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+  chroma_data:
